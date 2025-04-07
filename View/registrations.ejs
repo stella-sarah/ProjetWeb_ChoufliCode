@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Inscriptions</title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+    <h1>Liste des Inscriptions</h1>
+    <div id="registration-list">
+        <% registrations.forEach(registration => { %>
+            <div>
+                <h3><%= registration.participantName %></h3>
+                <p>Statut : <%= registration.status %></p>
+            </div>
+        <% }); %>
+    </div>
+</body>
+</html>

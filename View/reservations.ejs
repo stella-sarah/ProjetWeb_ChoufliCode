@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Réservations</title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+    <h1>Liste des Réservations</h1>
+    <div id="reservation-list">
+        <% reservations.forEach(reservation => { %>
+            <div>
+                <h3><%= reservation.participantName %></h3>
+                <p>Nombre de Places : <%= reservation.spots %></p>
+            </div>
+        <% }); %>
+    </div>
+</body>
+</html>

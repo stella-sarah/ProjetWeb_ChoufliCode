@@ -1,0 +1,1446 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="fr">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>TuniFy Village - Gestion des Événements</title>
+    <style type="text/css">
+        
+        
+
+        :root {
+            --gold-primary: #c9a86c;
+            --gold-light: #e9d9b6;
+            --gold-dark: #8b783d;
+            --dark-bg: #1c1c1c;
+            --darker-bg: #111111;
+            --light-text: #f8f5eb;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: var(--darker-bg);
+            color: var(--light-text);
+            overflow-x: hidden;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        /* Navigation */
+        .header {
+            position: fixed;
+            width: 100%;
+            z-index: 1000;
+            transition: background-color 0.3s ease;
+            padding: 20px 0;
+        }
+        
+        .header.scrolled {
+            background-color: rgba(28, 28, 28, 0.95);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .nav-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo img {
+            height: 60px;
+        }
+        
+        .logo-text {
+            margin-left: 15px;
+        }
+        
+        .logo-text h1 {
+            font-family: 'Cinzel', serif;
+            font-weight: 700;
+            font-size: 24px;
+            color: var(--gold-primary);
+            margin: 0;
+            letter-spacing: 1px;
+        }
+        
+        .logo-text p {
+            font-size: 12px;
+            font-weight: 300;
+            color: var(--gold-light);
+            letter-spacing: 4px;
+            text-transform: uppercase;
+        }
+        
+        .nav ul {
+            display: flex;
+            list-style: none;
+            gap: 40px;
+        }
+        
+        .nav ul li a {
+            color: var(--light-text);
+            text-decoration: none;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: color 0.3s ease;
+            font-weight: 400;
+        }
+        
+        .nav ul li a:hover {
+            color: var(--gold-primary);
+        }
+        
+        .contact-btn {
+            background-color: transparent;
+            border: 1px solid var(--gold-primary);
+            color: var(--gold-primary);
+            padding: 10px 30px;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 500;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .contact-btn:hover {
+            background-color: var(--gold-primary);
+            color: var(--darker-bg);
+        }
+        
+        /* Hero Section */
+        .section.hero {
+            height: 100vh;
+            position: relative;
+            background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.7)), url('/api/placeholder/1600/900') center/cover no-repeat;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        
+        .section.hero:before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(to top, var(--darker-bg), transparent);
+            z-index: 1;
+        }
+        
+        .hero-content {
+            text-align: center;
+            z-index: 2;
+            max-width: 800px;
+            padding: 0 20px;
+            transform: translateY(-50px);
+        }
+        
+        .hero-subtitle {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 16px;
+            letter-spacing: 8px;
+            text-transform: uppercase;
+            color: var(--gold-light);
+            margin-bottom: 20px;
+            animation: fadeInUp 1s ease-out;
+        }
+        
+        .hero-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 80px;
+            font-weight: 700;
+            color: var(--light-text);
+            margin-bottom: 30px;
+            line-height: 1.1;
+            animation: fadeInUp 1s ease-out 0.2s forwards;
+            opacity: 0;
+        }
+        
+        .hero-title span {
+            color: var(--gold-primary);
+        }
+        
+        .hero-description {
+            font-size: 18px;
+            line-height: 1.6;
+            margin-bottom: 40px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            animation: fadeInUp 1s ease-out 0.4s forwards;
+            opacity: 0;
+        }
+        
+        .hero-cta {
+            display: inline-block;
+            background-color: var(--gold-primary);
+            color: var(--darker-bg);
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 600;
+            font-size: 16px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            padding: 18px 45px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            animation: fadeInUp 1s ease-out 0.6s forwards;
+            opacity: 0;
+            text-decoration: none;
+        }
+        
+        .hero-cta:hover {
+            background-color: var(--light-text);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        /* 3D Elements */
+        .cube-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            perspective: 1000px;
+            width: 300px;
+            height: 300px;
+            opacity: 0.15;
+            z-index: 0;
+        }
+        
+        .cube {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            animation: rotate 20s infinite linear;
+        }
+        
+        .cube div {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            border: 2px solid var(--gold-primary);
+            opacity: 0.5;
+            background-color: rgba(201, 168, 108, 0.05);
+        }
+        
+        .front { transform: translateZ(150px); }
+        .back { transform: rotateY(180deg) translateZ(150px); }
+        .right { transform: rotateY(90deg) translateZ(150px); }
+        .left { transform: rotateY(-90deg) translateZ(150px); }
+        .top { transform: rotateX(90deg) translateZ(150px); }
+        .bottom { transform: rotateX(-90deg) translateZ(150px); }
+
+        /* Events Section */
+        .section.events {
+            padding: 120px 0;
+            background-color: var(--dark-bg);
+            position: relative;
+        }
+        
+        .events-header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+        
+        .section-subtitle {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 14px;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            color: var(--gold-primary);
+            margin-bottom: 15px;
+        }
+        
+        .section-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 48px;
+            font-weight: 700;
+            color: var(--light-text);
+            margin-bottom: 30px;
+            line-height: 1.2;
+        }
+        
+        .section-title span {
+            color: var(--gold-primary);
+        }
+        
+        .event-form, .edit-form {
+            background-color: rgba(28, 28, 28, 0.5);
+            padding: 40px;
+            border-radius: 5px;
+            border: 1px solid rgba(201, 168, 108, 0.1);
+            margin-bottom: 40px;
+        }
+        
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        label {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 500;
+            font-size: 16px;
+            color: var(--light-text);
+        }
+        
+        input, textarea, select {
+            width: 100%;
+            background-color: rgba(17, 17, 17, 0.7);
+            border: 1px solid rgba(201, 168, 108, 0.2);
+            padding: 15px;
+            font-family: 'Montserrat', sans-serifIt;
+            font-size: 15px;
+            color: var(--light-text);
+            border-radius: 4px;
+            transition: border-color 0.3s ease;
+        }
+        
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: var(--gold-primary);
+        }
+        
+        textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+        
+        button {
+            background-color: var(--gold-primary);
+            color: var(--darker-bg);
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 600;
+            font-size: 16px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        button:hover {
+            background-color: var(--light-text);
+        }
+        
+        .list {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .item {
+            background-color: rgba(28, 28, 28, 0.5);
+            padding: 30px;
+            border-radius: 5px;
+            border: 1px solid rgba(201, 168, 108, 0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .item:hover {
+            transform: translateY(-5px);
+        }
+        
+        .item h3 {
+            font-family: 'Cinzel', serif;
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--light-text);
+            margin-bottom: 15px;
+        }
+        
+        .item p {
+            font-size: 15px;
+            line-height: 1.7;
+            color: rgba(248, 245, 235, 0.7);
+            margin-bottom: 10px;
+        }
+        
+        .edit-form {
+            display: none;
+        }
+
+        /* Footer */
+        .footer {
+            background-color: var(--dark-bg);
+            padding: 80px 0 40px;
+        }
+        
+        .footer-top {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 60px;
+            padding-bottom: 60px;
+            border-bottom: 1px solid rgba(201, 168, 108, 0.2);
+            margin-bottom: 40px;
+        }
+        
+        .footer-about .logo {
+            margin-bottom: 25px;
+        }
+        
+        .footer-about p {
+            font-size: 15px;
+            line-height: 1.7;
+            color: rgba(248, 245, 235, 0.7);
+            margin-bottom: 25px;
+        }
+        
+        .footer-heading {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--light-text);
+            margin-bottom: 25px;
+            position: relative;
+            padding-bottom: 15px;
+        }
+        
+        .footer-heading::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 40px;
+            height: 2px;
+            background-color: var(--gold-primary);
+        }
+        
+        .footer-links ul {
+            list-style: none;
+        }
+        
+        .footer-links ul li {
+            margin-bottom: 12px;
+        }
+        
+        .footer-links ul li a {
+            color: rgba(248, 245, 235, 0.7);
+            text-decoration: none;
+            font-size: 15px;
+            transition: color 0.3s ease, padding-left 0.3s ease;
+            display: block;
+        }
+        
+        .footer-links ul li a:hover {
+            color: var(--gold-primary);
+            padding-left: 5px;
+        }
+        
+        .footer-contact p {
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            margin-bottom: 15px;
+            font-size: 15px;
+            color: rgba(248, 245, 235, 0.7);
+        }
+        
+        .footer-contact i {
+            color: var(--gold-primary);
+            font-size: 18px;
+        }
+        
+        .footer-bottom {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .footer-copyright {
+            font-size: 14px;
+            color: rgba(248, 245, 235, 0.7);
+        }
+        
+        .footer-copyright a {
+            color: var(--gold-primary);
+            text-decoration: none;
+        }
+        
+        .footer-copyright a:hover {
+            text-decoration: underline;
+        }
+        
+        /* Animations */
+        @keyframes rotate {
+            0% { transform: rotateX(0) rotateY(0) rotateZ(0); }
+            100% { transform: rotateX(360deg) rotateY(360deg) rotateZ(360deg); }
+        }
+        
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Responsive Styles */
+        @media screen and (max-width: 1200px) {
+            .footer-top {
+                grid-template-columns: 1fr 1fr;
+                gap: 40px 60px;
+            }
+        }
+        
+        @media screen and (max-width: 768px) {
+            .nav-container {
+                flex-direction: column;
+                gap: 20px;
+            }
+            
+            .nav ul {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+            
+            .hero-title {
+                font-size: 60px;
+            }
+            
+            .footer-top {
+                grid-template-columns: 1fr;
+                gap: 40px;
+            }
+            
+            .footer-bottom {
+                flex-direction: column;
+                gap: 20px;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header / Navigation -->
+    <div class="header">
+        <div class="container nav-container">
+            <div class="logo">
+                <img src="img.png" alt="TuniFy Logo">
+                <div class="logo-text">
+                    <h1>TuniFy</h1>
+                    <p>Village</p>
+                </div>
+            </div>
+            <div class="nav">
+                <ul>
+                    <li><a href="#home">Home</a></li>
+                    <li><a href="#events">Events</a></li>
+                    <li><a href="#reservations">Reservations</a></li>
+                    <li><a href="#registrations">Registrations</a></li>
+                </ul>
+            </div>
+            <button class="contact-btn">Contact Us</button>
+        </div>
+    </div>
+
+    <!-- Hero Section -->
+    <div class="section hero" id="home">
+        <div class="cube-container">
+            <div class="cube">
+                <div class="front"></div>
+                <div class="back"></div>
+                <div class="right"></div>
+                <div class="left"></div>
+                <div class="top"></div>
+                <div class="bottom"></div>
+            </div>
+        </div>
+        <div class="hero-content">
+            <div class="hero-subtitle">Event Management</div>
+            <h1 class="hero-title">TuniFy <span>EVENTS</span></h1>
+            <p class="hero-description">Plan, manage, and attend exclusive events at TuniFy Village. From cultural festivals to professional conferences, we offer a seamless experience for organizers and participants alike.</p>
+            <a href="#events" class="hero-cta">Explore Events</a>
+        </div>
+    </div>
+
+    <!-- Events Section -->
+    <div class="section events" id="events">
+        <div class="container">
+            <div class="events-header">
+                <p class="section-subtitle">Event Management</p>
+                <h2 class="section-title">Create & Manage <span>Events</span></h2>
+            </div>
+
+            <!-- Créer un Événement -->
+            <div class="event-form">
+                <h2 class="section-title">Créer un Événement</h2>
+                <form id="create-event-form" onsubmit="return validateEventForm(this)">
+                    <label for="event-name">Nom de l'Événement :</label>
+                    <input type="text" id="event-name" name="event-name">
+                    
+                    <label>Catégories (sélectionnez au moins une) :</label>
+                    <div class="category-checkboxes">
+                        <label><input type="checkbox" name="event-categories" value="festival"><span>Festival</span></label>
+                        <label><input type="checkbox" name="event-categories" value="conférence"><span>Conférence</span></label>
+                        <label><input type="checkbox" name="event-categories" value="atelier"><span>Atelier</span></label>
+                        <label><input type="checkbox" name="event-categories" value="autre"><span>Autre</span></label>
+                        <label><input type="checkbox" name="event-categories" value="sport"><span>Autre</span></label>
+                    </div>
+                    
+                    <label for="event-start-date">Date de Début (YYYY-MM-DD) :</label>
+                    <input type="text" id="event-start-date" name="event-start-date">
+                    
+                    <label for="event-end-date">Date de Fin (YYYY-MM-DD) :</label>
+                    <input type="text" id="event-end-date" name="event-end-date">
+                    
+                    <label for="event-location">Lieu :</label>
+                    <input type="text" id="event-location" name="event-location">
+                    
+                    <label for="event-description">Description :</label>
+                    <textarea id="event-description" name="event-description"></textarea>
+                    
+                    <label for="event-capacity">Capacité :</label>
+                    <input type="text" id="event-capacity" name="event-capacity">
+                    
+                    <label for="event-status">Statut :</label>
+                    <select id="event-status" name="event-status">
+                        <option value="planifié">Planifié</option>
+                        <option value="en cours">En cours</option>
+                        <option value="terminé">Terminé</option>
+                    </select>
+                    
+                    <label for="event-promotion">Promotion (%) :</label>
+                    <input type="text" id="event-promotion" name="event-promotion" value="0">
+                    
+                    <button type="submit">Créer l'Événement</button>
+                </form>
+            </div>
+
+            <!-- Modifier un Événement -->
+            <div class="edit-form" id="edit-event-form">
+                <h2 class="section-title">Modifier un Événement</h2>
+                <form onsubmit="return validateEditEventForm(this)">
+                    <input type="hidden" id="edit-event-id" name="event-id">
+                    
+                    <label for="edit-event-name">Nom de l'Événement :</label>
+                    <input type="text" id="edit-event-name" name="event-name">
+                    
+                    <label>Catégories (sélectionnez au moins une) :</label>
+                    <div class="category-checkboxes">
+                        <label><input type="checkbox" name="edit-event-categories" value="festival"><span>Festival</span></label>
+                        <label><input type="checkbox" name="edit-event-categories" value="conférence"><span>Conférence</span></label>
+                        <label><input type="checkbox" name="edit-event-categories" value="atelier"><span>Atelier</span></label>
+                        <label><input type="checkbox" name="edit-event-categories" value="autre"><span>Autre</span></label>
+                        <label><input type="checkbox" name="edit-event-categories" value="sport"><span>Autre</span></label>
+                    </div>
+                    
+                    <label for="edit-event-start-date">Date de Début (YYYY-MM-DD) :</label>
+                    <input type="text" id="edit-event-start-date" name="event-start-date">
+                    
+                    <label for="edit-event-end-date">Date de Fin (YYYY-MM-DD) :</label>
+                    <input type="text" id="edit-event-end-date" name="event-end-date">
+                    
+                    <label for="edit-event-location">Lieu :</label>
+                    <input type="text" id="edit-event-location" name="event-location">
+                    
+                    <label for="edit-event-description">Description :</label>
+                    <textarea id="edit-event-description" name="event-description"></textarea>
+                    
+                    <label for="edit-event-capacity">Capacité :</label>
+                    <input type="text" id="edit-event-capacity" name="event-capacity">
+                    
+                    <label for="edit-event-status">Statut :</label>
+                    <select id="edit-event-status" name="event-status">
+                        <option value="planifié">Planifié</option>
+                        <option value="en cours">En cours</option>
+                        <option value="terminé">Terminé</option>
+                    </select>
+                    
+                    <label for="edit-event-promotion">Promotion (%) :</label>
+                    <input type="text" id="edit-event-promotion" name="event-promotion" value="0">
+                    
+                    <button type="submit">Mettre à Jour</button>
+                    <button type="button" onclick="cancelEditEvent()">Annuler</button>
+                </form>
+            </div>
+
+            <!-- Liste des Événements -->
+            <h2 class="section-title">Événements Disponibles</h2>
+            <div id="event-list" class="list">
+                <!-- Les événements seront ajoutés dynamiquement ici -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Reservations Section -->
+    <div class="section events" id="reservations">
+        <div class="container">
+            <div class="events-header">
+                <p class="section-subtitle">Event Reservations</p>
+                <h2 class="section-title">Manage <span>Reservations</span></h2>
+            </div>
+
+            <!-- Créer une Réservation -->
+            <div class="event-form">
+                <h2 class="section-title">Créer une Réservation</h2>
+                <form id="create-reservation-form" onsubmit="return validateReservationForm(this)">
+                    <label for="participant-name">Nom du Participant :</label>
+                    <input type="text" id="participant-name" name="participant-name">
+                    
+                    <label for="reservation-event">Événement :</label>
+                    <select id="reservation-event" name="reservation-event">
+                        <option value="">Sélectionner un événement</option>
+                    </select>
+                    
+                    <label for="reservation-spots">Nombre de Places :</label>
+                    <input type="text" id="reservation-spots" name="reservation-spots">
+                    
+                    <label for="reservation-comments">Commentaires :</label>
+                    <textarea id="reservation-comments" name="reservation-comments"></textarea>
+                    
+                    <button type="submit">Créer la Réservation</button>
+                </form>
+            </div>
+
+            <!-- Modifier une Réservation -->
+            <div class="edit-form" id="edit-reservation-form">
+                <h2 class="section-title">Modifier une Réservation</h2>
+                <form onsubmit="return validateEditReservationForm(this)">
+                    <input type="hidden" id="edit-reservation-id" name="reservation-id">
+                    
+                    <label for="edit-participant-name">Nom du Participant :</label>
+                    <input type="text" id="edit-participant-name" name="participant-name">
+                    
+                    <label for="edit-reservation-event">Événement :</label>
+                    <select id="edit-reservation-event" name="reservation-event">
+                        <option value="">Sélectionner un événement</option>
+                    </select>
+                    
+                    <label for="edit-reservation-spots">Nombre de Places :</label>
+                    <input type="text" id="edit-reservation-spots" name="reservation-spots">
+                    
+                    <label for="edit-reservation-comments">Commentaires :</label>
+                    <textarea id="edit-reservation-comments" name="reservation-comments"></textarea>
+                    
+                    <button type="submit">Mettre à Jour</button>
+                    <button type="button" onclick="cancelEditReservation()">Annuler</button>
+                </form>
+            </div>
+
+            <!-- Liste des Réservations -->
+            <h2 class="section-title">Réservations</h2>
+            <div id="reservation-list" class="list">
+                <!-- Les réservations seront ajoutées dynamiquement ici -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Registrations Section -->
+    <div class="section events" id="registrations">
+        <div class="container">
+            <div class="events-header">
+                <p class="section-subtitle">Event Registrations</p>
+                <h2 class="section-title">Manage <span>Registrations</span></h2>
+            </div>
+
+            <!-- Créer une Inscription -->
+            <div class="event-form">
+                <h2 class="section-title">Créer une Inscription</h2>
+                <form id="create-registration-form" onsubmit="return validateRegistrationForm(this)">
+                    <label for="registration-participant-name">Nom du Participant :</label>
+                    <input type="text" id="registration-participant-name" name="registration-participant-name">
+                    
+                    <label for="registration-event">Événement :</label>
+                    <select id="registration-event" name="registration-event">
+                        <option value="">Sélectionner un événement</option>
+                    </select>
+                    
+                    <label for="registration-spots">Nombre de Places :</label>
+                    <input type="text" id="registration-spots" name="registration-spots">
+                    
+                    <label for="registration-status">Statut :</label>
+                    <select id="registration-status" name="registration-status">
+                        <option value="en attente">En attente</option>
+                        <option value="confirmée">Confirmée</option>
+                        <option value="annulée">Annulée</option>
+                    </select>
+                    
+                    <button type="submit">Créer l'Inscription</button>
+                </form>
+            </div>
+
+            <!-- Modifier une Inscription -->
+            <div class="edit-form" id="edit-registration-form">
+                <h2 class="section-title">Modifier une Inscription</h2>
+                <form onsubmit="return validateEditRegistrationForm(this)">
+                    <input type="hidden" id="edit-registration-id" name="registration-id">
+                    
+                    <label for="edit-registration-participant-name">Nom du Participant :</label>
+                    <input type="text" id="edit-registration-participant-name" name="registration-participant-name">
+                    
+                    <label for="edit-registration-event">Événement :</label>
+                    <select id="edit-registration-event" name="registration-event">
+                        <option value="">Sélectionner un événement</option>
+                    </select>
+                    
+                    <label for="edit-registration-spots">Nombre de Places :</label>
+                    <input type="text" id="edit-registration-spots" name="registration-spots">
+                    
+                    <label for="edit-registration-status">Statut :</label>
+                    <select id="edit-registration-status" name="registration-status">
+                        <option value="en attente">En attente</option>
+                        <option value="confirmée">Confirmée</option>
+                        <option value="annulée">Annulée</option>
+                    </select>
+                    
+                    <button type="submit">Mettre à Jour</button>
+                    <button type="button" onclick="cancelEditRegistration()">Annuler</button>
+                </form>
+            </div>
+
+            <!-- Liste des Inscriptions -->
+            <h2 class="section-title">Inscriptions</h2>
+            <div id="registration-list" class="list">
+                <!-- Les inscriptions seront ajoutées dynamiquement ici -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        <div class="container">
+            <div class="footer-top">
+                <div class="footer-about">
+                    <div class="logo">
+                        <img src="logo.png" alt="TuniFy Logo">
+                        <div class="logo-text">
+                            <h1>TuniFy</h1>
+                            <p>Village</p>
+                        </div>
+                    </div>
+                    <p>TuniFy Village is the epitome of luxury living, offering an exclusive residential experience with premium amenities and exceptional service in a stunning setting.</p>
+                </div>
+                
+                <div class="footer-links">
+                    <h3 class="footer-heading">Quick Links</h3>
+                    <ul>
+                        <li><a href="#home">Home</a></li>
+                        <li><a href="#events">Events</a></li>
+                        <li><a href="#reservations">Reservations</a></li>
+                        <li><a href="#registrations">Registrations</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-links">
+                    <h3 class="footer-heading">Our Services</h3>
+                    <ul>
+                        <li><a href="#">Event Management</a></li>
+                        <li><a href="#">Property Management</a></li>
+                        <li><a href="#">Concierge Services</a></li>
+                        <li><a href="#">Luxury Amenities</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-contact">
+                    <h3 class="footer-heading">Contact Info</h3>
+                    <p><i>📍</i> 123 Luxury Boulevard, Golden District, City</p>
+                    <p><i>📞</i> +123 456 7890</p>
+                    <p><i>✉️</i> info@TuniFyvillage.com</p>
+                    <p><i>⏰</i> Mon-Sat: 9:00 AM - 6:00 PM</p>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <div class="footer-copyright">
+                    © 2025 TuniFy Village. All Rights Reserved. Designed by <a href="#">Kaptin</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script type="text/javascript">
+        // Données initiales
+        var events = [
+            { id: 1, name: "Festival de Tunis", categories: ["festival"], startDate: "2025-04-10", endDate: "2025-04-12", location: "Tunis", description: "Un festival culturel célébrant les 24 gouvernorats.", capacity: 500, status: "planifié", promotion: 0 },
+            { id: 2, name: "Conférence sur l'Innovation", categories: ["conférence"], startDate: "2025-04-15", endDate: "2025-04-16", location: "Sfax", description: "Discussions sur les technologies du futur.", capacity: 200, status: "planifié", promotion: 15 }
+        ];
+
+        var reservations = [
+            { id: 1, participantName: "Jean Dupont", eventId: 1, spots: 2, comments: "Arrivera en avance" },
+            { id: 2, participantName: "Marie Leclerc", eventId: 2, spots: 1, comments: "Besoin d'un siège spécial" }
+        ];
+
+        var registrations = [
+            { id: 1, participantName: "Jean Dupont", eventId: 1, spots: 2, status: "confirmée" },
+            { id: 2, participantName: "Marie Leclerc", eventId: 2, spots: 1, status: "en attente" }
+        ];
+
+        // Fonction pour formater les dates
+        function formatDate(dateString) {
+            var parts = dateString.split('-');
+            return parts[2] + '/' + parts[1] + '/' + parts[0];
+        }
+
+        // Validation des formulaires
+        function validateEventForm(form) {
+            var name = form['event-name'].value;
+            var categories = document.getElementsByName('event-categories');
+            var selectedCategories = [];
+            for (var i = 0; i < categories.length; i++) {
+                if (categories[i].checked) {
+                    selectedCategories.push(categories[i].value);
+                }
+            }
+            var startDate = form['event-start-date'].value;
+            var endDate = form['event-end-date'].value;
+            var location = form['event-location'].value;
+            var description = form['event-description'].value;
+            var capacity = form['event-capacity'].value;
+            var status = form['event-status'].value;
+            var promotion = form['event-promotion'].value;
+
+            // Validation des champs obligatoires
+            if (!name) {
+                alert("Veuillez entrer le nom de l'événement !");
+                return false;
+            }
+            if (selectedCategories.length === 0) {
+                alert("Veuillez sélectionner au moins une catégorie !");
+                return false;
+            }
+            if (!startDate || !/^\d{4}-\d{2}-\d{2}$/.test(startDate)) {
+                alert("Veuillez entrer une date de début valide (YYYY-MM-DD) !");
+                return false;
+            }
+            if (!endDate || !/^\d{4}-\d{2}-\d{2}$/.test(endDate)) {
+                alert("Veuillez entrer une date de fin valide (YYYY-MM-DD) !");
+                return false;
+            }
+            if (!location) {
+                alert("Veuillez entrer le lieu de l'événement !");
+                return false;
+            }
+            if (!description) {
+                alert("Veuillez entrer une description !");
+                return false;
+            }
+            if (!capacity || isNaN(capacity) || parseInt(capacity) < 1) {
+                alert("Veuillez entrer une capacité valide (nombre supérieur ou égal à 1) !");
+                return false;
+            }
+            if (!status) {
+                alert("Veuillez sélectionner un statut !");
+                return false;
+            }
+            if (promotion && (isNaN(promotion) || parseInt(promotion) < 0 || parseInt(promotion) > 100)) {
+                alert("Veuillez entrer une promotion valide (entre 0 et 100) !");
+                return false;
+            }
+            return true;
+        }
+
+        function validateEditEventForm(form) {
+            return validateEventForm(form);
+        }
+
+        function validateReservationForm(form) {
+            var participantName = form['participant-name'].value;
+            var eventId = form['reservation-event'].value;
+            var spots = form['reservation-spots'].value;
+
+            if (!participantName) {
+                alert("Veuillez entrer le nom du participant !");
+                return false;
+            }
+            if (!eventId) {
+                alert("Veuillez sélectionner un événement !");
+                return false;
+            }
+            if (!spots || isNaN(spots) || parseInt(spots) < 1) {
+                alert("Veuillez entrer un nombre de places valide (nombre supérieur ou égal à 1) !");
+                return false;
+            }
+            return true;
+        }
+
+        function validateEditReservationForm(form) {
+            return validateReservationForm(form);
+        }
+
+        function validateRegistrationForm(form) {
+            var participantName = form['registration-participant-name'].value;
+            var eventId = form['registration-event'].value;
+            var spots = form['registration-spots'].value;
+            var status = form['registration-status'].value;
+
+            if (!participantName) {
+                alert("Veuillez entrer le nom du participant !");
+                return false;
+            }
+            if (!eventId) {
+                alert("Veuillez sélectionner un événement !");
+                return false;
+            }
+            if (!spots || isNaN(spots) || parseInt(spots) < 1) {
+                alert("Veuillez entrer un nombre de places valide (nombre supérieur ou égal à 1) !");
+                return false;
+            }
+            if (!status) {
+                alert("Veuillez sélectionner un statut !");
+                return false;
+            }
+            return true;
+        }
+
+        function validateEditRegistrationForm(form) {
+            return validateRegistrationForm(form);
+        }
+
+        // Afficher les événements
+        function displayEvents() {
+            var eventList = document.getElementById('event-list');
+            eventList.innerHTML = '';
+            for (var i = 0; i < events.length; i++) {
+                var event = events[i];
+                var eventDiv = document.createElement('div');
+                eventDiv.className = 'item';
+                eventDiv.innerHTML =
+                    '<h3>' + event.name + '</h3>' +
+                    '<p>Catégories : ' + event.categories.join(', ') + '</p>' +
+                    '<p>Date : ' + formatDate(event.startDate) + ' - ' + formatDate(event.endDate) + '</p>' +
+                    '<p>Lieu : ' + event.location + '</p>' +
+                    '<p>Description : ' + event.description + '</p>' +
+                    '<p>Capacité : ' + event.capacity + '</p>' +
+                    '<p>Statut : ' + event.status + '</p>' +
+                    '<p>Promotion : ' + event.promotion + '%</p>' +
+                    '<button onclick="deleteEvent(' + event.id + ')">Supprimer</button>' +
+                    '<button onclick="editEvent(' + event.id + ')">Modifier</button>';
+                eventList.appendChild(eventDiv);
+            }
+            updateEventSelects();
+        }
+
+        // Ajouter un événement
+        document.getElementById('create-event-form').onsubmit = function(e) {
+            e = e || window.event;
+            if (!validateEventForm(this)) {
+                e.preventDefault();
+                return false;
+            }
+            var selectedCategories = [];
+            var categories = document.getElementsByName('event-categories');
+            for (var i = 0; i < categories.length; i++) {
+                if (categories[i].checked) {
+                    selectedCategories.push(categories[i].value);
+                }
+            }
+            var newEvent = {
+                id: events.length + 1,
+                name: document.getElementById('event-name').value,
+                categories: selectedCategories,
+                startDate: document.getElementById('event-start-date').value,
+                endDate: document.getElementById('event-end-date').value,
+                location: document.getElementById('event-location').value,
+                description: document.getElementById('event-description').value,
+                capacity: parseInt(document.getElementById('event-capacity').value),
+                status: document.getElementById('event-status').value,
+                promotion: parseInt(document.getElementById('event-promotion').value) || 0
+            };
+            events.push(newEvent);
+            displayEvents();
+            this.reset();
+            alert("Événement créé avec succès !");
+            return false;
+        };
+
+        // Supprimer un événement
+        function deleteEvent(eventId) {
+            if (confirm("Êtes-vous sûr de vouloir supprimer cet événement ?")) {
+                events = events.filter(function(event) {
+                    return event.id !== eventId;
+                });
+                displayEvents();
+                alert("Événement supprimé !");
+            }
+        }
+
+        // Modifier un événement
+        function editEvent(eventId) {
+            var event = null;
+            for (var i = 0; i < events.length; i++) {
+                if (events[i].id === eventId) {
+                    event = events[i];
+                    break;
+                }
+            }
+            if (event) {
+                document.getElementById('edit-event-id').value = event.id;
+                document.getElementById('edit-event-name').value = event.name;
+                var checkboxes = document.getElementsByName('edit-event-categories');
+                for (var i = 0; i < checkboxes.length; i++) {
+                    checkboxes[i].checked = event.categories.indexOf(checkboxes[i].value) !== -1;
+                }
+                document.getElementById('edit-event-start-date').value = event.startDate;
+                document.getElementById('edit-event-end-date').value = event.endDate;
+                document.getElementById('edit-event-location').value = event.location;
+                document.getElementById('edit-event-description').value = event.description;
+                document.getElementById('edit-event-capacity').value = event.capacity;
+                document.getElementById('edit-event-status').value = event.status;
+                document.getElementById('edit-event-promotion').value = event.promotion;
+                document.getElementById('edit-event-form').style.display = 'block';
+                document.getElementById('create-event-form').style.display = 'none';
+            }
+        }
+
+        document.getElementById('edit-event-form').onsubmit = function(e) {
+            e = e || window.event;
+            if (!validateEditEventForm(this)) {
+                e.preventDefault();
+                return false;
+            }
+            var eventId = parseInt(document.getElementById('edit-event-id').value);
+            var selectedCategories = [];
+            var categories = document.getElementsByName('edit-event-categories');
+            for (var i = 0; i < categories.length; i++) {
+                if (categories[i].checked) {
+                    selectedCategories.push(categories[i].value);
+                }
+            }
+            var updatedEvent = {
+                id: eventId,
+                name: document.getElementById('edit-event-name').value,
+                categories: selectedCategories,
+                startDate: document.getElementById('edit-event-start-date').value,
+                endDate: document.getElementById('edit-event-end-date').value,
+                location: document.getElementById('edit-event-location').value,
+                description: document.getElementById('edit-event-description').value,
+                capacity: parseInt(document.getElementById('edit-event-capacity').value),
+                status: document.getElementById('edit-event-status').value,
+                promotion: parseInt(document.getElementById('edit-event-promotion').value) || 0
+            };
+            for (var i = 0; i < events.length; i++) {
+                if (events[i].id === eventId) {
+                    events[i] = updatedEvent;
+                    break;
+                }
+            }
+            displayEvents();
+            this.style.display = 'none';
+            document.getElementById('create-event-form').style.display = 'block';
+            alert("Événement mis à jour avec succès !");
+            return false;
+        };
+
+        function cancelEditEvent() {
+            document.getElementById('edit-event-form').style.display = 'none';
+            document.getElementById('create-event-form').style.display = 'block';
+        }
+
+        // Afficher les réservations
+        function displayReservations() {
+            var reservationList = document.getElementById('reservation-list');
+            reservationList.innerHTML = '';
+            for (var i = 0; i < reservations.length; i++) {
+                var reservation = reservations[i];
+                var event = null;
+                for (var j = 0; j < events.length; j++) {
+                    if (events[j].id === reservation.eventId) {
+                        event = events[j];
+                        break;
+                    }
+                }
+                var reservationDiv = document.createElement('div');
+                reservationDiv.className = 'item';
+                reservationDiv.innerHTML =
+                    '<h3>' + reservation.participantName + '</h3>' +
+                    '<p>Événement : ' + (event ? event.name : 'Inconnu') + '</p>' +
+                    '<p>Nombre de Places : ' + reservation.spots + '</p>' +
+                    '<p>Commentaires : ' + (reservation.comments || "Aucun") + '</p>' +
+                    '<button onclick="deleteReservation(' + reservation.id + ')">Supprimer</button>' +
+                    '<button onclick="editReservation(' + reservation.id + ')">Modifier</button>';
+                reservationList.appendChild(reservationDiv);
+            }
+        }
+
+        // Mettre à jour les sélecteurs d'événements
+        function updateEventSelects() {
+            var selects = document.getElementsByTagName('select');
+            for (var i = 0; i < selects.length; i++) {
+                if (selects[i].name === 'reservation-event' || selects[i].name === 'registration-event') {
+                    selects[i].innerHTML = '<option value="">Sélectionner un événement</option>';
+                    for (var j = 0; j < events.length; j++) {
+                        var option = document.createElement('option');
+                        option.value = events[j].id;
+                        option.text = events[j].name;
+                        selects[i].appendChild(option);
+                    }
+                }
+            }
+        }
+
+        // Ajouter une réservation
+        document.getElementById('create-reservation-form').onsubmit = function(e) {
+            e = e || window.event;
+            if (!validateReservationForm(this)) {
+                e.preventDefault();
+                return false;
+            }
+            var newReservation = {
+                id: reservations.length + 1,
+                participantName: document.getElementById('participant-name').value,
+                eventId: parseInt(document.getElementById('reservation-event').value),
+                spots: parseInt(document.getElementById('reservation-spots').value),
+                comments: document.getElementById('reservation-comments').value
+            };
+            reservations.push(newReservation);
+            displayReservations();
+            this.reset();
+            alert("Réservation créée avec succès !");
+            return false;
+        };
+
+        // Supprimer une réservation
+        function deleteReservation(reservationId) {
+            if (confirm("Êtes-vous sûr de vouloir supprimer cette réservation ?")) {
+                reservations = reservations.filter(function(reservation) {
+                    return reservation.id !== reservationId;
+                });
+                displayReservations();
+                alert("Réservation supprimée !");
+            }
+        }
+
+        // Modifier une réservation
+        function editReservation(reservationId) {
+            var reservation = null;
+            for (var i = 0; i < reservations.length; i++) {
+                if (reservations[i].id === reservationId) {
+                    reservation = reservations[i];
+                    break;
+                }
+            }
+            if (reservation) {
+                document.getElementById('edit-reservation-id').value = reservation.id;
+                document.getElementById('edit-participant-name').value = reservation.participantName;
+                document.getElementById('edit-reservation-event').value = reservation.eventId;
+                document.getElementById('edit-reservation-spots').value = reservation.spots;
+                document.getElementById('edit-reservation-comments').value = reservation.comments || '';
+                document.getElementById('edit-reservation-form').style.display = 'block';
+                document.getElementById('create-reservation-form').style.display = 'none';
+            }
+        }
+
+        document.getElementById('edit-reservation-form').onsubmit = function(e) {
+            e = e || window.event;
+            if (!validateEditReservationForm(this)) {
+                e.preventDefault();
+                return false;
+            }
+            var reservationId = parseInt(document.getElementById('edit-reservation-id').value);
+            var updatedReservation = {
+                id: reservationId,
+                participantName: document.getElementById('edit-participant-name').value,
+                eventId: parseInt(document.getElementById('edit-reservation-event').value),
+                spots: parseInt(document.getElementById('edit-reservation-spots').value),
+                comments: document.getElementById('edit-reservation-comments').value
+            };
+            for (var i = 0; i < reservations.length; i++) {
+                if (reservations[i].id === reservationId) {
+                    reservations[i] = updatedReservation;
+                    break;
+                }
+            }
+            displayReservations();
+            this.style.display = 'none';
+            document.getElementById('create-reservation-form').style.display = 'block';
+            alert("Réservation mise à jour avec succès !");
+            return false;
+        };
+
+        function cancelEditReservation() {
+            document.getElementById('edit-reservation-form').style.display = 'none';
+            document.getElementById('create-reservation-form').style.display = 'block';
+        }
+
+        // Afficher les inscriptions
+        function displayRegistrations() {
+            var registrationList = document.getElementById('registration-list');
+            registrationList.innerHTML = '';
+            for (var i = 0; i < registrations.length; i++) {
+                var registration = registrations[i];
+                var event = null;
+                for (var j = 0; j < events.length; j++) {
+                    if (events[j].id === registration.eventId) {
+                        event = events[j];
+                        break;
+                    }
+                }
+                var registrationDiv = document.createElement('div');
+                registrationDiv.className = 'item';
+                registrationDiv.innerHTML =
+                    '<h3>' + registration.participantName + '</h3>' +
+                    '<p>Événement : ' + (event ? event.name : 'Inconnu') + '</p>' +
+                    '<p>Nombre de Places : ' + registration.spots + '</p>' +
+                    '<p>Statut : ' + registration.status + '</p>' +
+                    '<button onclick="deleteRegistration(' + registration.id + ')">Supprimer</button>' +
+                    '<button onclick="editRegistration(' + registration.id + ')">Modifier</button>';
+                registrationList.appendChild(registrationDiv);
+            }
+        }
+
+        // Ajouter une inscription
+        document.getElementById('create-registration-form').onsubmit = function(e) {
+            e = e || window.event;
+            if (!validateRegistrationForm(this)) {
+                e.preventDefault();
+                return false;
+            }
+            var newRegistration = {
+                id: registrations.length + 1,
+                participantName: document.getElementById('registration-participant-name').value,
+                eventId: parseInt(document.getElementById('registration-event').value),
+                spots: parseInt(document.getElementById('registration-spots').value),
+                status: document.getElementById('registration-status').value
+            };
+            registrations.push(newRegistration);
+            displayRegistrations();
+            this.reset();
+            alert("Inscription créée avec succès !");
+            return false;
+        };
+
+        // Supprimer une inscription
+        function deleteRegistration(registrationId) {
+            if (confirm("Êtes-vous sûr de vouloir supprimer cette inscription ?")) {
+                registrations = registrations.filter(function(registration) {
+                    return registration.id !== registrationId;
+                });
+                displayRegistrations();
+                alert("Inscription supprimée !");
+            }
+        }
+
+        // Modifier une inscription
+        function editRegistration(registrationId) {
+            var registration = null;
+            for (var i = 0; i < registrations.length; i++) {
+                if (registrations[i].id === registrationId) {
+                    registration = registrations[i];
+                    break;
+                }
+            }
+            if (registration) {
+                document.getElementById('edit-registration-id').value = registration.id;
+                document.getElementById('edit-registration-participant-name').value = registration.participantName;
+                document.getElementById('edit-registration-event').value = registration.eventId;
+                document.getElementById('edit-registration-spots').value = registration.spots;
+                document.getElementById('edit-registration-status').value = registration.status;
+                document.getElementById('edit-registration-form').style.display = 'block';
+                document.getElementById('create-registration-form').style.display = 'none';
+            }
+        }
+
+        document.getElementById('edit-registration-form').onsubmit = function(e) {
+            e = e || window.event;
+            if (!validateEditRegistrationForm(this)) {
+                e.preventDefault();
+                return false;
+            }
+            var registrationId = parseInt(document.getElementById('edit-registration-id').value);
+            var updatedRegistration = {
+                id: registrationId,
+                participantName: document.getElementById('edit-registration-participant-name').value,
+                eventId: parseInt(document.getElementById('edit-registration-event').value),
+                spots: parseInt(document.getElementById('edit-registration-spots').value),
+                status: document.getElementById('edit-registration-status').value
+            };
+            for (var i = 0; i < registrations.length; i++) {
+                if (registrations[i].id === registrationId) {
+                    registrations[i] = updatedRegistration;
+                    break;
+                }
+            }
+            displayRegistrations();
+            this.style.display = 'none';
+            document.getElementById('create-registration-form').style.display = 'block';
+            alert("Inscription mise à jour avec succès !");
+            return false;
+        };
+
+        function cancelEditRegistration() {
+            document.getElementById('edit-registration-form').style.display = 'none';
+            document.getElementById('create-registration-form').style.display = 'block';
+        }
+
+        // Scroll Header Effect
+        window.onscroll = function() {
+            var header = document.getElementsByTagName('div')[0];
+            if (window.pageYOffset > 50) {
+                header.className = 'header scrolled';
+            } else {
+                header.className = 'header';
+            }
+        };
+
+        // Smooth Scrolling for Anchor Links (Custom Implementation)
+        function smoothScroll(targetId, duration) {
+            var target = document.getElementById(targetId);
+            if (!target) return;
+            var startPosition = window.pageYOffset;
+            var targetPosition = target.offsetTop;
+            var distance = targetPosition - startPosition;
+            var startTime = null;
+
+            function animation(currentTime) {
+                if (startTime === null) startTime = currentTime;
+                var timeElapsed = currentTime - startTime;
+                var run = ease(timeElapsed, startPosition, distance, duration);
+                window.scrollTo(0, run);
+                if (timeElapsed < duration) requestAnimationFrame(animation);
+            }
+
+            function ease(t, b, c, d) {
+                t /= d / 2;
+                if (t < 1) return c / 2 * t * t + b;
+                t--;
+                return -c / 2 * (t * (t - 2) - 1) + b;
+            }
+
+            requestAnimationFrame(animation);
+        }
+
+        var anchors = document.getElementsByTagName('a');
+        for (var i = 0; i < anchors.length; i++) {
+            if (anchors[i].href.indexOf('#') !== -1) {
+                anchors[i].onclick = function(e) {
+                    e = e || window.event;
+                    e.preventDefault();
+                    var targetId = this.getAttribute('href').substring(1);
+                    smoothScroll(targetId, 1000);
+                    return false;
+                };
+            }
+        }
+
+        // Initialisation
+        displayEvents();
+        displayReservations();
+        displayRegistrations();
+    </script>
+</body>
+</html>

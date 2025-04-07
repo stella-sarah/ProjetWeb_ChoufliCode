@@ -1,0 +1,121 @@
+/* Styles généraux */
+body {
+    font-family: 'Montserrat', sans-serif;
+    background-color: #111111; /* Couleur de fond sombre */
+    color: #f8f5eb; /* Couleur de texte clair */
+    margin: 0;
+    padding: 0;
+}
+
+/* En-tête */
+.header {
+    position: fixed;
+    width: 100%;
+    z-index: 1000;
+    padding: 20px 0;
+    transition: background-color 0.3s ease;
+}
+
+.header.scrolled {
+    background-color: rgba(28, 28, 28, 0.95);
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* Liens de navigation */
+.nav ul {
+    display: flex;
+    list-style: none;
+    gap: 40px;
+}
+
+.nav ul li a {
+    color: #f8f5eb;
+    text-decoration: none;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    transition: color 0.3s ease;
+}
+
+.nav ul li a:hover {
+    color: #c9a86c; /* Couleur dorée pour le survol */
+}
+
+/* Section héro */
+.section.hero {
+    height: 100vh;
+    background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.7)), url('/api/placeholder/1600/900') center/cover no-repeat;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.hero-content {
+    text-align: center;
+    z-index: 2;
+    padding: 0 20px;
+}
+
+.hero-title {
+    font-size: 80px;
+    font-weight: 700;
+    margin-bottom: 30px;
+}
+
+.hero-description {
+    font-size: 18px;
+    line-height: 1.6;
+    margin-bottom: 40px;
+}
+
+/* Section des événements */
+.section.events {
+    padding: 120px 0;
+    background-color: #1c1c1c;
+}
+
+.item {
+    background-color: rgba(28, 28, 28, 0.5);
+    padding: 30px;
+    border-radius: 5px;
+    border: 1px solid rgba(201, 168, 108, 0.1);
+    transition: transform 0.3s ease;
+}
+
+.item:hover {
+    transform: translateY(-5px);
+}
+
+/* Pied de page */
+.footer {
+    background-color: #1c1c1c;
+    padding: 80px 0 40px;
+}
+
+.footer-links ul {
+    list-style: none;
+}
+
+.footer-links ul li a {
+    color: rgba(248, 245, 235, 0.7);
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.footer-links ul li a:hover {
+    color: #c9a86c; /* Couleur dorée pour le survol */
+}
+
+/* Responsive */
+@media screen and (max-width: 768px) {
+    .hero-title {
+        font-size: 60px;
+    }
+
+    .nav ul {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+    }
+}
