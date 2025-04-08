@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Panier d'achat</title>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+		<link href='http://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
+		<link rel="stylesheet" type="text/css" href="assets/css/bootstrap.min.css"/>
+		<link rel="stylesheet" type="text/css" href="style.css"/>		
+	</head>
+
+	<body>
+		
+		<nav class="navbar">
+			<div class="container">
+				<div class="logo">
+					<img src="logo.png" alt="Jullanar Logo">
+					<div class="logo-text">
+						<h1>TuniFy</h1>
+						<p>Village</p>
+					</div>
+				</div>	
+				<div class="navbar-right">
+					<div class="container minicart"></div>
+				</div>
+			</div>
+		</nav>
+		
+		<div class="container-fluid breadcrumbBox text-center">
+			<ol class="breadcrumb">
+				<li class="active"><a href="#">Commande</a></li>
+				<li><a href="#">Paiement</a></li>
+			</ol>
+		</div>
+		
+		<div class="container text-center">
+
+			<div class="col-md-5 col-sm-12">
+				<div class="bigcart"></div>
+				<h1>Votre panier</h1>
+				<p>
+					Votre panier de voyage contient tous les services que vous avez sélectionnés pour votre prochaine aventure. Vous pouvez modifier les quantités ou supprimer des éléments avant de procéder au paiement.
+				</p>
+			</div>
+			
+			<div class="col-md-7 col-sm-12 text-left">
+				<ul>
+					<li class="row list-inline columnCaptions">
+						<span>QTÉ</span>
+						<span>ARTICLE</span>
+						<span>Prix</span>
+					</li>
+					<li class="row">
+						<span class="quantity">5</span>
+						<span class="itemName">Nuits à l'hôtel Le Paradis</span>
+						<span class="popbtn"><a class="arrow"></a></span>
+						<span class="price">€750.00</span>
+					</li>
+					<li class="row">
+						<span class="quantity">2</span>
+						<span class="itemName">Billets d'avion Paris-Marrakech</span>
+						<span class="popbtn"><a class="arrow"></a></span>
+						<span class="price">€450.00</span>
+					</li>
+					<li class="row">
+						<span class="quantity">1</span>
+						<span class="itemName">Excursion en 4x4 dans le désert</span>
+						<span class="popbtn"><a class="arrow"></a></span>
+						<span class="price">€120.00</span>				
+					</li>
+					<li class="row">
+						<span class="quantity">5</span>
+						<span class="itemName">Petits-déjeuners buffet</span>
+						<span class="popbtn"><a class="arrow"></a></span>
+						<span class="price">€75.00</span>
+					</li>
+					<li class="row">
+						<span class="quantity">1</span>
+						<span class="itemName">Dîner gastronomique</span>
+						<span class="popbtn"  data-parent="#asd" data-toggle="collapse" data-target="#demo"><a class="arrow"></a></span>
+						<span class="price">€90.00</span>				
+					</li>
+					<li class="row totals">
+						<span class="itemName">Total :</span>
+						<span class="price">€1485.00</span>
+						<span class="order"> <a class="text-center">PAYER</a></span>
+					</li>
+				</ul>
+			</div>
+
+		</div>
+
+		<!-- The popover content -->
+
+		<div id="popover" style="display: none">
+			<a href="#"><span class="glyphicon glyphicon-pencil"></span></a>
+			<a href="#"><span class="glyphicon glyphicon-remove"></span></a>
+		</div>
+		
+		<!-- JavaScript includes -->
+
+		<script src="http://code.jquery.com/jquery-1.11.0.min.js"></script> 
+		<script src="assets/js/bootstrap.min.js"></script>
+		<script src="assets/js/customjs.js"></script>
+
+	</body>
+
+	    <!-- Footer -->
+		<footer class="footer">
+			<div class="container">
+				<div class="footer-top">
+					<div class="footer-about">
+						<div class="logo">
+							<img src="logo.png" alt="Jullanar Logo">
+							<div class="logo-text">
+								<h1>TuniFy</h1>
+								<p>Village</p>
+							</div>
+						</div>
+						<p>TuniFy Village is the epitome of luxury living, offering an exclusive residential experience with premium amenities and exceptional service in a stunning setting.</p>
+					</div>
+					
+					<div class="footer-links">
+						<h3 class="footer-heading">Quick Links</h3>
+						<ul>
+							<li><a href="#home">Home</a></li>
+							<li><a href="#about">About Us</a></li>
+							<li><a href="#gallery">Properties</a></li>
+							<li><a href="#features">Amenities</a></li>
+							<li><a href="#contact">Contact</a></li>
+						</ul>
+					</div>
+					
+					<div class="footer-links">
+						<h3 class="footer-heading">Our Services</h3>
+						<ul>
+							<li><a href="#">Property Sales</a></li>
+							<li><a href="#">Property Management</a></li>
+							<li><a href="#">Interior Design</a></li>
+							<li><a href="#">Landscaping</a></li>
+							<li><a href="#">Concierge Services</a></li>
+						</ul>
+					</div>
+					
+					<div class="footer-contact">
+						<h3 class="footer-heading">Contact Info</h3>
+						<p><i>📍</i> 123 Luxury Boulevard, Golden District, City</p>
+						<p><i>📞</i> +123 456 7890</p>
+						<p><i>✉️</i> info@TuniFyvillage.com</p>
+						<p><i>⏰</i> Mon-Sat: 9:00 AM - 6:00 PM</p>
+					</div>
+				</div>
+				
+				<div class="footer-bottom">
+					<div class="footer-copyright">
+						&copy; 2025 TuniFy Village. All Rights Reserved.
+					</div>
+				</div>
+			</div>
+		</footer>	
+</html>

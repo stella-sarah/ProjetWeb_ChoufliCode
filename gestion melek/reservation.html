@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulaire de Réservation</title>
+    <link rel="stylesheet" href="style res.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">
+                <img src="logo.png" alt="Jullanar Logo">
+                <div class="logo-text">
+                    <h1>TuniFy</h1>
+                    <p>Village</p>
+                </div>
+            </div>	
+        <nav>
+                <ul>
+                    <li><a href="#hebergement">Hébergement</a></li>
+                    <li><a href="#transport">Transport</a></li>
+                    <li><a href="#restauration">Restauration</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <section class="container">
+        <h2>Formulaire de Réservation</h2>
+        
+        <!-- Formulaire de Réservation -->
+        <form id="reservation-form" method="POST" action="submit_reservation.php">
+            <!-- Section Hébergement -->
+            <div class="section" id="hebergement">
+                <h3>Hébergement</h3>
+                <label for="hebergement_type">Type d'hébergement :</label>
+                <select id="hebergement_type" name="hebergement[type]" required>
+                    <option value="hotel">Hôtel</option>
+                    <option value="appartement">Appartement</option>
+                    <option value="villa">Villa</option>
+                </select>
+
+                <label for="hebergement_arrivee">Date d'arrivée :</label>
+                <input type="date" id="hebergement_arrivee" name="hebergement[arrivee]" required>
+
+                <label for="hebergement_depart">Date de départ :</label>
+                <input type="date" id="hebergement_depart" name="hebergement[depart]" required>
+
+                <label for="hebergement_chambre">Type de chambre :</label>
+                <select id="hebergement_chambre" name="hebergement[chambre]" required>
+                    <option value="single">Simple</option>
+                    <option value="double">Double</option>
+                    <option value="suite">Suite</option>
+                </select>
+            </div>
+
+            <!-- Section Transport -->
+            <div class="section" id="transport">
+                <h3>Transport</h3>
+                <label for="transport_mode">Mode de transport :</label>
+                <select id="transport_mode" name="transport[mode]" required>
+                    <option value="voiture">Voiture</option>
+                    <option value="bus">Bus</option>
+                    <option value="avion">Avion</option>
+                    <option value="train">Train</option>
+                </select>
+
+                <label for="transport_depart">Lieu de départ :</label>
+                <input type="text" id="transport_depart" name="transport[depart]" required>
+
+                <label for="transport_arrivee">Lieu d'arrivée :</label>
+                <input type="text" id="transport_arrivee" name="transport[arrivee]" required>
+
+                <label for="transport_date">Date et heure du départ :</label>
+                <input type="datetime-local" id="transport_date" name="transport[date]" required>
+            </div>
+
+            <!-- Section Restauration -->
+            <div class="section" id="restauration">
+                <h3>Restauration</h3>
+                <label for="restauration_type">Type de repas :</label>
+                <select id="restauration_type" name="restauration[type]" required>
+                    <option value="petit_dejeuner">Petit-déjeuner</option>
+                    <option value="dejeuner">Déjeuner</option>
+                    <option value="diner">Dîner</option>
+                    <option value="buffet">Buffet</option>
+                </select>
+
+                <label for="restauration_restaurant">Restaurant choisi :</label>
+                <select id="restauration_restaurant" name="restauration[restaurant]" required>
+                    <option value="restaurant_1">Restaurant 1</option>
+                    <option value="restaurant_2">Restaurant 2</option>
+                    <option value="restaurant_3">Restaurant 3</option>
+                </select>
+
+                <label for="restauration_date">Date et heure du repas :</label>
+                <input type="datetime-local" id="restauration_date" name="restauration[date]" required>
+            </div>
+
+            <!-- Détails Personnels -->
+            <div class="section" id="details_personnels">
+                <h3>Informations Personnelles</h3>
+                <label for="client_nom">Nom complet :</label>
+                <input type="text" id="client_nom" name="client[nom]" required>
+
+                <label for="client_email">Email :</label>
+                <input type="email" id="client_email" name="client[email]" required>
+
+                <label for="client_telephone">Téléphone :</label>
+                <input type="tel" id="client_telephone" name="client[telephone]" required>
+            </div>
+
+            <!-- Paiement -->
+            <div class="section" id="paiement">
+                <h3>Paiement</h3>
+                <label for="paiement_mode">Mode de paiement :</label>
+                <select id="paiement_mode" name="paiement[mode]" required>
+                    <option value="carte_bancaire">Carte Bancaire</option>
+                    <option value="paypal">PayPal</option>
+                    <option value="paypal">Espèces</option>
+                </select>
+
+                <label for="paiement_montant">Montant total :</label>
+                <input type="text" id="paiement_montant" name="paiement[montant]" value="Calculé dynamiquement" disabled>
+            </div>
+
+            <!-- Soumettre le formulaire -->
+            <div class="cta-container">
+                <button type="submit" class="cta-primary">Confirmer la Réservation</button>
+            </div>
+        </form>
+    </section>
+</body>
+	    <!-- Footer -->
+		<footer class="footer">
+			<div class="container">
+				<div class="footer-top">
+					<div class="footer-about">
+						<div class="logo">
+							<img src="logo.png" alt="Jullanar Logo">
+							<div class="logo-text">
+								<h1>TuniFy</h1>
+								<p>Village</p>
+							</div>
+						</div>
+						<p>TuniFy Village is the epitome of luxury living, offering an exclusive residential experience with premium amenities and exceptional service in a stunning setting.</p>
+					</div>
+					
+					<div class="footer-links">
+						<h3 class="footer-heading">Quick Links</h3>
+						<ul>
+							<li><a href="#home">Home</a></li>
+							<li><a href="#about">About Us</a></li>
+							<li><a href="#gallery">Properties</a></li>
+							<li><a href="#features">Amenities</a></li>
+							<li><a href="#contact">Contact</a></li>
+						</ul>
+					</div>
+					
+					<div class="footer-links">
+						<h3 class="footer-heading">Our Services</h3>
+						<ul>
+							<li><a href="#">Property Sales</a></li>
+							<li><a href="#">Property Management</a></li>
+							<li><a href="#">Interior Design</a></li>
+							<li><a href="#">Landscaping</a></li>
+							<li><a href="#">Concierge Services</a></li>
+						</ul>
+					</div>
+					
+					<div class="footer-contact">
+						<h3 class="footer-heading">Contact Info</h3>
+						<p><i>📍</i> 123 Luxury Boulevard, Golden District, City</p>
+						<p><i>📞</i> +123 456 7890</p>
+						<p><i>✉️</i> info@TuniFyvillage.com</p>
+						<p><i>⏰</i> Mon-Sat: 9:00 AM - 6:00 PM</p>
+					</div>
+				</div>
+				
+				<div class="footer-bottom">
+					<div class="footer-copyright">
+						&copy; 2025 TuniFy Village. All Rights Reserved.
+					</div>
+				</div>
+			</div>
+		</footer>	
+
+</html>
