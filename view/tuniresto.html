@@ -1,0 +1,1445 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TuniFy Village - Gestion de Restauration Tunisienne</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&family=Montserrat:wght@300;400;500;600&display=swap');
+        
+        :root {
+            --gold-primary: #c9a86c;
+            --gold-light: #e9d9b6;
+            --gold-dark: #8b783d;
+            --dark-bg: #1c1c1c;
+            --darker-bg: #111111;
+            --light-text: #f8f5eb;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: var(--darker-bg);
+            color: var(--light-text);
+            overflow-x: hidden;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        /* Navigation */
+        header {
+            position: fixed;
+            width: 100%;
+            z-index: 1000;
+            transition: background-color 0.3s ease;
+            padding: 20px 0;
+        }
+        
+        header.scrolled {
+            background-color: rgba(28, 28, 28, 0.95);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .nav-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo img {
+            height: 60px;
+        }
+        
+        .logo-text {
+            margin-left: 15px;
+        }
+        
+        .logo-text h1 {
+            font-family: 'Cinzel', serif;
+            font-weight: 700;
+            font-size: 24px;
+            color: var(--gold-primary);
+            margin: 0;
+            letter-spacing: 1px;
+        }
+        
+        .logo-text p {
+            font-size: 12px;
+            font-weight: 300;
+            color: var(--gold-light);
+            letter-spacing: 4px;
+            text-transform: uppercase;
+        }
+        
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 40px;
+        }
+        
+        nav ul li a {
+            color: var(--light-text);
+            text-decoration: none;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: color 0.3s ease;
+            font-weight: 400;
+        }
+        
+        nav ul li a:hover {
+            color: var(--gold-primary);
+        }
+        
+        .contact-btn {
+            background-color: transparent;
+            border: 1px solid var(--gold-primary);
+            color: var(--gold-primary);
+            padding: 10px 30px;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 500;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .contact-btn:hover {
+            background-color: var(--gold-primary);
+            color: var(--darker-bg);
+        }
+        
+        /* Hero Section */
+        .hero {
+            height: 100vh;
+            position: relative;
+            background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.7)), url('/api/placeholder/1600/900') center/cover no-repeat;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        
+        .hero:before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(to top, var(--darker-bg), transparent);
+            z-index: 1;
+        }
+        
+        .hero-content {
+            text-align: center;
+            z-index: 2;
+            max-width: 800px;
+            padding: 0 20px;
+            transform: translateY(-50px);
+        }
+        
+        .hero-subtitle {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 16px;
+            letter-spacing: 8px;
+            text-transform: uppercase;
+            color: var(--gold-light);
+            margin-bottom: 20px;
+            animation: fadeInUp 1s ease-out;
+        }
+        
+        .hero-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 80px;
+            font-weight: 700;
+            color: var(--light-text);
+            margin-bottom: 30px;
+            line-height: 1.1;
+            animation: fadeInUp 1s ease-out 0.2s forwards;
+            opacity: 0;
+        }
+        
+        .hero-title span {
+            color: var(--gold-primary);
+        }
+        
+        .hero-description {
+            font-size: 18px;
+            line-height: 1.6;
+            margin-bottom: 40px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            animation: fadeInUp 1s ease-out 0.4s forwards;
+            opacity: 0;
+        }
+        
+        .hero-cta {
+            display: inline-block;
+            background-color: var(--gold-primary);
+            color: var(--darker-bg);
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 600;
+            font-size: 16px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            padding: 18px 45px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            animation: fadeInUp 1s ease-out 0.6s forwards;
+            opacity: 0;
+            text-decoration: none;
+        }
+        
+        .hero-cta:hover {
+            background-color: var(--light-text);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        /* 3D Elements */
+        .cube-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            perspective: 1000px;
+            width: 300px;
+            height: 300px;
+            opacity: 0.15;
+            z-index: 0;
+        }
+        
+        .cube {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            animation: rotate 20s infinite linear;
+        }
+        
+        .cube div {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            border: 2px solid var(--gold-primary);
+            opacity: 0.5;
+            background-color: rgba(201, 168, 108, 0.05);
+        }
+        
+        .front { transform: translateZ(150px); }
+        .back { transform: rotateY(180deg) translateZ(150px); }
+        .right { transform: rotateY(90deg) translateZ(150px); }
+        .left { transform: rotateY(-90deg) translateZ(150px); }
+        .top { transform: rotateX(90deg) translateZ(150px); }
+        .bottom { transform: rotateX(-90deg) translateZ(150px); }
+
+        /* Restaurant Sections */
+        .restaurant {
+            padding: 120px 0;
+            background-color: var(--dark-bg);
+            position: relative;
+        }
+        
+        .restaurant-header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+        
+        .section-subtitle {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 14px;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            color: var(--gold-primary);
+            margin-bottom: 15px;
+        }
+        
+        .section-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 48px;
+            font-weight: 700;
+            color: var(--light-text);
+            margin-bottom: 30px;
+            line-height: 1.2;
+        }
+        
+        .section-title span {
+            color: var(--gold-primary);
+        }
+        
+        .dish-form, .reservation-form, .order-form, .edit-form {
+            background-color: rgba(28, 28, 28, 0.5);
+            padding: 40px;
+            border-radius: 5px;
+            border: 1px solid rgba(201, 168, 108, 0.1);
+            margin-bottom: 40px;
+        }
+        
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        label {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 500;
+            font-size: 16px;
+            color: var(--light-text);
+        }
+        
+        input, textarea, select {
+            width: 100%;
+            background-color: rgba(17, 17, 17, 0.7);
+            border: 1px solid rgba(201, 168, 108, 0.2);
+            padding: 15px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 15px;
+            color: var(--light-text);
+            border-radius: 4px;
+            transition: border-color 0.3s ease;
+        }
+        
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: var(--gold-primary);
+        }
+        
+        textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+        
+        .category-checkboxes {
+            display: flex;
+            flex-direction: column;
+            gap: 15px; /* Espacement entre les lignes */
+        }
+        
+        .category-checkboxes label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 400;
+            font-size: 15px;
+            color: var(--light-text);
+            width: 100%; /* Prend toute la largeur */
+        }
+        
+        /* Aligner les cases à cocher et les étiquettes */
+        .category-checkboxes input[type="checkbox"] {
+            width: 20px; /* Taille fixe pour les cases à cocher */
+            height: 20px;
+            margin: 0; /* Supprimer les marges par défaut */
+        }
+        
+        /* S'assurer que les étiquettes sont alignées à gauche après la case à cocher */
+        .category-checkboxes label span {
+            flex: 1; /* Prend l'espace restant pour aligner le texte */
+        }
+        
+        button {
+            background-color: var(--gold-primary);
+            color: var(--darker-bg);
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 600;
+            font-size: 16px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        button:hover {
+            background-color: var(--light-text);
+        }
+        
+        .list {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .item {
+            background-color: rgba(28, 28, 28, 0.5);
+            padding: 30px;
+            border-radius: 5px;
+            border: 1px solid rgba(201, 168, 108, 0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .item:hover {
+            transform: translateY(-5px);
+        }
+        
+        .item h3 {
+            font-family: 'Cinzel', serif;
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--light-text);
+            margin-bottom: 15px;
+        }
+        
+        .item p {
+            font-size: 15px;
+            line-height: 1.7;
+            color: rgba(248, 245, 235, 0.7);
+            margin-bottom: 10px;
+        }
+        
+        .edit-form {
+            display: none;
+        }
+        
+        .order-items {
+            margin-top: 10px;
+            padding: 10px;
+            border: 1px solid rgba(201, 168, 108, 0.2);
+            border-radius: 4px;
+        }
+        
+        .order-dish {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .order-dish select, .order-dish input {
+            flex: 1;
+        }
+        
+        .menu-section {
+            background-color: rgba(28, 28, 28, 0.5);
+            padding: 30px;
+            border-radius: 5px;
+            border: 1px solid rgba(201, 168, 108, 0.1);
+            margin-bottom: 40px;
+        }
+        
+        .menu-section h3 {
+            font-family: 'Cinzel', serif;
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--light-text);
+            margin-bottom: 15px;
+        }
+        
+        .menu-section ol {
+            padding-left: 20px;
+        }
+        
+        .menu-section li {
+            font-size: 16px;
+            line-height: 1.7;
+            color: rgba(248, 245, 235, 0.7);
+            margin: 10px 0;
+        }
+
+        /* Footer */
+        .footer {
+            background-color: var(--dark-bg);
+            padding: 80px 0 40px;
+        }
+        
+        .footer-top {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 60px;
+            padding-bottom: 60px;
+            border-bottom: 1px solid rgba(201, 168, 108, 0.2);
+            margin-bottom: 40px;
+        }
+        
+        .footer-about .logo {
+            margin-bottom: 25px;
+        }
+        
+        .footer-about p {
+            font-size: 15px;
+            line-height: 1.7;
+            color: rgba(248, 245, 235, 0.7);
+            margin-bottom: 25px;
+        }
+        
+        .footer-heading {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--light-text);
+            margin-bottom: 25px;
+            position: relative;
+            padding-bottom: 15px;
+        }
+        
+        .footer-heading::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 40px;
+            height: 2px;
+            background-color: var(--gold-primary);
+        }
+        
+        .footer-links ul {
+            list-style: none;
+        }
+        
+        .footer-links ul li {
+            margin-bottom: 12px;
+        }
+        
+        .footer-links ul li a {
+            color: rgba(248, 245, 235, 0.7);
+            text-decoration: none;
+            font-size: 15px;
+            transition: color 0.3s ease, padding-left 0.3s ease;
+            display: block;
+        }
+        
+        .footer-links ul li a:hover {
+            color: var(--gold-primary);
+            padding-left: 5px;
+        }
+        
+        .footer-contact p {
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            margin-bottom: 15px;
+            font-size: 15px;
+            color: rgba(248, 245, 235, 0.7);
+        }
+        
+        .footer-contact i {
+            color: var(--gold-primary);
+            font-size: 18px;
+        }
+        
+        .footer-bottom {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .footer-copyright {
+            font-size: 14px;
+            color: rgba(248, 245, 235, 0.7);
+        }
+        
+        .footer-copyright a {
+            color: var(--gold-primary);
+            text-decoration: none;
+        }
+        
+        .footer-copyright a:hover {
+            text-decoration: underline;
+        }
+        
+        /* Animations */
+        @keyframes rotate {
+            0% { transform: rotateX(0) rotateY(0) rotateZ(0); }
+            100% { transform: rotateX(360deg) rotateY(360deg) rotateZ(360deg); }
+        }
+        
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Responsive Styles */
+        @media screen and (max-width: 1200px) {
+            .footer-top {
+                grid-template-columns: 1fr 1fr;
+                gap: 40px 60px;
+            }
+        }
+        
+        @media screen and (max-width: 768px) {
+            .nav-container {
+                flex-direction: column;
+                gap: 20px;
+            }
+            
+            nav ul {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+            
+            .hero-title {
+                font-size: 60px;
+            }
+            
+            .footer-top {
+                grid-template-columns: 1fr;
+                gap: 40px;
+            }
+            
+            .footer-bottom {
+                flex-direction: column;
+                gap: 20px;
+                text-align: center;
+            }
+            
+            .order-dish {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header / Navigation -->
+    <header>
+        <div class="container nav-container">
+            <div class="logo">
+                <img src="logo.png" alt="TuniFy Logo">
+                <div class="logo-text">
+                    <h1>TuniFy</h1>
+                    <p>Village</p>
+                </div>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="#home">Home</a></li>
+                    <li><a href="#menu">Menu</a></li>
+                    <li><a href="#dishes">Dishes</a></li>
+                    <li><a href="#reservations">Reservations</a></li>
+                    <li><a href="#orders">Orders</a></li>
+                </ul>
+            </nav>
+            <button class="contact-btn">Contact Us</button>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero" id="home">
+        <div class="cube-container">
+            <div class="cube">
+                <div class="front"></div>
+                <div class="back"></div>
+                <div class="right"></div>
+                <div class="left"></div>
+                <div class="top"></div>
+                <div class="bottom"></div>
+            </div>
+        </div>
+        <div class="hero-content">
+            <div class="hero-subtitle">Tunisian Cuisine</div>
+            <h1 class="hero-title">TuniFy <span>RESTAURANT</span></h1>
+            <p class="hero-description">Savor the authentic flavors of Tunisian cuisine at TuniFy Village. From traditional couscous to delightful desserts, we offer a culinary experience that celebrates culture and taste.</p>
+            <a href="#menu" class="hero-cta">Explore Menu</a>
+        </div>
+    </section>
+
+    <!-- Menu Section -->
+    <section class="restaurant" id="menu">
+        <div class="container">
+            <div class="restaurant-header">
+                <p class="section-subtitle">Our Menu</p>
+                <h2 class="section-title">Discover <span>Tunisian Flavors</span></h2>
+            </div>
+            <div id="menu-section" class="menu-section">
+                <h3>Entrées</h3>
+                <ol id="menu-entrees"></ol>
+                <h3>Plats Principaux</h3>
+                <ol id="menu-plats-principaux"></ol>
+                <h3>Soupes</h3>
+                <ol id="menu-soupes"></ol>
+                <h3>Accompagnements</h3>
+                <ol id="menu-accompagnements"></ol>
+                <h3>Desserts</h3>
+                <ol id="menu-desserts"></ol>
+            </div>
+        </div>
+    </section>
+
+    <!-- Dishes Section -->
+    <section class="restaurant" id="dishes">
+        <div class="container">
+            <div class="restaurant-header">
+                <p class="section-subtitle">Dish Management</p>
+                <h2 class="section-title">Create & Manage <span>Dishes</span></h2>
+            </div>
+
+            <!-- Créer un Plat -->
+            <div class="dish-form">
+                <h2 class="section-title">Créer un Plat</h2>
+                <form id="create-dish-form">
+                    <label for="dish-name">Nom du Plat :</label>
+                    <input type="text" id="dish-name" name="dish-name" required>
+                    
+                    <label>Catégories (sélectionnez au moins une) :</label>
+                    <div class="category-checkboxes">
+                        <label><input type="checkbox" name="dish-categories" value="entrée"><span>Entrée</span></label>
+                        <label><input type="checkbox" name="dish-categories" value="plat principal"><span>Plat principal</span></label>
+                        <label><input type="checkbox" name="dish-categories" value="soupe"><span>Soupe</span></label>
+                        <label><input type="checkbox" name="dish-categories" value="dessert"><span>Dessert</span></label>
+                        <label><input type="checkbox" name="dish-categories" value="accompagnement"><span>Accompagnement</span></label>
+                    </div>
+                    
+                    <label for="dish-price">Prix (en €) :</label>
+                    <input type="number" id="dish-price" name="dish-price" step="0.01" min="0" required>
+                    
+                    <label for="dish-availability">Disponibilité :</label>
+                    <select id="dish-availability" name="dish-availability" required>
+                        <option value="true">Disponible</option>
+                        <option value="false">Non disponible</option>
+                    </select>
+                    
+                    <label for="dish-promotion">Promotion (%) :</label>
+                    <input type="number" id="dish-promotion" name="dish-promotion" min="0" max="100" placeholder="0 si aucune">
+                    
+                    <button type="submit">Créer le Plat</button>
+                </form>
+            </div>
+
+            <!-- Modifier un Plat -->
+            <div class="edit-form" id="edit-dish-form">
+                <h2 class="section-title">Modifier un Plat</h2>
+                <form>
+                    <input type="hidden" id="edit-dish-id" name="dish-id">
+                    
+                    <label for="edit-dish-name">Nom du Plat :</label>
+                    <input type="text" id="edit-dish-name" name="dish-name" required>
+                    
+                    <label>Catégories (sélectionnez au moins une) :</label>
+                    <div class="category-checkboxes">
+                        <label><input type="checkbox" name="edit-dish-categories" value="entrée"><span>Entrée</span></label>
+                        <label><input type="checkbox" name="edit-dish-categories" value="plat principal"><span>Plat principal</span></label>
+                        <label><input type="checkbox" name="edit-dish-categories" value="soupe"><span>Soupe</span></label>
+                        <label><input type="checkbox" name="edit-dish-categories" value="dessert"><span>Dessert</span></label>
+                        <label><input type="checkbox" name="edit-dish-categories" value="accompagnement"><span>Accompagnement</span></label>
+                    </div>
+                    
+                    <label for="edit-dish-price">Prix (en €) :</label>
+                    <input type="number" id="edit-dish-price" name="dish-price" step="0.01" min="0" required>
+                    
+                    <label for="edit-dish-availability">Disponibilité :</label>
+                    <select id="edit-dish-availability" name="dish-availability" required>
+                        <option value="true">Disponible</option>
+                        <option value="false">Non disponible</option>
+                    </select>
+                    
+                    <label for="edit-dish-promotion">Promotion (%) :</label>
+                    <input type="number" id="edit-dish-promotion" name="dish-promotion" min="0" max="100" placeholder="0 si aucune">
+                    
+                    <button type="submit">Mettre à Jour</button>
+                    <button type="button" onclick="cancelEditDish()">Annuler</button>
+                </form>
+            </div>
+
+            <!-- Liste des Plats -->
+            <h2 class="section-title">Plats Disponibles</h2>
+            <div id="dish-list" class="list">
+                <!-- Les plats seront ajoutés dynamiquement ici -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Reservations Section -->
+    <section class="restaurant" id="reservations">
+        <div class="container">
+            <div class="restaurant-header">
+                <p class="section-subtitle">Restaurant Reservations</p>
+                <h2 class="section-title">Manage <span>Reservations</span></h2>
+            </div>
+
+            <!-- Créer une Réservation -->
+            <div class="reservation-form">
+                <h2 class="section-title">Créer une Réservation</h2>
+                <form id="create-reservation-form">
+                    <label for="customer-name">Nom du Client :</label>
+                    <input type="text" id="customer-name" name="customer-name" required>
+                    
+                    <label for="reservation-date">Date de Réservation :</label>
+                    <input type="date" id="reservation-date" name="reservation-date" required>
+                    
+                    <label for="reservation-time">Heure :</label>
+                    <input type="time" id="reservation-time" name="reservation-time" required>
+                    
+                    <label for="party-size">Nombre de Personnes :</label>
+                    <input type="number" id="party-size" name="party-size" min="1" required>
+                    
+                    <label for="special-requests">Demandes Spéciales :</label>
+                    <textarea id="special-requests" name="special-requests"></textarea>
+                    
+                    <button type="submit">Créer la Réservation</button>
+                </form>
+            </div>
+
+            <!-- Modifier une Réservation -->
+            <div class="edit-form" id="edit-reservation-form">
+                <h2 class="section-title">Modifier une Réservation</h2>
+                <form>
+                    <input type="hidden" id="edit-reservation-id" name="reservation-id">
+                    
+                    <label for="edit-customer-name">Nom du Client :</label>
+                    <input type="text" id="edit-customer-name" name="customer-name" required>
+                    
+                    <label for="edit-reservation-date">Date de Réservation :</label>
+                    <input type="date" id="edit-reservation-date" name="reservation-date" required>
+                    
+                    <label for="edit-reservation-time">Heure :</label>
+                    <input type="time" id="edit-reservation-time" name="reservation-time" required>
+                    
+                    <label for="edit-party-size">Nombre de Personnes :</label>
+                    <input type="number" id="edit-party-size" name="party-size" min="1" required>
+                    
+                    <label for="edit-special-requests">Demandes Spéciales :</label>
+                    <textarea id="edit-special-requests" name="special-requests"></textarea>
+                    
+                    <button type="submit">Mettre à Jour</button>
+                    <button type="button" onclick="cancelEditReservation()">Annuler</button>
+                </form>
+            </div>
+
+            <!-- Liste des Réservations -->
+            <h2 class="section-title">Réservations</h2>
+            <div id="reservation-list" class="list">
+                <!-- Les réservations seront ajoutées dynamiquement ici -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Orders Section -->
+    <section class="restaurant" id="orders">
+        <div class="container">
+            <div class="restaurant-header">
+                <p class="section-subtitle">Restaurant Orders</p>
+                <h2 class="section-title">Manage <span>Orders</span></h2>
+            </div>
+
+            <!-- Créer une Commande -->
+            <div class="order-form">
+                <h2 class="section-title">Créer une Commande</h2>
+                <form id="create-order-form">
+                    <label for="order-customer-name">Nom du Client :</label>
+                    <input type="text" id="order-customer-name" name="order-customer-name" required>
+                    
+                    <label for="order-city">Ville :</label>
+                    <input type="text" id="order-city" name="order-city" required>
+                    
+                    <label for="order-delivery-time">Heure de Livraison Souhaitée :</label>
+                    <input type="time" id="order-delivery-time" name="order-delivery-time" required>
+                    
+                    <label for="order-dishes">Plats :</label>
+                    <div id="order-dishes">
+                        <div class="order-dish">
+                            <select name="dish-id" class="dish-select" required>
+                                <option value="">Sélectionner un plat</option>
+                            </select>
+                            <input type="number" name="quantity" min="1" placeholder="Quantité" required>
+                        </div>
+                    </div>
+                    <button type="button" onclick="addDishToOrder()">Ajouter un autre plat</button>
+                    
+                    <label for="order-status">Statut :</label>
+                    <select id="order-status" name="order-status" required>
+                        <option value="en attente">En attente</option>
+                        <option value="en préparation">En préparation</option>
+                        <option value="livré">Livré</option>
+                    </select>
+                    
+                    <button type="submit">Créer la Commande</button>
+                </form>
+            </div>
+
+            <!-- Modifier une Commande -->
+            <div class="edit-form" id="edit-order-form">
+                <h2 class="section-title">Modifier une Commande</h2>
+                <form>
+                    <input type="hidden" id="edit-order-id" name="order-id">
+                    
+                    <label for="edit-order-customer-name">Nom du Client :</label>
+                    <input type="text" id="edit-order-customer-name" name="order-customer-name" required>
+                    
+                    <label for="edit-order-city">Ville :</label>
+                    <input type="text" id="edit-order-city" name="order-city" required>
+                    
+                    <label for="edit-order-delivery-time">Heure de Livraison Souhaitée :</label>
+                    <input type="time" id="edit-order-delivery-time" name="order-delivery-time" required>
+                    
+                    <label for="edit-order-dishes">Plats :</label>
+                    <div id="edit-order-dishes">
+                        <div class="order-dish">
+                            <select name="dish-id" class="dish-select" required>
+                                <option value="">Sélectionner un plat</option>
+                            </select>
+                            <input type="number" name="quantity" min="1" placeholder="Quantité" required>
+                        </div>
+                    </div>
+                    <button type="button" onclick="addDishToEditOrder()">Ajouter un autre plat</button>
+                    
+                    <label for="edit-order-status">Statut :</label>
+                    <select id="edit-order-status" name="order-status" required>
+                        <option value="en attente">En attente</option>
+                        <option value="en préparation">En préparation</option>
+                        <option value="livré">Livré</option>
+                    </select>
+                    
+                    <button type="submit">Mettre à Jour</button>
+                    <button type="button" onclick="cancelEditOrder()">Annuler</button>
+                </form>
+            </div>
+
+            <!-- Liste des Commandes -->
+            <h2 class="section-title">Commandes</h2>
+            <div id="order-list" class="list">
+                <!-- Les commandes seront ajoutées dynamiquement ici -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-top">
+                <div class="footer-about">
+                    <div class="logo">
+                        <img src="logo.png" alt="TuniFy Logo">
+                        <div class="logo-text">
+                            <h1>TuniFy</h1>
+                            <p>Village</p>
+                        </div>
+                    </div>
+                    <p>TuniFy Village is the epitome of luxury living, offering an exclusive residential experience with premium amenities and exceptional service in a stunning setting.</p>
+                </div>
+                
+                <div class="footer-links">
+                    <h3 class="footer-heading">Quick Links</h3>
+                    <ul>
+                        <li><a href="#home">Home</a></li>
+                        <li><a href="#menu">Menu</a></li>
+                        <li><a href="#dishes">Dishes</a></li>
+                        <li><a href="#reservations">Reservations</a></li>
+                        <li><a href="#orders">Orders</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-links">
+                    <h3 class="footer-heading">Our Services</h3>
+                    <ul>
+                        <li><a href="#">Restaurant</a></li>
+                        <li><a href="#">Event Management</a></li>
+                        <li><a href="#">Property Management</a></li>
+                        <li><a href="#">Concierge Services</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-contact">
+                    <h3 class="footer-heading">Contact Info</h3>
+                    <p><i>📍</i> 123 Luxury Boulevard, Golden District, City</p>
+                    <p><i>📞</i> +123 456 7890</p>
+                    <p><i>✉️</i> info@TuniFyvillage.com</p>
+                    <p><i>⏰</i> Mon-Sat: 9:00 AM - 6:00 PM</p>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <div class="footer-copyright">
+                    © 2025 TuniFy Village. All Rights Reserved. Designed by <a href="#">Kaptin</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+        // Données initiales avec les plats tunisiens
+        let dishes = [
+            { id: 1, name: "Couscous", categories: ["plat principal"], price: 15.00, availability: true, promotion: 0 },
+            { id: 2, name: "Brik", categories: ["entrée"], price: 3.50, availability: true, promotion: 10 },
+            { id: 3, name: "Lablabi", categories: ["soupe"], price: 4.00, availability: true, promotion: 0 },
+            { id: 4, name: "Tunisian Tagine", categories: ["plat principal"], price: 12.00, availability: true, promotion: 0 },
+            { id: 5, name: "Chakchouka", categories: ["plat principal"], price: 8.00, availability: true, promotion: 0 },
+            { id: 6, name: "Mechouia", categories: ["entrée"], price: 5.00, availability: true, promotion: 0 },
+            { id: 7, name: "Mansaf", categories: ["plat principal"], price: 18.00, availability: true, promotion: 0 },
+            { id: 8, name: "Saj", categories: ["accompagnement"], price: 2.00, availability: true, promotion: 0 },
+            { id: 9, name: "Harissa", categories: ["accompagnement"], price: 1.50, availability: true, promotion: 0 },
+            { id: 10, name: "Rfissa", categories: ["plat principal"], price: 14.00, availability: true, promotion: 0 },
+            { id: 11, name: "Kefta", categories: ["plat principal"], price: 10.00, availability: true, promotion: 0 },
+            { id: 12, name: "Lentilles à la Tunisienne", categories: ["plat principal"], price: 7.00, availability: true, promotion: 0 },
+            { id: 13, name: "Couscous au poisson", categories: ["plat principal"], price: 16.00, availability: true, promotion: 0 },
+            { id: 14, name: "Fricassé", categories: ["entrée"], price: 3.00, availability: true, promotion: 0 },
+            { id: 15, name: "Soupe de poisson", categories: ["soupe"], price: 6.00, availability: true, promotion: 0 },
+            { id: 16, name: "Makroud", categories: ["dessert"], price: 2.50, availability: true, promotion: 0 },
+            { id: 17, name: "Bambalouni", categories: ["dessert"], price: 2.00, availability: true, promotion: 0 },
+            { id: 18, name: "Makroud el Louz", categories: ["dessert"], price: 3.00, availability: true, promotion: 0 },
+            { id: 19, name: "Zriga", categories: ["dessert"], price: 3.50, availability: true, promotion: 0 },
+            { id: 20, name: "Ghriba", categories: ["dessert"], price: 2.00, availability: true, promotion: 0 },
+            { id: 21, name: "Ktaïf", categories: ["dessert"], price: 4.00, availability: true, promotion: 0 },
+            { id: 22, name: "Boulou", categories: ["dessert"], price: 3.00, availability: true, promotion: 0 },
+            { id: 23, name: "Chaâbana", categories: ["dessert"], price: 3.50, availability: true, promotion: 0 },
+            { id: 24, name: "Jben", categories: ["dessert"], price: 4.00, availability: true, promotion: 0 }
+        ];
+
+        let reservations = [
+            { id: 1, customerName: "Jean Dupont", date: "2025-04-10", time: "19:00", partySize: 4, specialRequests: "Table près de la fenêtre" },
+            { id: 2, customerName: "Marie Leclerc", date: "2025-04-15", time: "20:30", partySize: 2, specialRequests: "Menu végétarien" }
+        ];
+
+        let orders = [
+            { id: 1, customerName: "Jean Dupont", city: "Tunis", deliveryTime: "19:30", dishes: [{ dishId: 1, quantity: 2 }, { dishId: 16, quantity: 1 }], status: "en attente" },
+            { id: 2, customerName: "Marie Leclerc", city: "Sfax", deliveryTime: "21:00", dishes: [{ dishId: 4, quantity: 1 }], status: "en préparation" }
+        ];
+
+        // Fonction pour formater les dates
+        function formatDate(dateString) {
+            const [year, month, day] = dateString.split('-');
+            return `${day}/${month}/${year}`;
+        }
+
+        // Afficher les plats
+        function displayDishes() {
+            const dishList = document.getElementById('dish-list');
+            dishList.innerHTML = '';
+            dishes.forEach(dish => {
+                const dishDiv = document.createElement('div');
+                dishDiv.className = 'item';
+                dishDiv.innerHTML = `
+                    <h3>${dish.name}</h3>
+                    <p>Catégories : ${dish.categories.join(', ')}</p>
+                    <p>Prix : ${dish.price} €</p>
+                    <p>Disponibilité : ${dish.availability ? 'Oui' : 'Non'}</p>
+                    <p>Promotion : ${dish.promotion}%</p>
+                    <button onclick="deleteDish(${dish.id})">Supprimer</button>
+                    <button onclick="editDish(${dish.id})">Modifier</button>
+                `;
+                dishList.appendChild(dishDiv);
+            });
+            updateDishSelects();
+            displayMenu();
+        }
+
+        // Afficher le menu
+        function displayMenu() {
+            const menuEntrees = document.getElementById('menu-entrees');
+            menuEntrees.innerHTML = '';
+            const entrees = dishes.filter(dish => dish.categories.includes('entrée'));
+            entrees.forEach(dish => {
+                const li = document.createElement('li');
+                li.textContent = `${dish.name} - ${dish.price} € ${dish.promotion > 0 ? `(Promotion: ${dish.promotion}%)` : ''} ${dish.availability ? '' : '(Non disponible)'}`;
+                menuEntrees.appendChild(li);
+            });
+
+            const menuPlatsPrincipaux = document.getElementById('menu-plats-principaux');
+            menuPlatsPrincipaux.innerHTML = '';
+            const platsPrincipaux = dishes.filter(dish => dish.categories.includes('plat principal'));
+            platsPrincipaux.forEach(dish => {
+                const li = document.createElement('li');
+                li.textContent = `${dish.name} - ${dish.price} € ${dish.promotion > 0 ? `(Promotion: ${dish.promotion}%)` : ''} ${dish.availability ? '' : '(Non disponible)'}`;
+                menuPlatsPrincipaux.appendChild(li);
+            });
+
+            const menuSoupes = document.getElementById('menu-soupes');
+            menuSoupes.innerHTML = '';
+            const soupes = dishes.filter(dish => dish.categories.includes('soupe'));
+            soupes.forEach(dish => {
+                const li = document.createElement('li');
+                li.textContent = `${dish.name} - ${dish.price} € ${dish.promotion > 0 ? `(Promotion: ${dish.promotion}%)` : ''} ${dish.availability ? '' : '(Non disponible)'}`;
+                menuSoupes.appendChild(li);
+            });
+
+            const menuAccompagnements = document.getElementById('menu-accompagnements');
+            menuAccompagnements.innerHTML = '';
+            const accompagnements = dishes.filter(dish => dish.categories.includes('accompagnement'));
+            accompagnements.forEach(dish => {
+                const li = document.createElement('li');
+                li.textContent = `${dish.name} - ${dish.price} € ${dish.promotion > 0 ? `(Promotion: ${dish.promotion}%)` : ''} ${dish.availability ? '' : '(Non disponible)'}`;
+                menuAccompagnements.appendChild(li);
+            });
+
+            const menuDesserts = document.getElementById('menu-desserts');
+            menuDesserts.innerHTML = '';
+            const desserts = dishes.filter(dish => dish.categories.includes('dessert'));
+            desserts.forEach(dish => {
+                const li = document.createElement('li');
+                li.textContent = `${dish.name} - ${dish.price} € ${dish.promotion > 0 ? `(Promotion: ${dish.promotion}%)` : ''} ${dish.availability ? '' : '(Non disponible)'}`;
+                menuDesserts.appendChild(li);
+            });
+        }
+
+        // Ajouter un plat
+        document.getElementById('create-dish-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const selectedCategories = Array.from(document.querySelectorAll('input[name="dish-categories"]:checked')).map(checkbox => checkbox.value);
+            if (selectedCategories.length === 0) {
+                alert("Veuillez sélectionner au moins une catégorie !");
+                return;
+            }
+            const newDish = {
+                id: dishes.length + 1,
+                name: document.getElementById('dish-name').value,
+                categories: selectedCategories,
+                price: parseFloat(document.getElementById('dish-price').value),
+                availability: document.getElementById('dish-availability').value === 'true',
+                promotion: parseInt(document.getElementById('dish-promotion').value) || 0
+            };
+            dishes.push(newDish);
+            displayDishes();
+            this.reset();
+            alert("Plat créé avec succès !");
+        });
+
+        // Supprimer un plat
+        function deleteDish(dishId) {
+            if (confirm("Êtes-vous sûr de vouloir supprimer ce plat ?")) {
+                dishes = dishes.filter(dish => dish.id !== dishId);
+                displayDishes();
+                alert("Plat supprimé !");
+            }
+        }
+
+        // Modifier un plat
+        function editDish(dishId) {
+            const dish = dishes.find(dish => dish.id === dishId);
+            if (dish) {
+                document.getElementById('edit-dish-id').value = dish.id;
+                document.getElementById('edit-dish-name').value = dish.name;
+                document.getElementById('edit-dish-price').value = dish.price;
+                document.getElementById('edit-dish-availability').value = dish.availability.toString();
+                document.getElementById('edit-dish-promotion').value = dish.promotion;
+
+                const checkboxes = document.querySelectorAll('input[name="edit-dish-categories"]');
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = dish.categories.includes(checkbox.value);
+                });
+
+                document.getElementById('edit-dish-form').style.display = 'block';
+                document.getElementById('create-dish-form').style.display = 'none';
+            }
+        }
+
+        document.getElementById('edit-dish-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const dishId = parseInt(document.getElementById('edit-dish-id').value);
+            const selectedCategories = Array.from(document.querySelectorAll('input[name="edit-dish-categories"]:checked')).map(checkbox => checkbox.value);
+            if (selectedCategories.length === 0) {
+                alert("Veuillez sélectionner au moins une catégorie !");
+                return;
+            }
+            const updatedDish = {
+                id: dishId,
+                name: document.getElementById('edit-dish-name').value,
+                categories: selectedCategories,
+                price: parseFloat(document.getElementById('edit-dish-price').value),
+                availability: document.getElementById('edit-dish-availability').value === 'true',
+                promotion: parseInt(document.getElementById('edit-dish-promotion').value) || 0
+            };
+            dishes = dishes.map(dish => dish.id === dishId ? updatedDish : dish);
+            displayDishes();
+            this.style.display = 'none';
+            document.getElementById('create-dish-form').style.display = 'block';
+            alert("Plat mis à jour avec succès !");
+        });
+
+        function cancelEditDish() {
+            document.getElementById('edit-dish-form').style.display = 'none';
+            document.getElementById('create-dish-form').style.display = 'block';
+        }
+
+        // Afficher les réservations
+        function displayReservations() {
+            const reservationList = document.getElementById('reservation-list');
+            reservationList.innerHTML = '';
+            reservations.forEach(reservation => {
+                const reservationDiv = document.createElement('div');
+                reservationDiv.className = 'item';
+                reservationDiv.innerHTML = `
+                    <h3>${reservation.customerName}</h3>
+                    <p>Date : ${formatDate(reservation.date)}</p>
+                    <p>Heure : ${reservation.time}</p>
+                    <p>Nombre de Personnes : ${reservation.partySize}</p>
+                    <p>Demandes Spéciales : ${reservation.specialRequests || "Aucune"}</p>
+                    <button onclick="deleteReservation(${reservation.id})">Supprimer</button>
+                    <button onclick="editReservation(${reservation.id})">Modifier</button>
+                `;
+                reservationList.appendChild(reservationDiv);
+            });
+        }
+
+        // Ajouter une réservation
+        document.getElementById('create-reservation-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const newReservation = {
+                id: reservations.length + 1,
+                customerName: document.getElementById('customer-name').value,
+                date: document.getElementById('reservation-date').value,
+                time: document.getElementById('reservation-time').value,
+                partySize: parseInt(document.getElementById('party-size').value),
+                specialRequests: document.getElementById('special-requests').value
+            };
+            reservations.push(newReservation);
+            displayReservations();
+            this.reset();
+            alert("Réservation créée avec succès !");
+        });
+
+        // Supprimer une réservation
+        function deleteReservation(reservationId) {
+            if (confirm("Êtes-vous sûr de vouloir supprimer cette réservation ?")) {
+                reservations = reservations.filter(reservation => reservation.id !== reservationId);
+                displayReservations();
+                alert("Réservation supprimée !");
+            }
+        }
+
+        // Modifier une réservation
+        function editReservation(reservationId) {
+            const reservation = reservations.find(reservation => reservation.id === reservationId);
+            if (reservation) {
+                document.getElementById('edit-reservation-id').value = reservation.id;
+                document.getElementById('edit-customer-name').value = reservation.customerName;
+                document.getElementById('edit-reservation-date').value = reservation.date;
+                document.getElementById('edit-reservation-time').value = reservation.time;
+                document.getElementById('edit-party-size').value = reservation.partySize;
+                document.getElementById('edit-special-requests').value = reservation.specialRequests || '';
+                document.getElementById('edit-reservation-form').style.display = 'block';
+                document.getElementById('create-reservation-form').style.display = 'none';
+            }
+        }
+
+        document.getElementById('edit-reservation-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const reservationId = parseInt(document.getElementById('edit-reservation-id').value);
+            const updatedReservation = {
+                id: reservationId,
+                customerName: document.getElementById('edit-customer-name').value,
+                date: document.getElementById('edit-reservation-date').value,
+                time: document.getElementById('edit-reservation-time').value,
+                partySize: parseInt(document.getElementById('edit-party-size').value),
+                specialRequests: document.getElementById('edit-special-requests').value
+            };
+            reservations = reservations.map(reservation => reservation.id === reservationId ? updatedReservation : reservation);
+            displayReservations();
+            this.style.display = 'none';
+            document.getElementById('create-reservation-form').style.display = 'block';
+            alert("Réservation mise à jour avec succès !");
+        });
+
+        function cancelEditReservation() {
+            document.getElementById('edit-reservation-form').style.display = 'none';
+            document.getElementById('create-reservation-form').style.display = 'block';
+        }
+
+        // Afficher les commandes
+        function displayOrders() {
+            const orderList = document.getElementById('order-list');
+            orderList.innerHTML = '';
+            orders.forEach(order => {
+                const orderDiv = document.createElement('div');
+                orderDiv.className = 'item';
+                let dishesHtml = '<div class="order-items">';
+                order.dishes.forEach(dish => {
+                    const dishInfo = dishes.find(d => d.id === dish.dishId);
+                    dishesHtml += `<p>${dishInfo.name} - Quantité : ${dish.quantity}</p>`;
+                });
+                dishesHtml += '</div>';
+                orderDiv.innerHTML = `
+                    <h3>${order.customerName}</h3>
+                    <p>Ville : ${order.city}</p>
+                    <p>Heure de Livraison : ${order.deliveryTime}</p>
+                    <p>Plats :</p>
+                    ${dishesHtml}
+                    <p>Statut : ${order.status}</p>
+                    <button onclick="deleteOrder(${order.id})">Supprimer</button>
+                    <button onclick="editOrder(${order.id})">Modifier</button>
+                `;
+                orderList.appendChild(orderDiv);
+            });
+        }
+
+        // Mettre à jour les sélecteurs de plats
+        function updateDishSelects() {
+            const selects = document.querySelectorAll('.dish-select');
+            selects.forEach(select => {
+                select.innerHTML = '<option value="">Sélectionner un plat</option>';
+                dishes.forEach(dish => {
+                    const option = document.createElement('option');
+                    option.value = dish.id;
+                    option.textContent = `${dish.name} (${dish.price} €)`;
+                    select.appendChild(option);
+                });
+            });
+        }
+
+        // Ajouter un plat à une commande
+        function addDishToOrder() {
+            const orderDishes = document.getElementById('order-dishes');
+            const newDishDiv = document.createElement('div');
+            newDishDiv.className = 'order-dish';
+            newDishDiv.innerHTML = `
+                <select name="dish-id" class="dish-select" required>
+                    <option value="">Sélectionner un plat</option>
+                </select>
+                <input type="number" name="quantity" min="1" placeholder="Quantité" required>
+            `;
+            orderDishes.appendChild(newDishDiv);
+            updateDishSelects();
+        }
+
+        function addDishToEditOrder() {
+            const orderDishes = document.getElementById('edit-order-dishes');
+            const newDishDiv = document.createElement('div');
+            newDishDiv.className = 'order-dish';
+            newDishDiv.innerHTML = `
+                <select name="dish-id" class="dish-select" required>
+                    <option value="">Sélectionner un plat</option>
+                </select>
+                <input type="number" name="quantity" min="1" placeholder="Quantité" required>
+            `;
+            orderDishes.appendChild(newDishDiv);
+            updateDishSelects();
+        }
+
+        // Ajouter une commande
+        document.getElementById('create-order-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const dishElements = document.querySelectorAll('#order-dishes .order-dish');
+            const orderDishes = Array.from(dishElements).map(element => ({
+                dishId: parseInt(element.querySelector('select').value),
+                quantity: parseInt(element.querySelector('input[name="quantity"]').value)
+            }));
+            const newOrder = {
+                id: orders.length + 1,
+                customerName: document.getElementById('order-customer-name').value,
+                city: document.getElementById('order-city').value,
+                deliveryTime: document.getElementById('order-delivery-time').value,
+                dishes: orderDishes,
+                status: document.getElementById('order-status').value
+            };
+            orders.push(newOrder);
+            displayOrders();
+            this.reset();
+            document.getElementById('order-dishes').innerHTML = `
+                <div class="order-dish">
+                    <select name="dish-id" class="dish-select" required>
+                        <option value="">Sélectionner un plat</option>
+                    </select>
+                    <input type="number" name="quantity" min="1" placeholder="Quantité" required>
+                </div>
+            `;
+            updateDishSelects();
+            alert("Commande créée avec succès !");
+        });
+
+        // Supprimer une commande
+        function deleteOrder(orderId) {
+            if (confirm("Êtes-vous sûr de vouloir supprimer cette commande ?")) {
+                orders = orders.filter(order => order.id !== orderId);
+                displayOrders();
+                alert("Commande supprimée !");
+            }
+        }
+
+        // Modifier une commande
+        function editOrder(orderId) {
+            const order = orders.find(order => order.id === orderId);
+            if (order) {
+                document.getElementById('edit-order-id').value = order.id;
+                document.getElementById('edit-order-customer-name').value = order.customerName;
+                document.getElementById('edit-order-city').value = order.city;
+                document.getElementById('edit-order-delivery-time').value = order.deliveryTime;
+                document.getElementById('edit-order-status').value = order.status;
+                const editOrderDishes = document.getElementById('edit-order-dishes');
+                editOrderDishes.innerHTML = '';
+                order.dishes.forEach(dish => {
+                    const dishDiv = document.createElement('div');
+                    dishDiv.className = 'order-dish';
+                    dishDiv.innerHTML = `
+                        <select name="dish-id" class="dish-select" required>
+                            <option value="">Sélectionner un plat</option>
+                        </select>
+                        <input type="number" name="quantity" min="1" placeholder="Quantité" value="${dish.quantity}" required>
+                    `;
+                    editOrderDishes.appendChild(dishDiv);
+                });
+                updateDishSelects();
+                editOrderDishes.querySelectorAll('select').forEach((select, index) => {
+                    select.value = order.dishes[index].dishId;
+                });
+                document.getElementById('edit-order-form').style.display = 'block';
+                document.getElementById('create-order-form').style.display = 'none';
+            }
+        }
+
+        document.getElementById('edit-order-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const orderId = parseInt(document.getElementById('edit-order-id').value);
+            const dishElements = document.querySelectorAll('#edit-order-dishes .order-dish');
+            const orderDishes = Array.from(dishElements).map(element => ({
+                dishId: parseInt(element.querySelector('select').value),
+                quantity: parseInt(element.querySelector('input[name="quantity"]').value)
+            }));
+            const updatedOrder = {
+                id: orderId,
+                customerName: document.getElementById('edit-order-customer-name').value,
+                city: document.getElementById('edit-order-city').value,
+                deliveryTime: document.getElementById('edit-order-delivery-time').value,
+                dishes: orderDishes,
+                status: document.getElementById('edit-order-status').value
+            };
+            orders = orders.map(order => order.id === orderId ? updatedOrder : order);
+            displayOrders();
+            this.style.display = 'none';
+            document.getElementById('create-order-form').style.display = 'block';
+            alert("Commande mise à jour avec succès !");
+        });
+
+        function cancelEditOrder() {
+            document.getElementById('edit-order-form').style.display = 'none';
+            document.getElementById('create-order-form').style.display = 'block';
+        }
+
+        // Scroll Header Effect
+        window.addEventListener('scroll', function() {
+            const header = document.querySelector('header');
+            if (window.scrollY > 50) {
+                header.classList.add('scrolled');
+            } else {
+                header.classList.remove('scrolled');
+            }
+        });
+
+        // Smooth Scrolling for Anchor Links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+
+        // Initialisation
+        displayDishes();
+        displayReservations();
+        displayOrders();
+        displayMenu();
+    </script>
+</body>
+</html>
