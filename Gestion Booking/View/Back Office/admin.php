@@ -1,12 +1,9 @@
-<?php
-// Admin.php - Back Office Dashboard
-?>
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TuniFy Village - Administration</title>
+    <title>TuniFy Village - Backoffice</title>
     <link rel="stylesheet" href="../../styleback.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -26,37 +23,43 @@
         <div class="sidebar-nav">
             <ul>
                 <li class="active">
-                    <a href="admin.php">
+                    <a href="dashboard.php">
                         <i class="fas fa-tachometer-alt"></i>
                         <span>Tableau de Bord</span>
                     </a>
                 </li>
                 <li>
-                    <a href="admin-villas.php">
-                        <i class="fas fa-home"></i>
-                        <span>Gestion des Villas</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="admin-reservations.php">
-                        <i class="fas fa-calendar-check"></i>
-                        <span>Réservations</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="admin-clients.php">
-                        <i class="fas fa-users"></i>
-                        <span>Clients</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="admin-transports.php">
+                    <a href="transportback.php">
                         <i class="fas fa-car"></i>
                         <span>Transports</span>
                     </a>
                 </li>
                 <li>
-                    <a href="admin-settings.php">
+                    <a href="admin-reservations.php">
+                        <i class="fas fa-hotel"></i>
+                        <span>Hébergements</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
+                        <i class="fas fa-utensils"></i>
+                        <span>Restauration</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
+                        <i class="fas fa-comments"></i>
+                        <span>Forums</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
+                        <i class="fas fa-users"></i>
+                        <span>Utilisateurs</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
                         <i class="fas fa-cog"></i>
                         <span>Paramètres</span>
                     </a>
@@ -122,9 +125,9 @@
                 <div class="card" style="margin-bottom: 0;">
                     <div style="padding: 20px; text-align: center;">
                         <div style="font-size: 40px; color: var(--gold-primary); margin-bottom: 10px;">
-                            <i class="fas fa-home"></i>
+                            <i class="fas fa-car"></i>
                         </div>
-                        <h3 style="font-size: 20px; margin-bottom: 5px;">Total Villas</h3>
+                        <h3 style="font-size: 20px; margin-bottom: 5px;">Transports</h3>
                         <p style="font-size: 28px; font-weight: 600; color: var(--gold-primary);">24</p>
                         <p style="font-size: 14px; color: #4bc0c0; margin-top: 10px;">
                             <i class="fas fa-arrow-up"></i> +2 ce mois
@@ -135,10 +138,23 @@
                 <div class="card" style="margin-bottom: 0;">
                     <div style="padding: 20px; text-align: center;">
                         <div style="font-size: 40px; color: var(--gold-primary); margin-bottom: 10px;">
-                            <i class="fas fa-check-circle"></i>
+                            <i class="fas fa-hotel"></i>
                         </div>
-                        <h3 style="font-size: 20px; margin-bottom: 5px;">Réservations</h3>
-                        <p style="font-size: 28px; font-weight: 600; color: var(--gold-primary);">18</p>
+                        <h3 style="font-size: 20px; margin-bottom: 5px;">Hébergements</h3>
+                        <p style="font-size: 28px; font-weight: 600; color: var(--gold-primary);">15</p>
+                        <p style="font-size: 14px; color: #4bc0c0; margin-top: 10px;">
+                            <i class="fas fa-arrow-up"></i> +3 cette semaine
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="card" style="margin-bottom: 0;">
+                    <div style="padding: 20px; text-align: center;">
+                        <div style="font-size: 40px; color: var(--gold-primary); margin-bottom: 10px;">
+                            <i class="fas fa-utensils"></i>
+                        </div>
+                        <h3 style="font-size: 20px; margin-bottom: 5px;">Restauration</h3>
+                        <p style="font-size: 28px; font-weight: 600; color: var(--gold-primary);">32</p>
                         <p style="font-size: 14px; color: #4bc0c0; margin-top: 10px;">
                             <i class="fas fa-arrow-up"></i> +5 cette semaine
                         </p>
@@ -148,56 +164,18 @@
                 <div class="card" style="margin-bottom: 0;">
                     <div style="padding: 20px; text-align: center;">
                         <div style="font-size: 40px; color: var(--gold-primary); margin-bottom: 10px;">
-                            <i class="fas fa-users"></i>
+                            <i class="fas fa-comments"></i>
                         </div>
-                        <h3 style="font-size: 20px; margin-bottom: 5px;">Clients</h3>
-                        <p style="font-size: 28px; font-weight: 600; color: var(--gold-primary);">42</p>
+                        <h3 style="font-size: 20px; margin-bottom: 5px;">Forums</h3>
+                        <p style="font-size: 28px; font-weight: 600; color: var(--gold-primary);">5</p>
                         <p style="font-size: 14px; color: #4bc0c0; margin-top: 10px;">
-                            <i class="fas fa-arrow-up"></i> +8 ce mois
-                        </p>
-                    </div>
-                </div>
-                
-                <div class="card" style="margin-bottom: 0;">
-                    <div style="padding: 20px; text-align: center;">
-                        <div style="font-size: 40px; color: var(--gold-primary); margin-bottom: 10px;">
-                            <i class="fas fa-money-bill-wave"></i>
-                        </div>
-                        <h3 style="font-size: 20px; margin-bottom: 5px;">Revenus</h3>
-                        <p style="font-size: 28px; font-weight: 600; color: var(--gold-primary);">2.4M DT</p>
-                        <p style="font-size: 14px; color: #4bc0c0; margin-top: 10px;">
-                            <i class="fas fa-arrow-up"></i> +12% ce trimestre
+                            <i class="fas fa-arrow-up"></i> +1 aujourd'hui
                         </p>
                     </div>
                 </div>
             </div>
 
-            <!-- Stats Chart -->
-            <div class="card">
-                <div class="card-header">
-                    <h3>Statistiques de Vente</h3>
-                    <div class="card-actions">
-                        <select class="period-select">
-                            <option>Cette Année</option>
-                            <option>Ce Trimestre</option>
-                            <option>Ce Mois</option>
-                            <option>Cette Semaine</option>
-                        </select>
-                        <button class="refresh-btn">
-                            <i class="fas fa-sync-alt"></i>
-                        </button>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <div class="stats-chart">
-                        <div class="chart-placeholder">
-                            <i class="fas fa-chart-line" style="font-size: 48px; margin-bottom: 15px;"></i>
-                            <p>Le graphique des ventes apparaîtra ici.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
+       
             <!-- Recent Reservations -->
             <div class="card">
                 <div class="card-header">
@@ -220,21 +198,19 @@
                             <tr>
                                 <th>ID</th>
                                 <th>Client</th>
-                                <th>Villa</th>
+                                <th>Service</th>
                                 <th>Date</th>
                                 <th>Statut</th>
-                                <th>Prix</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
-                                <td>#RES-001</td>
-                                <td>Ahmed Benali</td>
-                                <td>S+3 KMAR</td>
-                                <td>05/04/2025</td>
+                                <td>#1254</td>
+                                <td>John Doe</td>
+                                <td>Voiture de luxe</td>
+                                <td>15 Juin 2023</td>
                                 <td><span class="status confirmed">Confirmée</span></td>
-                                <td>650,000 DT</td>
                                 <td>
                                     <button class="action-btn view"><i class="fas fa-eye"></i></button>
                                     <button class="action-btn edit"><i class="fas fa-edit"></i></button>
@@ -242,12 +218,11 @@
                                 </td>
                             </tr>
                             <tr>
-                                <td>#RES-002</td>
-                                <td>Sonia Mansour</td>
-                                <td>S+4 YASSER</td>
-                                <td>03/04/2025</td>
+                                <td>#1253</td>
+                                <td>Jane Smith</td>
+                                <td>Suite Deluxe</td>
+                                <td>14 Juin 2023</td>
                                 <td><span class="status active">En attente</span></td>
-                                <td>850,000 DT</td>
                                 <td>
                                     <button class="action-btn view"><i class="fas fa-eye"></i></button>
                                     <button class="action-btn edit"><i class="fas fa-edit"></i></button>
@@ -255,38 +230,23 @@
                                 </td>
                             </tr>
                             <tr>
-                                <td>#RES-003</td>
-                                <td>Mohamed Kamoun</td>
-                                <td>S+5 YASMINE</td>
-                                <td>01/04/2025</td>
+                                <td>#1252</td>
+                                <td>Robert Johnson</td>
+                                <td>Dîner gastronomique</td>
+                                <td>14 Juin 2023</td>
+                                <td><span class="status confirmed">Complétée</span></td>
+                                <td>
+                                    <button class="action-btn view"><i class="fas fa-eye"></i></button>
+                                    <button class="action-btn edit"><i class="fas fa-edit"></i></button>
+                                    <button class="action-btn delete"><i class="fas fa-trash"></i></button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>#1251</td>
+                                <td>Sarah Williams</td>
+                                <td>Trottinette électrique</td>
+                                <td>13 Juin 2023</td>
                                 <td><span class="status cancelled">Annulée</span></td>
-                                <td>1,050,000 DT</td>
-                                <td>
-                                    <button class="action-btn view"><i class="fas fa-eye"></i></button>
-                                    <button class="action-btn edit"><i class="fas fa-edit"></i></button>
-                                    <button class="action-btn delete"><i class="fas fa-trash"></i></button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>#RES-004</td>
-                                <td>Leila Trabelsi</td>
-                                <td>S+3 SAMI</td>
-                                <td>30/03/2025</td>
-                                <td><span class="status confirmed">Confirmée</span></td>
-                                <td>670,000 DT</td>
-                                <td>
-                                    <button class="action-btn view"><i class="fas fa-eye"></i></button>
-                                    <button class="action-btn edit"><i class="fas fa-edit"></i></button>
-                                    <button class="action-btn delete"><i class="fas fa-trash"></i></button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>#RES-005</td>
-                                <td>Karim Mejri</td>
-                                <td>S+4 NARJESS</td>
-                                <td>28/03/2025</td>
-                                <td><span class="status active">En attente</span></td>
-                                <td>870,000 DT</td>
                                 <td>
                                     <button class="action-btn view"><i class="fas fa-eye"></i></button>
                                     <button class="action-btn edit"><i class="fas fa-edit"></i></button>
@@ -312,23 +272,21 @@
                         <label>Client</label>
                         <select>
                             <option value="" disabled selected>Sélectionner un client</option>
-                            <option>Ahmed Benali</option>
-                            <option>Sonia Mansour</option>
-                            <option>Mohamed Kamoun</option>
-                            <option>Leila Trabelsi</option>
-                            <option>Karim Mejri</option>
+                            <option>John Doe</option>
+                            <option>Jane Smith</option>
+                            <option>Robert Johnson</option>
+                            <option>Sarah Williams</option>
                         </select>
                     </div>
                     
                     <div class="form-group">
-                        <label>Villa</label>
+                        <label>Service</label>
                         <select>
-                            <option value="" disabled selected>Sélectionner une villa</option>
-                            <option>S+3 KMAR</option>
-                            <option>S+4 YASSER</option>
-                            <option>S+3 SAMI</option>
-                            <option>S+4 NARJESS</option>
-                            <option>S+5 YASMINE</option>
+                            <option value="" disabled selected>Sélectionner un service</option>
+                            <option>Voiture de luxe</option>
+                            <option>Suite Deluxe</option>
+                            <option>Dîner gastronomique</option>
+                            <option>Trottinette électrique</option>
                         </select>
                     </div>
                 </div>
@@ -377,76 +335,6 @@
         </div>
     </div>
 
-    <!-- View Reservation Modal -->
-    <div class="modal" id="viewReservationModal">
-        <div class="modal-content">
-            <span class="close-modal" id="closeViewModal">&times;</span>
-            <h2>Détails de la Réservation</h2>
-            
-            <div class="detail-row">
-                <div class="detail-image">
-                    <img src="/api/placeholder/600/350" alt="Villa Image">
-                </div>
-                
-                <div class="detail-info">
-                    <div class="detail-item">
-                        <span class="detail-label">ID Réservation:</span>
-                        <span class="detail-value">#RES-001</span>
-                    </div>
-                    
-                    <div class="detail-item">
-                        <span class="detail-label">Client:</span>
-                        <span class="detail-value">Ahmed Benali</span>
-                    </div>
-                    
-                    <div class="detail-item">
-                        <span class="detail-label">Contact:</span>
-                        <span class="detail-value">+216 12 345 678</span>
-                    </div>
-                    
-                    <div class="detail-item">
-                        <span class="detail-label">Email:</span>
-                        <span class="detail-value">ahmed.benali@email.com</span>
-                    </div>
-                    
-                    <div class="detail-item">
-                        <span class="detail-label">Villa:</span>
-                        <span class="detail-value">S+3 KMAR</span>
-                    </div>
-                    
-                    <div class="detail-item">
-                        <span class="detail-label">Date:</span>
-                        <span class="detail-value">05/04/2025 à 10:00</span>
-                    </div>
-                    
-                    <div class="detail-item">
-                        <span class="detail-label">Statut:</span>
-                        <span class="detail-value"><span class="status confirmed">Confirmée</span></span>
-                    </div>
-                    
-                    <div class="detail-item">
-                        <span class="detail-label">Prix:</span>
-                        <span class="detail-value" style="color: var(--gold-primary); font-weight: 600;">650,000 DT</span>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="detail-item full-width" style="margin-top: 20px;">
-                <span class="detail-label">Notes:</span>
-                <p class="detail-description">
-                    Client très intéressé par cette villa. A demandé des informations supplémentaires sur les options de financement. Prévoir documentation complète pour la visite.
-                </p>
-            </div>
-            
-            <div class="detail-actions">
-                <button class="edit-btn">
-                    <i class="fas fa-edit"></i>
-                    Modifier
-                </button>
-            </div>
-        </div>
-    </div>
-
     <!-- JavaScript -->
     <script>
         // Sidebar Toggle Function
@@ -461,43 +349,50 @@
         
         // Modals
         const addReservationModal = document.getElementById('addReservationModal');
-        const viewReservationModal = document.getElementById('viewReservationModal');
         const addBtn = document.querySelector('.add-btn');
         const viewBtns = document.querySelectorAll('.action-btn.view');
         const closeModal = document.getElementById('closeModal');
-        const closeViewModal = document.getElementById('closeViewModal');
         const cancelAddReservation = document.getElementById('cancelAddReservation');
         
-        addBtn.addEventListener('click', function() {
-            addReservationModal.style.display = 'flex';
-        });
-        
-        viewBtns.forEach(btn => {
-            btn.addEventListener('click', function() {
-                viewReservationModal.style.display = 'flex';
+        if (addBtn) {
+            addBtn.addEventListener('click', function() {
+                addReservationModal.style.display = 'flex';
             });
-        });
+        }
         
-        closeModal.addEventListener('click', function() {
-            addReservationModal.style.display = 'none';
-        });
+        if (viewBtns) {
+            viewBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    // Handle view action
+                });
+            });
+        }
         
-        closeViewModal.addEventListener('click', function() {
-            viewReservationModal.style.display = 'none';
-        });
+        if (closeModal) {
+            closeModal.addEventListener('click', function() {
+                addReservationModal.style.display = 'none';
+            });
+        }
         
-        cancelAddReservation.addEventListener('click', function() {
-            addReservationModal.style.display = 'none';
-        });
+        if (cancelAddReservation) {
+            cancelAddReservation.addEventListener('click', function() {
+                addReservationModal.style.display = 'none';
+            });
+        }
         
         // Close modals when clicking outside
         window.addEventListener('click', function(event) {
             if (event.target === addReservationModal) {
                 addReservationModal.style.display = 'none';
             }
-            if (event.target === viewReservationModal) {
-                viewReservationModal.style.display = 'none';
-            }
+        });
+        
+        // Active menu item
+        document.querySelectorAll('.sidebar-nav li').forEach(item => {
+            item.addEventListener('click', function() {
+                document.querySelectorAll('.sidebar-nav li').forEach(i => i.classList.remove('active'));
+                this.classList.add('active');
+            });
         });
     </script>
 </body>

@@ -1,5 +1,7 @@
+
 <?php
 // Front office main page
+session_start(); // Pour gérer l'utilisateur connecté
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -27,78 +29,25 @@
                     <li><a href="#about">À Propos</a></li>
                     <li><a href="#gallery">Galerie</a></li>
                     <li><a href="#features">Services</a></li>
-                    <li><a href="reservation.php">Réservation</a></li>
+                    <li class="dropdown">
+                        <a href="javascript:void(0)" class="dropbtn">Réservation</a>
+                        <div class="dropdown-content">
+                            <a href="reservation-villa.php">Villas</a>
+                            <a href="reservation-maisonhote.php">Maisons d'hôtes</a>
+                            <a href="reservation-hotel.php">Hôtels</a>
+                        </div>
+                    </li>
                     <li><a href="#contact">Contact</a></li>
                 </ul>
             </nav>
-            <button class="contact-btn">Réserver une Visite</button>
+            <?php if(isset($_SESSION['user_id'])): ?>
+                <a href="logout.php" class="contact-btn">Déconnexion</a>
+            <?php else: ?>
+                <a href="login.php" class="contact-btn">Connexion</a>
+            <?php endif; ?>
         </div>
     </header>
 
-    <!-- Hero Section -->
-    <section class="hero" id="home">
-        <div class="cube-container">
-            <div class="cube">
-                <div class="front"></div>
-                <div class="back"></div>
-                <div class="right"></div>
-                <div class="left"></div>
-                <div class="top"></div>
-                <div class="bottom"></div>
-            </div>
-        </div>
-        <div class="hero-content">
-            <div class="hero-subtitle">Expérience de Vie Luxueuse</div>
-            <h1 class="hero-title">TuniFy <span>VILLAGE</span></h1>
-            <p class="hero-description">Un havre résidentiel exquis où le luxe rencontre la tranquillité, niché au milieu de paysages à couper le souffle et d'équipements haut de gamme pour une expérience de vie inégalée.</p>
-            <a href="#contact" class="hero-cta">Découvrir Plus</a>
-        </div>
-    </section>
-
-    <!-- About Section -->
-    <section class="about" id="about">
-        <div class="container about-container">
-            <div class="about-image">
-                <img src="/api/placeholder/600/600" alt="TuniFy Village Luxury">
-            </div>
-            <div class="about-content">
-                <p class="section-subtitle">À Propos de Notre Projet</p>
-                <h2 class="section-title">Découvrez l'<span>Essence</span> de la Vie Luxueuse</h2>
-                <p class="about-text">TuniFy Village représente le summum de l'habitat résidentiel de luxe, où l'architecture élégante rencontre le design moderne et le confort. Niché dans un emplacement privilégié, notre communauté exclusive offre aux résidents un mélange unique de tranquillité et de commodité.</p>
-                <p class="about-text">Chaque détail a été méticuleusement élaboré pour garantir un style de vie d'une qualité sans compromis, des intérieurs aux accents dorés aux jardins paysagers luxuriants qui entourent nos propriétés.</p>
-                <div class="about-features">
-                    <div class="feature">
-                        <div class="feature-icon">★</div>
-                        <div class="feature-content">
-                            <h4>Emplacement Premium</h4>
-                            <p>Positionné stratégiquement avec un accès facile aux principales commodités et attractions.</p>
-                        </div>
-                    </div>
-                    <div class="feature">
-                        <div class="feature-icon">★</div>
-                        <div class="feature-content">
-                            <h4>Excellence Architecturale</h4>
-                            <p>Des conceptions étonnantes qui mêlent élégance traditionnelle et innovation moderne.</p>
-                        </div>
-                    </div>
-                    <div class="feature">
-                        <div class="feature-icon">★</div>
-                        <div class="feature-content">
-                            <h4>Communauté Exclusive</h4>
-                            <p>Un quartier sélect de résidents partageant les mêmes idées et profitant d'installations premium.</p>
-                        </div>
-                    </div>
-                    <div class="feature">
-                        <div class="feature-icon">★</div>
-                        <div class="feature-content">
-                            <h4>Développement Durable</h4>
-                            <p>Pratiques écologiques intégrées dans la conception et la construction.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
 
     <!-- Gallery Section -->
     <section class="gallery" id="gallery">
@@ -108,6 +57,7 @@
                 <h2 class="section-title">Explorez Nos <span>Spectaculaires</span> Propriétés</h2>
             </div>
             <div class="gallery-grid">
+                <!-- Villas -->
                 <div class="gallery-item" onclick="openTransportPopup('s3')">
                     <img src="/api/placeholder/600/350" alt="Villa S+3">
                     <div class="gallery-item-content">
@@ -122,32 +72,57 @@
                         <p class="gallery-item-subtitle">Confort Moderne</p>
                     </div>
                 </div>
-                <div class="gallery-item">
-                    <img src="/api/placeholder/600/350" alt="Piscine">
+                <div class="gallery-item" onclick="openTransportPopup('s5')">
+                    <img src="/api/placeholder/600/350" alt="Villa S+5">
                     <div class="gallery-item-content">
-                        <h3 class="gallery-item-title">Piscines</h3>
-                        <p class="gallery-item-subtitle">Loisirs & Détente</p>
+                        <h3 class="gallery-item-title">Villa S+5</h3>
+                        <p class="gallery-item-subtitle">Luxe Ultime</p>
                     </div>
                 </div>
-                <div class="gallery-item">
-                    <img src="/api/placeholder/600/350" alt="Jardins Luxuriants">
+                
+                <!-- Maisons d'hôtes -->
+                <div class="gallery-item" onclick="openMaisonPopup('dar')">
+                    <img src="/api/placeholder/600/350" alt="Dar Traditionnel">
                     <div class="gallery-item-content">
-                        <h3 class="gallery-item-title">Jardins Luxuriants</h3>
-                        <p class="gallery-item-subtitle">Beauté Naturelle</p>
+                        <h3 class="gallery-item-title">Dar Traditionnel</h3>
+                        <p class="gallery-item-subtitle">Charme Authentique</p>
                     </div>
                 </div>
-                <div class="gallery-item">
-                    <img src="/api/placeholder/600/350" alt="Centre de Fitness">
+                <div class="gallery-item" onclick="openMaisonPopup('riad')">
+                    <img src="/api/placeholder/600/350" alt="Riad Luxueux">
                     <div class="gallery-item-content">
-                        <h3 class="gallery-item-title">Centre de Fitness</h3>
-                        <p class="gallery-item-subtitle">Santé & Bien-être</p>
+                        <h3 class="gallery-item-title">Riad Luxueux</h3>
+                        <p class="gallery-item-subtitle">Élégance Marocaine</p>
                     </div>
                 </div>
-                <div class="gallery-item">
-                    <img src="/api/placeholder/600/350" alt="Espaces Communautaires">
+                <div class="gallery-item" onclick="openMaisonPopup('villa')">
+                    <img src="/api/placeholder/600/350" alt="Villa d'Hôtes">
                     <div class="gallery-item-content">
-                        <h3 class="gallery-item-title">Espaces Communautaires</h3>
-                        <p class="gallery-item-subtitle">Rencontres Sociales</p>
+                        <h3 class="gallery-item-title">Villa d'Hôtes</h3>
+                        <p class="gallery-item-subtitle">Confort Privé</p>
+                    </div>
+                </div>
+                
+                <!-- Hôtels -->
+                <div class="gallery-item" onclick="openHotelPopup('palace')">
+                    <img src="/api/placeholder/600/350" alt="Hôtel Palace">
+                    <div class="gallery-item-content">
+                        <h3 class="gallery-item-title">Hôtel Palace</h3>
+                        <p class="gallery-item-subtitle">Luxe Royal</p>
+                    </div>
+                </div>
+                <div class="gallery-item" onclick="openHotelPopup('boutique')">
+                    <img src="/api/placeholder/600/350" alt="Hôtel Boutique">
+                    <div class="gallery-item-content">
+                        <h3 class="gallery-item-title">Hôtel Boutique</h3>
+                        <p class="gallery-item-subtitle">Charme Intime</p>
+                    </div>
+                </div>
+                <div class="gallery-item" onclick="openHotelPopup('resort')">
+                    <img src="/api/placeholder/600/350" alt="Résort 5*">
+                    <div class="gallery-item-content">
+                        <h3 class="gallery-item-title">Résort 5*</h3>
+                        <p class="gallery-item-subtitle">Détente Totale</p>
                     </div>
                 </div>
             </div>
@@ -186,9 +161,10 @@
 
                 <img src="/api/placeholder/600/300" alt="Plan Villa S+3" style="width:100%; margin-top:15px; border-radius:5px;">
                 
-                <a href="reservation-form.php?type=s3" class="book-now-btn">
-                    <span>R</span><span>É</span><span>S</span><span>E</span><span>R</span><span>V</span><span>E</span><span>R</span>
-                </a>
+                <div class="popup-buttons">
+                    <button onclick="window.location.href='reservation-villa.php?type=s3&nom=KMAR'" class="contact-btn">Réserver</button>
+                    <button onclick="closeTransportPopup()" class="contact-btn">Annuler</button>
+                </div>
             </div>
 
             <div id="s4Popup" class="popup-content">
@@ -217,196 +193,254 @@
 
                 <img src="/api/placeholder/600/300" alt="Plan Villa S+4" style="width:100%; margin-top:15px; border-radius:5px;">
                 
-                <a href="reservation-form.php?type=s4" class="book-now-btn">
-                    <span>R</span><span>É</span><span>S</span><span>E</span><span>R</span><span>V</span><span>E</span><span>R</span>
-                </a>
+                <div class="popup-buttons">
+                    <button onclick="window.location.href='reservation-villa.php?type=s4&nom=KMAR'" class="contact-btn">Réserver</button>
+                    <button onclick="closeTransportPopup()" class="contact-btn">Annuler</button>
+                </div>
+            </div>
+
+            <div id="s5Popup" class="popup-content">
+                <div class="transport-details-section">
+                    <h3>Caractéristiques</h3>
+                    <ul class="transport-details-list">
+                        <li><span>Type</span><span>S+5</span></li>
+                        <li><span>Surface Totale</span><span>350m²</span></li>
+                        <li><span>Sous-sol</span><span>80m²</span></li>
+                        <li><span>Jardin</span><span>120m²</span></li>
+                        <li><span>Piscine Extérieure</span><span>Oui</span></li>
+                        <li><span>Places de Parking</span><span>4</span></li>
+                    </ul>
+                </div>
+                
+                <div class="transport-prices-section">
+                    <h3>Détails Supplémentaires</h3>
+                    <ul class="transport-prices-list">
+                        <li><span>Étage</span><span>Rez-de-chaussée + 2</span></li>
+                        <li><span>Chambres</span><span>5</span></li>
+                        <li><span>Salles de Bain</span><span>4</span></li>
+                        <li><span>Cuisine</span><span>Équipée</span></li>
+                        <li><span>Prix</span><span>1,050,000 DT</span></li>
+                    </ul>
+                </div>
+
+                <img src="/api/placeholder/600/300" alt="Plan Villa S+5" style="width:100%; margin-top:15px; border-radius:5px;">
+                
+                <div class="popup-buttons">
+                    <button onclick="window.location.href='reservation-villa.php?type=s5&nom=KMAR'" class="contact-btn">Réserver</button>
+                    <button onclick="closeTransportPopup()" class="contact-btn">Annuler</button>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Features Section -->
-    <section class="features" id="features">
-        <div class="container features-container">
-            <div class="features-header">
-                <p class="section-subtitle">Services Premium</p>
-                <h2 class="section-title">Découvrez un <span>Luxe</span> et un Confort Inégalés</h2>
-            </div>
-            <div class="features-grid">
-                <div class="feature-box">
-                    <div class="feature-box-icon">♨️</div>
-                    <h3>Spa & Bien-être</h3>
-                    <p>Profitez de nos installations de spa ultramodernes comprenant des salles de soins, saunas, hammams et espaces de relaxation pour une régénération ultime.</p>
-                    <a href="#" class="feature-box-link">En Savoir Plus →</a>
-                </div>
-                <div class="feature-box">
-                    <div class="feature-box-icon">🏊</div>
-                    <h3>Piscines à Débordement</h3>
-                    <p>Plongez dans nos spectaculaires piscines à débordement avec vues panoramiques, solarium et cabanes privées.</p>
-                    <a href="#" class="feature-box-link">En Savoir Plus →</a>
-                </div>
-                <div class="feature-box">
-                    <div class="feature-box-icon">🏋️</div>
-                    <h3>Centre de Fitness</h3>
-                    <p>Restez en forme dans notre centre de fitness de pointe équipé des derniers appareils de cardio et de musculation, avec des coachs personnels.</p>
-                    <a href="#" class="feature-box-link">En Savoir Plus →</a>
-                </div>
-                <div class="feature-box">
-                    <div class="feature-box-icon">🍽️</div>
-                    <h3>Gastronomie</h3>
-                    <p>Savourez une cuisine exquise dans nos restaurants sur place offrant une gamme variée de plats internationaux et locaux préparés par des chefs renommés.</p>
-                    <a href="#" class="feature-box-link">En Savoir Plus →</a>
-                </div>
-                <div class="feature-box">
-                    <div class="feature-box-icon">🏢</div>
-                    <h3>Conciergerie 24/7</h3>
-                    <p>Notre service de conciergerie dédié est disponible 24h/24 pour répondre à toutes vos demandes, des réservations de restaurant aux arrangements de voyage.</p>
-                    <a href="#" class="feature-box-link">En Savoir Plus →</a>
-                </div>
-                <div class="feature-box">
-                    <div class="feature-box-icon">🔒</div>
-                    <h3>Services de Sécurité</h3>
-                    <p>Dormez tranquille grâce à notre système de sécurité complet comprenant une surveillance 24h/24, des contrôles d'accès sécurisés et du personnel de sécurité professionnel.</p>
-                    <a href="#" class="feature-box-link">En Savoir Plus →</a>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Call to Action Section -->
-    <section class="cta">
-        <div class="container cta-container">
-            <h2 class="cta-title">Prêt à Vivre le Luxe?</h2>
-            <p class="cta-text">Planifiez une visite privée de TuniFy Village et découvrez la maison de vos rêves dans notre communauté exclusive. Nos consultants chevronnés sont prêts à vous aider à trouver la résidence parfaite.</p>
-            <div class="cta-buttons">
-                <a href="#contact" class="cta-primary">Planifier une Visite</a>
-                <a href="#" class="cta-secondary">Télécharger la Brochure</a>
-            </div>
-        </div>
-    </section>
-
-    <!-- Contact Section -->
-    <section class="contact" id="contact">
-        <div class="container contact-container">
-            <div class="contact-info">
-                <p class="section-subtitle">Contactez-Nous</p>
-                <h2 class="section-title">Nous <span>Joindre</span></h2>
-                <p class="about-text">Vous avez des questions sur TuniFy Village? Notre équipe dévouée est là pour vous fournir toutes les informations dont vous avez besoin et vous accompagner dans votre parcours immobilier.</p>
-                
-                <div class="contact-details">
-                    <div class="contact-item">
-                        <div class="contact-icon">📍</div>
-                        <div class="contact-item-content">
-                            <h4>Notre Emplacement</h4>
-                            <p>123 Boulevard du Luxe, Quartier Doré, Ville</p>
-                        </div>
-                    </div>
-                    <div class="contact-item">
-                        <div class="contact-icon">📞</div>
-                        <div class="contact-item-content">
-                            <h4>Numéro de Téléphone</h4>
-                            <p><a href="tel:+21612345678">+216 12 345 678</a></p>
-                        </div>
-                    </div>
-                    <div class="contact-item">
-                        <div class="contact-icon">✉️</div>
-                        <div class="contact-item-content">
-                            <h4>Adresse Email</h4>
-                            <p><a href="mailto:info@tunifyvillage.com">info@tunifyvillage.com</a></p>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="contact-social">
-                    <a href="#" class="social-icon"><i class="fab fa-facebook-f"></i></a>
-                    <a href="#" class="social-icon"><i class="fab fa-linkedin-in"></i></a>
-                    <a href="#" class="social-icon"><i class="fab fa-instagram"></i></a>
-                    <a href="#" class="social-icon"><i class="fab fa-twitter"></i></a>
-                </div>
-            </div>
+    <!-- Maison d'hôte Popup -->
+    <div class="transport-popup" id="maisonPopup">
+        <div class="transport-popup-content">
+            <span class="close-popup" onclick="closeMaisonPopup()">&times;</span>
+            <h2 id="maisonPopupTitle">Détails de la Maison d'Hôtes</h2>
             
-            <div class="contact-form">
-                <form action="#" method="post">
-                    <div class="form-group">
-                        <input type="text" class="form-control" placeholder="Votre Nom" required>
-                    </div>
-                    <div class="form-group">
-                        <input type="email" class="form-control" placeholder="Votre Email" required>
-                    </div>
-                    <div class="form-group">
-                        <input type="tel" class="form-control" placeholder="Votre Téléphone">
-                    </div>
-                    <div class="form-group">
-                        <select class="form-control" required>
-                            <option value="" disabled selected>Intéressé Par</option>
-                            <option value="Villa">Villa de Luxe</option>
-                            <option value="Apartment">Appartement Premium</option>
-                            <option value="Penthouse">Penthouse Exclusif</option>
-                            <option value="General">Renseignement Général</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <textarea class="form-control" placeholder="Votre Message" required></textarea>
-                    </div>
-                    <button type="submit" class="form-submit">Envoyer le Message</button>
-                </form>
-            </div>
-        </div>
-    </section>
-
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-top">
-                <div class="footer-about">
-                    <div class="logo">
-                        <img src="logo.png" alt="TuniFy Logo">
-                        <div class="logo-text">
-                            <h1>TuniFy</h1>
-                            <p>Village</p>
-                        </div>
-                    </div>
-                    <p>TuniFy Village est l'incarnation du luxe, offrant une expérience résidentielle exclusive avec des équipements haut de gamme et un service exceptionnel dans un cadre magnifique.</p>
-                </div>
-                
-                <div class="footer-links">
-                    <h3 class="footer-heading">Liens Rapides</h3>
-                    <ul>
-                        <li><a href="#home">Accueil</a></li>
-                        <li><a href="#about">À Propos</a></li>
-                        <li><a href="#gallery">Propriétés</a></li>
-                        <li><a href="#features">Services</a></li>
-                        <li><a href="reservation.php">Réservation</a></li>
-                        <li><a href="#contact">Contact</a></li>
+            <div id="darPopup" class="popup-content">
+                <div class="transport-details-section">
+                    <h3>Caractéristiques</h3>
+                    <ul class="transport-details-list">
+                        <li><span>Type</span><span>Dar Traditionnel</span></li>
+                        <li><span>Surface</span><span>150m²</span></li>
+                        <li><span>Chambres</span><span>2</span></li>
+                        <li><span>Salles de Bain</span><span>1</span></li>
+                        <li><span>Terrasse</span><span>Oui</span></li>
+                        <li><span>Jardin</span><span>50m²</span></li>
                     </ul>
                 </div>
                 
-                <div class="footer-links">
-                    <h3 class="footer-heading">Nos Services</h3>
-                    <ul>
-                        <li><a href="#">Vente Immobilière</a></li>
-                        <li><a href="#">Gestion de Propriété</a></li>
-                        <li><a href="#">Design d'Intérieur</a></li>
-                        <li><a href="#">Aménagement Paysager</a></li>
-                        <li><a href="#">Services de Conciergerie</a></li>
+                <div class="transport-prices-section">
+                    <h3>Détails Supplémentaires</h3>
+                    <ul class="transport-prices-list">
+                        <li><span>Capacité</span><span>4 personnes</span></li>
+                        <li><span>Cuisine</span><span>Équipée</span></li>
+                        <li><span>Climatisation</span><span>Oui</span></li>
+                        <li><span>WiFi</span><span>Inclus</span></li>
+                        <li><span>Prix/nuit</span><span>350 DT</span></li>
+                    </ul>
+                </div>
+
+                <img src="/api/placeholder/600/300" alt="Dar Traditionnel" style="width:100%; margin-top:15px; border-radius:5px;">
+                
+                <div class="popup-buttons">
+                    <button onclick="window.location.href='reservation-maisonhote.php?type=dar'" class="contact-btn">Réserver</button>
+                    <button onclick="closeMaisonPopup()" class="contact-btn">Annuler</button>
+                </div>
+            </div>
+
+            <div id="riadPopup" class="popup-content">
+                <div class="transport-details-section">
+                    <h3>Caractéristiques</h3>
+                    <ul class="transport-details-list">
+                        <li><span>Type</span><span>Riad Luxueux</span></li>
+                        <li><span>Surface</span><span>220m²</span></li>
+                        <li><span>Chambres</span><span>3</span></li>
+                        <li><span>Salles de Bain</span><span>2</span></li>
+                        <li><span>Patio</span><span>Oui</span></li>
+                        <li><span>Piscine</span><span>Petite piscine</span></li>
                     </ul>
                 </div>
                 
-                <div class="footer-contact">
-                    <h3 class="footer-heading">Informations de Contact</h3>
-                    <p><i class="fas fa-map-marker-alt"></i> 123 Boulevard du Luxe, Quartier Doré, Ville</p>
-                    <p><i class="fas fa-phone"></i> +216 12 345 678</p>
-                    <p><i class="fas fa-envelope"></i> info@tunifyvillage.com</p>
-                    <p><i class="fas fa-clock"></i> Lun-Sam: 9:00 - 18:00</p>
+                <div class="transport-prices-section">
+                    <h3>Détails Supplémentaires</h3>
+                    <ul class="transport-prices-list">
+                        <li><span>Capacité</span><span>6 personnes</span></li>
+                        <li><span>Petit-déjeuner</span><span>Inclus</span></li>
+                        <li><span>Service ménage</span><span>Inclus</span></li>
+                        <li><span>Spa</span><span>Sur demande</span></li>
+                        <li><span>Prix/nuit</span><span>550 DT</span></li>
+                    </ul>
+                </div>
+
+                <img src="/api/placeholder/600/300" alt="Riad Luxueux" style="width:100%; margin-top:15px; border-radius:5px;">
+                
+                <div class="popup-buttons">
+                    <button onclick="window.location.href='reservation-maisonhote.php?type=riad'" class="contact-btn">Réserver</button>
+                    <button onclick="closeMaisonPopup()" class="contact-btn">Annuler</button>
                 </div>
             </div>
-            
-            <div class="footer-bottom">
-                <div class="footer-copyright">
-                    &copy; 2025 TuniFy Village. Tous Droits Réservés. Conçu par <a href="#">Kaptin</a>
+
+            <div id="villaPopup" class="popup-content">
+                <div class="transport-details-section">
+                    <h3>Caractéristiques</h3>
+                    <ul class="transport-details-list">
+                        <li><span>Type</span><span>Villa d'Hôtes</span></li>
+                        <li><span>Surface</span><span>300m²</span></li>
+                        <li><span>Chambres</span><span>4</span></li>
+                        <li><span>Salles de Bain</span><span>3</span></li>
+                        <li><span>Jardin</span><span>100m²</span></li>
+                        <li><span>Piscine</span><span>Privée</span></li>
+                    </ul>
+                </div>
+                
+                <div class="transport-prices-section">
+                    <h3>Détails Supplémentaires</h3>
+                    <ul class="transport-prices-list">
+                        <li><span>Capacité</span><span>8 personnes</span></li>
+                        <li><span>Cuisine extérieure</span><span>Oui</span></li>
+                        <li><span>Parking</span><span>3 voitures</span></li>
+                        <li><span>Service conciergerie</span><span>24/7</span></li>
+                        <li><span>Prix/nuit</span><span>750 DT</span></li>
+                    </ul>
+                </div>
+
+                <img src="/api/placeholder/600/300" alt="Villa d'Hôtes" style="width:100%; margin-top:15px; border-radius:5px;">
+                
+                <div class="popup-buttons">
+                    <button onclick="window.location.href='reservation-maisonhote.php?type=villa'" class="contact-btn">Réserver</button>
+                    <button onclick="closeMaisonPopup()" class="contact-btn">Annuler</button>
                 </div>
             </div>
         </div>
-    </footer>
+    </div>
+
+    <!-- Hotel Popup -->
+    <div class="transport-popup" id="hotelPopup">
+        <div class="transport-popup-content">
+            <span class="close-popup" onclick="closeHotelPopup()">&times;</span>
+            <h2 id="hotelPopupTitle">Détails de l'Hôtel</h2>
+            
+            <div id="palacePopup" class="popup-content">
+                <div class="transport-details-section">
+                    <h3>Caractéristiques</h3>
+                    <ul class="transport-details-list">
+                        <li><span>Type</span><span>Hôtel Palace 5*</span></li>
+                        <li><span>Chambres</span><span>Suites Deluxe/Executive</span></li>
+                        <li><span>Restaurants</span><span>3</span></li>
+                        <li><span>Piscine</span><span>Intérieure & extérieure</span></li>
+                        <li><span>Spa</span><span>Complet</span></li>
+                        <li><span>Service</span><span>24/7</span></li>
+                    </ul>
+                </div>
+                
+                <div class="transport-prices-section">
+                    <h3>Détails Supplémentaires</h3>
+                    <ul class="transport-prices-list">
+                        <li><span>Petit-déjeuner</span><span>Buffet inclus</span></li>
+                        <li><span>Room service</span><span>Disponible</span></li>
+                        <li><span>Navette</span><span>Aéroport gratuit</span></li>
+                        <li><span>Vue</span><span>Panoramique</span></li>
+                        <li><span>Prix/nuit</span><span>À partir de 800 DT</span></li>
+                    </ul>
+                </div>
+
+                <img src="/api/placeholder/600/300" alt="Hôtel Palace" style="width:100%; margin-top:15px; border-radius:5px;">
+                
+                <div class="popup-buttons">
+                    <button onclick="window.location.href='reservation-hotel.php?type=palace'" class="contact-btn">Réserver</button>
+                    <button onclick="closeHotelPopup()" class="contact-btn">Annuler</button>
+                </div>
+            </div>
+
+            <div id="boutiquePopup" class="popup-content">
+                <div class="transport-details-section">
+                    <h3>Caractéristiques</h3>
+                    <ul class="transport-details-list">
+                        <li><span>Type</span><span>Hôtel Boutique 4*</span></li>
+                        <li><span>Chambres</span><span>Standards/Supérieures</span></li>
+                        <li><span>Restaurant</span><span>1</span></li>
+                        <li><span>Bar</span><span>Lounge</span></li>
+                        <li><span>Terrasse</span><span>Panoramique</span></li>
+                        <li><span>Service</span><span>Conciergerie</span></li>
+                    </ul>
+                </div>
+                
+                <div class="transport-prices-section">
+                    <h3>Détails Supplémentaires</h3>
+                    <ul class="transport-prices-list">
+                        <li><span>Petit-déjeuner</span><span>Buffet inclus</span></li>
+                        <li><span>Navette</span><span>Sur demande</span></li>
+                        <li><span>Design</span><span>Unique</span></li>
+                        <li><span>Ambiance</span><span>Intime</span></li>
+                        <li><span>Prix/nuit</span><span>À partir de 450 DT</span></li>
+                    </ul>
+                </div>
+
+                <img src="/api/placeholder/600/300" alt="Hôtel Boutique" style="width:100%; margin-top:15px; border-radius:5px;">
+                
+                <div class="popup-buttons">
+                    <button onclick="window.location.href='reservation-hotel.php?type=boutique'" class="contact-btn">Réserver</button>
+                    <button onclick="closeHotelPopup()" class="contact-btn">Annuler</button>
+                </div>
+            </div>
+
+            <div id="resortPopup" class="popup-content">
+                <div class="transport-details-section">
+                    <h3>Caractéristiques</h3>
+                    <ul class="transport-details-list">
+                        <li><span>Type</span><span>Résort 5*</span></li>
+                        <li><span>Hébergement</span><span>Bungalows/Villas</span></li>
+                        <li><span>Restaurants</span><span>4</span></li>
+                        <li><span>Piscines</span><span>2</span></li>
+                        <li><span>Plage</span><span>Privée</span></li>
+                        <li><span>Activités</span><span>Nautiques</span></li>
+                    </ul>
+                </div>
+                
+                <div class="transport-prices-section">
+                    <h3>Détails Supplémentaires</h3>
+                    <ul class="transport-prices-list">
+                        <li><span>All-inclusive</span><span>Option disponible</span></li>
+                        <li><span>Club enfants</span><span>Oui</span></li>
+                        <li><span>Spa</span><span>Complet</span></li>
+                        <li><span>Sports</span><span>Équipements</span></li>
+                        <li><span>Prix/nuit</span><span>À partir de 650 DT</span></li>
+                    </ul>
+                </div>
+
+                <img src="/api/placeholder/600/300" alt="Résort 5*" style="width:100%; margin-top:15px; border-radius:5px;">
+                
+                <div class="popup-buttons">
+                    <button onclick="window.location.href='reservation-hotel.php?type=resort'" class="contact-btn">Réserver</button>
+                    <button onclick="closeHotelPopup()" class="contact-btn">Annuler</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 
     <!-- JavaScript -->
     <script>
@@ -420,24 +454,13 @@
             }
         });
         
-        // Smooth Scrolling for Anchor Links
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function(e) {
-                e.preventDefault();
-                
-                document.querySelector(this.getAttribute('href')).scrollIntoView({
-                    behavior: 'smooth'
-                });
-            });
-        });
-
         // Villa Popup Functions
         function openTransportPopup(type) {
             const popup = document.getElementById('transportPopup');
             popup.style.display = 'flex';
 
             // Hide all popup contents first
-            document.querySelectorAll('.popup-content').forEach(content => {
+            document.querySelectorAll('#transportPopup .popup-content').forEach(content => {
                 content.style.display = 'none';
             });
 
@@ -448,6 +471,9 @@
             } else if (type === 's4') {
                 document.getElementById('s4Popup').style.display = 'block';
                 document.getElementById('popupTitle').textContent = 'Villa S+4 - Détails';
+            } else if (type === 's5') {
+                document.getElementById('s5Popup').style.display = 'block';
+                document.getElementById('popupTitle').textContent = 'Villa S+5 - Détails';
             }
         }
 
@@ -461,12 +487,83 @@
             }, 200);
         }
 
+        // Maison d'hôte Popup Functions
+        function openMaisonPopup(type) {
+            const popup = document.getElementById('maisonPopup');
+            popup.style.display = 'flex';
+
+            // Hide all popup contents first
+            document.querySelectorAll('#maisonPopup .popup-content').forEach(content => {
+                content.style.display = 'none';
+            });
+
+            // Show the specific popup content
+            if (type === 'dar') {
+                document.getElementById('darPopup').style.display = 'block';
+                document.getElementById('maisonPopupTitle').textContent = 'Dar Traditionnel - Détails';
+            } else if (type === 'riad') {
+                document.getElementById('riadPopup').style.display = 'block';
+                document.getElementById('maisonPopupTitle').textContent = 'Riad Luxueux - Détails';
+            } else if (type === 'villa') {
+                document.getElementById('villaPopup').style.display = 'block';
+                document.getElementById('maisonPopupTitle').textContent = 'Villa d\'Hôtes - Détails';
+            }
+        }
+
+        function closeMaisonPopup() {
+            const popup = document.getElementById('maisonPopup');
+            popup.classList.add('hiding');
+            
+            setTimeout(() => {
+                popup.style.display = 'none';
+                popup.classList.remove('hiding');
+            }, 200);
+        }
+
+        // Hotel Popup Functions
+        function openHotelPopup(type) {
+            const popup = document.getElementById('hotelPopup');
+            popup.style.display = 'flex';
+
+            // Hide all popup contents first
+            document.querySelectorAll('#hotelPopup .popup-content').forEach(content => {
+                content.style.display = 'none';
+            });
+
+            // Show the specific popup content
+            if (type === 'palace') {
+                document.getElementById('palacePopup').style.display = 'block';
+                document.getElementById('hotelPopupTitle').textContent = 'Hôtel Palace - Détails';
+            } else if (type === 'boutique') {
+                document.getElementById('boutiquePopup').style.display = 'block';
+                document.getElementById('hotelPopupTitle').textContent = 'Hôtel Boutique - Détails';
+            } else if (type === 'resort') {
+                document.getElementById('resortPopup').style.display = 'block';
+                document.getElementById('hotelPopupTitle').textContent = 'Résort 5* - Détails';
+            }
+        }
+
+        function closeHotelPopup() {
+            const popup = document.getElementById('hotelPopup');
+            popup.classList.add('hiding');
+            
+            setTimeout(() => {
+                popup.style.display = 'none';
+                popup.classList.remove('hiding');
+            }, 200);
+        }
+
         // Close popup when clicking outside of it
         window.addEventListener('click', function(event) {
-            const popup = document.getElementById('transportPopup');
-            if (event.target === popup) {
-                closeTransportPopup();
-            }
+            const popups = ['transportPopup', 'maisonPopup', 'hotelPopup'];
+            popups.forEach(popupId => {
+                const popup = document.getElementById(popupId);
+                if (event.target === popup) {
+                    if (popupId === 'transportPopup') closeTransportPopup();
+                    if (popupId === 'maisonPopup') closeMaisonPopup();
+                    if (popupId === 'hotelPopup') closeHotelPopup();
+                }
+            });
         });
     </script>
 </body>

@@ -1,5 +1,73 @@
 <?php
-// Admin-reservations.php - Back Office Reservations Management
+// admin-reservations.php - Gestion des réservations de visites
+require_once 'C:/xampp/htdocs/Gestion Booking/config.php';
+require_once 'C:/xampp/htdocs/Gestion Booking/Controllor/Visite.php';
+
+// Initialiser la session
+session_start();
+
+// Vérifier si l'utilisateur est connecté en tant qu'admin
+// Commenter cette section si vous n'avez pas encore de système d'authentification
+/*
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+    // Rediriger vers la page de connexion
+    header('Location: login.php');
+    exit;
+}
+*/
+
+// Initialiser la connexion à la base de données
+$db = config::getConnexion();
+
+// Initialiser l'objet Visite
+$visite = new Visite($db);
+
+// Variables pour les messages
+$message = '';
+$error = '';
+
+// Traitement de la suppression d'une visite
+if (isset($_GET['action']) && $_GET['action'] === 'supprimer' && isset($_GET['id'])) {
+    $id_visite = $_GET['id'];
+    
+    if ($visite->supprimerVisite($id_visite)) {
+        $message = "La réservation de visite a été supprimée avec succès.";
+    } else {
+        $error = "Une erreur s'est produite lors de la suppression de la réservation.";
+    }
+}
+
+// Traitement de la modification d'une visite
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'modifier') {
+    // Récupérer les données du formulaire
+    $id_visite = $_POST['id_visite'];
+    $id_cin = htmlspecialchars(strip_tags($_POST['id_cin']));
+    $nom_complet = htmlspecialchars(strip_tags($_POST['nom_complet']));
+    $date_visite = htmlspecialchars(strip_tags($_POST['date_visite']));
+    $heure_visite = htmlspecialchars(strip_tags($_POST['heure_visite']));
+    
+    // Validation des données
+    if (empty($id_cin) || empty($nom_complet) || empty($date_visite) || empty($heure_visite)) {
+        $error = "Tous les champs sont obligatoires";
+    } else {
+        // Définir les valeurs de l'objet visite
+        $visite->setIdVisite($id_visite);
+        $visite->setCin($id_cin);
+        $visite->setNomComplet($nom_complet);
+        $visite->setDateVisite($date_visite);
+        $visite->setHeureVisite($heure_visite);
+        
+        // Mettre à jour la visite dans la base de données
+        if ($visite->modifierVisite()) {
+            $message = "La réservation de visite a été modifiée avec succès.";
+        } else {
+            $error = "Une erreur s'est produite lors de la modification de la réservation.";
+        }
+    }
+}
+
+// Récupération des réservations de visite
+$visites = $visite->afficherVisites();
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -10,46 +78,212 @@
     <link rel="stylesheet" href="../../styleback.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* Correction pour les modals trop grands */
-        .modal-content {
-            max-height: 85vh;
-            overflow-y: auto;
-            padding-right: 15px;
+        /* Style pour le tableau de réservations */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
         }
         
-        /* Style pour la barre de défilement */
-        .modal-content::-webkit-scrollbar {
-            width: 8px;
+        .data-table th, 
+        .data-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid rgba(201, 168, 108, 0.2);
         }
         
-        .modal-content::-webkit-scrollbar-track {
-            background: rgba(17, 17, 17, 0.5);
-            border-radius: 4px;
+        .data-table th {
+            background-color: rgba(36, 36, 36, 0.8);
+            color: var(--gold-primary);
+            font-weight: 600;
         }
         
-        .modal-content::-webkit-scrollbar-thumb {
-            background: var(--gold-primary);
-            border-radius: 4px;
+        .data-table tr:hover {
+            background-color: rgba(201, 168, 108, 0.1);
         }
         
-        .modal-content::-webkit-scrollbar-thumb:hover {
-            background: var(--gold-dark);
-        }
-        
-        /* Fixation de la position du bouton fermer */
-        .close-modal {
-            position: sticky;
-            top: 0;
-            right: 5px;
-            float: right;
-            z-index: 10;
-            background-color: var(--dark-bg);
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
+        .action-buttons {
             display: flex;
-            align-items: center;
-            justify-content: center;
+            gap: 10px;
+        }
+        
+        .btn {
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            border: none;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-edit {
+            background-color: #4CAF50;
+            color: white;
+        }
+        
+        .btn-edit:hover {
+            background-color: #3e8e41;
+        }
+        
+        .btn-delete {
+            background-color: #F44336;
+            color: white;
+        }
+        
+        .btn-delete:hover {
+            background-color: #d32f2f;
+        }
+        
+        /* Style pour les messages */
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        
+        .alert-success {
+            background-color: rgba(76, 175, 80, 0.2);
+            border: 1px solid #4CAF50;
+            color: #4CAF50;
+        }
+        
+        .alert-danger {
+            background-color: rgba(244, 67, 54, 0.2);
+            border: 1px solid #F44336;
+            color: #F44336;
+        }
+        
+        /* Style pour le modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.7);
+        }
+        
+        .modal-content {
+            background-color: #242424;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #c9a86c;
+            border-radius: 8px;
+            width: 60%;
+            max-width: 600px;
+            position: relative;
+            color: white;
+        }
+        
+        .close {
+            color: #c9a86c;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .close:hover {
+            color: #fff;
+        }
+        
+        .form-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+        
+        .form-group {
+            flex: 1;
+            margin-right: 15px;
+        }
+        
+        .form-group:last-child {
+            margin-right: 0;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #c9a86c;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid rgba(201, 168, 108, 0.2);
+            border-radius: 4px;
+            background-color: rgba(36, 36, 36, 0.8);
+            color: white;
+        }
+        
+        .form-control:focus {
+            border-color: #c9a86c;
+            outline: none;
+        }
+        
+        .action-btn {
+            background-color: transparent;
+            border: 1px solid;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            margin-right: 10px;
+        }
+        
+        .action-btn.edit {
+            border-color: #4CAF50;
+            color: #4CAF50;
+        }
+        
+        .action-btn.edit:hover {
+            background-color: #4CAF50;
+            color: #fff;
+        }
+        
+        .action-btn.delete {
+            border-color: #F44336;
+            color: #F44336;
+        }
+        
+        .action-btn.delete:hover {
+            background-color: #F44336;
+            color: #fff;
+        }
+        
+        /* Status styles */
+        .status {
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+        
+        .status.pending {
+            background-color: rgba(255, 193, 7, 0.2);
+            color: #FFC107;
+        }
+        
+        .status.confirmed {
+            background-color: rgba(76, 175, 80, 0.2);
+            color: #4CAF50;
+        }
+        
+        .status.completed {
+            background-color: rgba(33, 150, 243, 0.2);
+            color: #2196F3;
+        }
+        
+        .status.cancelled {
+            background-color: rgba(244, 67, 54, 0.2);
+            color: #F44336;
         }
     </style>
 </head>
@@ -69,15 +303,21 @@
         <div class="sidebar-nav">
             <ul>
                 <li>
-                    <a href="admin.php">
+                    <a href="dashboard.php">
                         <i class="fas fa-tachometer-alt"></i>
                         <span>Tableau de Bord</span>
                     </a>
                 </li>
                 <li>
-                    <a href="admin-villas.php">
-                        <i class="fas fa-home"></i>
-                        <span>Gestion des Villas</span>
+                    <a href="transportback.php">
+                        <i class="fas fa-car"></i>
+                        <span>Transports</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="admin-hebergements.php">
+                        <i class="fas fa-hotel"></i>
+                        <span>Hébergements</span>
                     </a>
                 </li>
                 <li class="active">
@@ -87,19 +327,25 @@
                     </a>
                 </li>
                 <li>
-                    <a href="admin-clients.php">
+                    <a href="#">
+                        <i class="fas fa-utensils"></i>
+                        <span>Restauration</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
+                        <i class="fas fa-comments"></i>
+                        <span>Forums</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
                         <i class="fas fa-users"></i>
-                        <span>Clients</span>
+                        <span>Utilisateurs</span>
                     </a>
                 </li>
                 <li>
-                    <a href="admin-transports.php">
-                        <i class="fas fa-car"></i>
-                        <span>Transports</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="admin-settings.php">
+                    <a href="#">
                         <i class="fas fa-cog"></i>
                         <span>Paramètres</span>
                     </a>
@@ -120,283 +366,6 @@
         </div>
     </div>
 
-    <!-- Add Reservation Modal -->
-    <div class="modal" id="addReservationModal">
-        <div class="modal-content">
-            <span class="close-modal" id="closeModal">&times;</span>
-            <h2>Ajouter une Réservation</h2>
-            
-            <form class="transport-form">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Client</label>
-                        <select>
-                            <option value="" disabled selected>Sélectionner un client</option>
-                            <option>Ahmed Benali</option>
-                            <option>Sonia Mansour</option>
-                            <option>Mohamed Kamoun</option>
-                            <option>Leila Trabelsi</option>
-                            <option>Karim Mejri</option>
-                            <option>+ Nouveau client</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Villa</label>
-                        <select>
-                            <option value="" disabled selected>Sélectionner une villa</option>
-                            <option>S+3 KMAR</option>
-                            <option>S+4 YASSER</option>
-                            <option>S+3 SAMI</option>
-                            <option>S+4 NARJESS</option>
-                            <option>S+5 YASMINE</option>
-                            <option>S+3 AMIRA</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Date de Visite</label>
-                        <input type="date">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Heure</label>
-                        <select>
-                            <option value="" disabled selected>Sélectionner l'heure</option>
-                            <option>09:00</option>
-                            <option>10:00</option>
-                            <option>11:00</option>
-                            <option>14:00</option>
-                            <option>15:00</option>
-                            <option>16:00</option>
-                            <option>17:00</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <div class="form-group">
-                    <label>Email du Client</label>
-                    <input type="email" placeholder="exemple@email.com">
-                </div>
-                
-                <div class="form-group">
-                    <label>Téléphone du Client</label>
-                    <input type="tel" placeholder="+216 XX XXX XXX">
-                </div>
-                
-                <div class="form-group">
-                    <label>Statut</label>
-                    <select>
-                        <option value="" disabled selected>Sélectionner le statut</option>
-                        <option>Confirmée</option>
-                        <option>En attente</option>
-                        <option>Annulée</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label>Notes</label>
-                    <textarea placeholder="Ajouter des notes ou commentaires"></textarea>
-                </div>
-                
-                <div class="form-actions">
-                    <button type="button" class="cancel-btn" id="cancelAddReservation">Annuler</button>
-                    <button type="submit" class="submit-btn">Ajouter</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Add Villa Modal -->
-    <div class="modal" id="addVillaModal">
-        <div class="modal-content">
-            <span class="close-modal" id="closeVillaModal">&times;</span>
-            <h2>Ajouter une Villa</h2>
-            
-            <form class="transport-form">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Nom de la Villa</label>
-                        <input type="text" placeholder="Ex: KMAR, YASMINE, etc.">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Type</label>
-                        <select>
-                            <option value="" disabled selected>Sélectionner le type</option>
-                            <option>S+2</option>
-                            <option>S+3</option>
-                            <option>S+4</option>
-                            <option>S+5</option>
-                            <option>S+6</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Surface Totale (m²)</label>
-                        <input type="number" placeholder="Ex: 215">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Sous-sol (m²)</label>
-                        <input type="number" placeholder="Ex: 52">
-                    </div>
-                </div>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Jardin (m²)</label>
-                        <input type="number" placeholder="Ex: 73">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Nombre de Chambres</label>
-                        <input type="number" placeholder="Ex: 3">
-                    </div>
-                </div>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Nombre de Salles de Bain</label>
-                        <input type="number" placeholder="Ex: 2">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Places de Parking</label>
-                        <input type="number" placeholder="Ex: 2">
-                    </div>
-                </div>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Étages</label>
-                        <select>
-                            <option value="" disabled selected>Sélectionner le nombre d'étages</option>
-                            <option>Rez-de-chaussée</option>
-                            <option>Rez-de-chaussée + 1</option>
-                            <option>Rez-de-chaussée + 2</option>
-                            <option>Rez-de-chaussée + 3</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Piscine</label>
-                        <select>
-                            <option value="" disabled selected>Sélectionner</option>
-                            <option>Oui</option>
-                            <option>Non</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <div class="form-group">
-                    <label>Prix (DT)</label>
-                    <input type="text" placeholder="Ex: 650,000">
-                </div>
-                
-                <div class="form-group">
-                    <label>Description</label>
-                    <textarea placeholder="Description détaillée de la villa..."></textarea>
-                </div>
-                
-                <div class="form-group">
-                    <label>Plan de la Villa</label>
-                    <div class="file-upload">
-                        <input type="file" id="villaPlan" accept="image/*">
-                        <label for="villaPlan">Choisir un fichier</label>
-                    </div>
-                </div>
-                
-                <div class="form-group">
-                    <label>Images de la Villa</label>
-                    <div class="file-upload">
-                        <input type="file" id="villaImages" accept="image/*" multiple>
-                        <label for="villaImages">Choisir des fichiers</label>
-                    </div>
-                </div>
-                
-                <div class="form-actions">
-                    <button type="button" class="cancel-btn" id="cancelAddVilla">Annuler</button>
-                    <button type="submit" class="submit-btn">Ajouter</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- View/Edit Reservation Modal -->
-    <div class="modal" id="viewReservationModal">
-        <div class="modal-content">
-            <span class="close-modal" id="closeViewModal">&times;</span>
-            <h2>Détails de la Réservation</h2>
-            
-            <div class="detail-row">
-                <div class="detail-image">
-                    <img src="/api/placeholder/600/350" alt="Villa Image">
-                </div>
-                
-                <div class="detail-info">
-                    <div class="detail-item">
-                        <span class="detail-label">ID Réservation:</span>
-                        <span class="detail-value">#RES-001</span>
-                    </div>
-                    
-                    <div class="detail-item">
-                        <span class="detail-label">Client:</span>
-                        <span class="detail-value">Ahmed Benali</span>
-                    </div>
-                    
-                    <div class="detail-item">
-                        <span class="detail-label">Contact:</span>
-                        <span class="detail-value">+216 12 345 678</span>
-                    </div>
-                    
-                    <div class="detail-item">
-                        <span class="detail-label">Email:</span>
-                        <span class="detail-value">ahmed.benali@email.com</span>
-                    </div>
-                    
-                    <div class="detail-item">
-                        <span class="detail-label">Villa:</span>
-                        <span class="detail-value">S+3 KMAR</span>
-                    </div>
-                    
-                    <div class="detail-item">
-                        <span class="detail-label">Date de Visite:</span>
-                        <span class="detail-value">05/04/2025 à 10:00</span>
-                    </div>
-                    
-                    <div class="detail-item">
-                        <span class="detail-label">Date de Réservation:</span>
-                        <span class="detail-value">01/04/2025</span>
-                    </div>
-                    
-                    <div class="detail-item">
-                        <span class="detail-label">Statut:</span>
-                        <span class="detail-value"><span class="status confirmed">Confirmée</span></span>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="detail-item full-width" style="margin-top: 20px;">
-                <span class="detail-label">Notes:</span>
-                <p class="detail-description">
-                    Client très intéressé par cette villa. A demandé des informations supplémentaires sur les options de financement. Prévoir documentation complète pour la visite.
-                </p>
-            </div>
-            
-            <div class="detail-actions">
-                <button class="edit-btn" id="editReservationBtn">
-                    <i class="fas fa-edit"></i>
-                    Modifier
-                </button>
-            </div>
-        </div>
-    </div>
-
     <!-- Main Content -->
     <div class="main-content" id="mainContent">
         <!-- Top Navigation -->
@@ -405,24 +374,14 @@
                 <button class="sidebar-toggle" id="sidebarToggle">
                     <i class="fas fa-bars"></i>
                 </button>
-                <h2>Gestion des Réservations</h2>
+                <h2>Gestion des Réservations de Visite</h2>
             </div>
             
             <div class="nav-right">
                 <div class="search-box">
                     <i class="fas fa-search"></i>
-                    <input type="text" placeholder="Rechercher...">
+                    <input type="text" id="searchInput" placeholder="Rechercher un CIN ou un nom...">
                 </div>
-                
-                <button class="add-btn" id="openAddReservationModal" style="margin-right: 10px;">
-                    <i class="fas fa-plus"></i>
-                    Nouvelle Réservation
-                </button>
-                
-                <button class="add-btn" id="openAddVillaModal" style="background-color: var(--gold-dark);">
-                    <i class="fas fa-home"></i>
-                    Nouvelle Villa
-                </button>
                 
                 <div class="user-profile">
                     <img src="/api/placeholder/100/100" alt="Admin Profile">
@@ -434,364 +393,218 @@
 
         <!-- Content Area -->
         <div class="content-area">
-            <!-- Filter Options -->
-            <div class="card" style="margin-bottom: 30px;">
-                <div class="card-body" style="padding: 20px;">
-                    <div style="display: flex; gap: 20px; flex-wrap: wrap;">
-                        <div style="flex: 1; min-width: 200px;">
-                            <label style="display: block; margin-bottom: 8px; color: var(--gold-light);">Statut</label>
-                            <select class="filter-select" style="width: 100%;">
-                                <option>Tous les statuts</option>
-                                <option>Confirmée</option>
-                                <option>En attente</option>
-                                <option>Annulée</option>
-                            </select>
-                        </div>
-                        
-                        <div style="flex: 1; min-width: 200px;">
-                            <label style="display: block; margin-bottom: 8px; color: var(--gold-light);">Villa</label>
-                            <select class="filter-select" style="width: 100%;">
-                                <option>Toutes les villas</option>
-                                <option>S+3 KMAR</option>
-                                <option>S+4 YASSER</option>
-                                <option>S+3 SAMI</option>
-                                <option>S+4 NARJESS</option>
-                                <option>S+5 YASMINE</option>
-                            </select>
-                        </div>
-                        
-                        <div style="flex: 1; min-width: 200px;">
-                            <label style="display: block; margin-bottom: 8px; color: var(--gold-light);">Période</label>
-                            <select class="filter-select" style="width: 100%;">
-                                <option>Toutes les dates</option>
-                                <option>Aujourd'hui</option>
-                                <option>Cette semaine</option>
-                                <option>Ce mois</option>
-                                <option>Ce trimestre</option>
-                            </select>
-                        </div>
-                        
-                        <div style="display: flex; align-items: flex-end;">
-                            <button style="background-color: var(--gold-primary); color: var(--darker-bg); border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: 500; transition: all 0.3s ease;">
-                                <i class="fas fa-filter"></i> Filtrer
-                            </button>
-                        </div>
-                    </div>
-                </div>
+            <?php if(!empty($message)): ?>
+            <div class="alert alert-success">
+                <?php echo $message; ?>
             </div>
-
-            <!-- Reservations Table -->
+            <?php endif; ?>
+            
+            <?php if(!empty($error)): ?>
+            <div class="alert alert-danger">
+                <?php echo $error; ?>
+            </div>
+            <?php endif; ?>
+            
+            <!-- Liste des réservations -->
             <div class="card">
                 <div class="card-header">
-                    <h3>Liste des Réservations</h3>
+                    <h3>Liste des réservations de visite</h3>
                     <div class="card-actions">
-                        <button class="refresh-btn">
+                        <button class="refresh-btn" id="refreshBtn">
                             <i class="fas fa-sync-alt"></i>
                         </button>
                     </div>
                 </div>
                 <div class="card-body">
-                    <table class="data-table">
+                    <table class="data-table" id="reservationsTable">
                         <thead>
                             <tr>
                                 <th>ID</th>
-                                <th>Client</th>
-                                <th>Contact</th>
-                                <th>Villa</th>
-                                <th>Date de Visite</th>
-                                <th>Date de Réservation</th>
-                                <th>Statut</th>
+                                <th>CIN</th>
+                                <th>Nom Complet</th>
+                                <th>Date Visite</th>
+                                <th>Heure Visite</th>
+                                <th>Type Villa</th>
+                                <th>Nom Villa</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr>
-                                <td>#RES-001</td>
-                                <td>Ahmed Benali</td>
-                                <td>+216 12 345 678</td>
-                                <td>S+3 KMAR</td>
-                                <td>05/04/2025 10:00</td>
-                                <td>01/04/2025</td>
-                                <td><span class="status confirmed">Confirmée</span></td>
-                                <td>
-                                    <button class="action-btn view"><i class="fas fa-eye"></i></button>
-                                    <button class="action-btn edit"><i class="fas fa-edit"></i></button>
-                                    <button class="action-btn delete"><i class="fas fa-trash"></i></button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>#RES-002</td>
-                                <td>Sonia Mansour</td>
-                                <td>+216 23 456 789</td>
-                                <td>S+4 YASSER</td>
-                                <td>03/04/2025 14:00</td>
-                                <td>30/03/2025</td>
-                                <td><span class="status active">En attente</span></td>
-                                <td>
-                                    <button class="action-btn view"><i class="fas fa-eye"></i></button>
-                                    <button class="action-btn edit"><i class="fas fa-edit"></i></button>
-                                    <button class="action-btn delete"><i class="fas fa-trash"></i></button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>#RES-003</td>
-                                <td>Mohamed Kamoun</td>
-                                <td>+216 34 567 890</td>
-                                <td>S+5 YASMINE</td>
-                                <td>01/04/2025 16:00</td>
-                                <td>28/03/2025</td>
-                                <td><span class="status cancelled">Annulée</span></td>
-                                <td>
-                                    <button class="action-btn view"><i class="fas fa-eye"></i></button>
-                                    <button class="action-btn edit"><i class="fas fa-edit"></i></button>
-                                    <button class="action-btn delete"><i class="fas fa-trash"></i></button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>#RES-004</td>
-                                <td>Leila Trabelsi</td>
-                                <td>+216 45 678 901</td>
-                                <td>S+3 SAMI</td>
-                                <td>30/03/2025 11:00</td>
-                                <td>25/03/2025</td>
-                                <td><span class="status confirmed">Confirmée</span></td>
-                                <td>
-                                    <button class="action-btn view"><i class="fas fa-eye"></i></button>
-                                    <button class="action-btn edit"><i class="fas fa-edit"></i></button>
-                                    <button class="action-btn delete"><i class="fas fa-trash"></i></button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>#RES-005</td>
-                                <td>Karim Mejri</td>
-                                <td>+216 56 789 012</td>
-                                <td>S+4 NARJESS</td>
-                                <td>28/03/2025 15:00</td>
-                                <td>23/03/2025</td>
-                                <td><span class="status active">En attente</span></td>
-                                <td>
-                                    <button class="action-btn view"><i class="fas fa-eye"></i></button>
-                                    <button class="action-btn edit"><i class="fas fa-edit"></i></button>
-                                    <button class="action-btn delete"><i class="fas fa-trash"></i></button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>#RES-006</td>
-                                <td>Sarra Bouslama</td>
-                                <td>+216 67 890 123</td>
-                                <td>S+3 KMAR</td>
-                                <td>10/04/2025 09:00</td>
-                                <td>05/04/2025</td>
-                                <td><span class="status active">En attente</span></td>
-                                <td>
-                                    <button class="action-btn view"><i class="fas fa-eye"></i></button>
-                                    <button class="action-btn edit"><i class="fas fa-edit"></i></button>
-                                    <button class="action-btn delete"><i class="fas fa-trash"></i></button>
-                                </td>
-                            </tr>
+                            <?php if(!empty($visites)): ?>
+                                <?php foreach($visites as $v): ?>
+                                    <tr>
+                                        <td><?php echo $v['id_visite']; ?></td>
+                                        <td><?php echo $v['id_cin']; ?></td>
+                                        <td><?php echo $v['nom_complet']; ?></td>
+                                        <td><?php echo date('d/m/Y', strtotime($v['date_visite'])); ?></td>
+                                        <td><?php echo $v['heure_visite']; ?></td>
+                                        <td><?php echo $v['type_villa'] ?? 'Non spécifié'; ?></td>
+                                        <td><?php echo $v['nom_villa'] ?? 'Non spécifié'; ?></td>
+                                        <td>
+                                            <div class="action-buttons">
+                                                <button class="btn btn-edit" onclick="openEditModal(<?php echo $v['id_visite']; ?>, '<?php echo $v['id_cin']; ?>', '<?php echo $v['nom_complet']; ?>', '<?php echo $v['date_visite']; ?>', '<?php echo $v['heure_visite']; ?>', '<?php echo $v['type_villa'] ?? ''; ?>', '<?php echo $v['nom_villa'] ?? ''; ?>')">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <button class="btn btn-delete" onclick="confirmDelete(<?php echo $v['id_visite']; ?>)">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <tr>
+                                    <td colspan="8" style="text-align: center;">Aucune réservation de visite trouvée</td>
+                                </tr>
+                            <?php endif; ?>
                         </tbody>
                     </table>
-                </div>
-            </div>
-            
-            <!-- Pagination -->
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 30px;">
-                <div>
-                    <span style="color: var(--gold-light);">Affichage de 1-6 sur 24 réservations</span>
-                </div>
-                
-                <div style="display: flex; gap: 10px;">
-                    <button style="background-color: rgba(201, 168, 108, 0.1); color: var(--gold-light); border: 1px solid rgba(201, 168, 108, 0.3); padding: 8px 15px; border-radius: 4px; cursor: pointer; transition: all 0.3s ease;">
-                        <i class="fas fa-chevron-left"></i>
-                    </button>
-                    
-                    <button style="background-color: rgba(201, 168, 108, 0.2); color: var(--gold-primary); border: 1px solid var(--gold-primary); padding: 8px 15px; border-radius: 4px; cursor: pointer; transition: all 0.3s ease;">
-                        1
-                    </button>
-                    
-                    <button style="background-color: rgba(201, 168, 108, 0.1); color: var(--gold-light); border: 1px solid rgba(201, 168, 108, 0.3); padding: 8px 15px; border-radius: 4px; cursor: pointer; transition: all 0.3s ease;">
-                        2
-                    </button>
-                    
-                    <button style="background-color: rgba(201, 168, 108, 0.1); color: var(--gold-light); border: 1px solid rgba(201, 168, 108, 0.3); padding: 8px 15px; border-radius: 4px; cursor: pointer; transition: all 0.3s ease;">
-                        3
-                    </button>
-                    
-                    <button style="background-color: rgba(201, 168, 108, 0.1); color: var(--gold-light); border: 1px solid rgba(201, 168, 108, 0.3); padding: 8px 15px; border-radius: 4px; cursor: pointer; transition: all 0.3s ease;">
-                        <i class="fas fa-chevron-right"></i>
-                    </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- JavaScript -->
+    <!-- Modal de modification de réservation -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeEditModal()">&times;</span>
+            <h2>Modifier la réservation de visite</h2>
+            
+            <form id="editForm" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="POST">
+                <input type="hidden" name="action" value="modifier">
+                <input type="hidden" id="edit_id_visite" name="id_visite" value="">
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="edit_id_cin">Numéro CIN</label>
+                        <input type="text" id="edit_id_cin" name="id_cin" class="form-control" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="edit_nom_complet">Nom Complet</label>
+                        <input type="text" id="edit_nom_complet" name="nom_complet" class="form-control" required>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="edit_date_visite">Date de Visite</label>
+                        <input type="date" id="edit_date_visite" name="date_visite" class="form-control" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="edit_heure_visite">Heure de Visite</label>
+                        <select id="edit_heure_visite" name="heure_visite" class="form-control" required>
+                            <option value="09:00">09:00</option>
+                            <option value="10:00">10:00</option>
+                            <option value="11:00">11:00</option>
+                            <option value="14:00">14:00</option>
+                            <option value="15:00">15:00</option>
+                            <option value="16:00">16:00</option>
+                            <option value="17:00">17:00</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="edit_type_villa">Type de Villa</label>
+                        <input type="text" id="edit_type_villa" class="form-control" disabled>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="edit_nom_villa">Nom de Villa</label>
+                        <input type="text" id="edit_nom_villa" class="form-control" disabled>
+                    </div>
+                </div>
+                
+                <div class="form-group" style="text-align: right; margin-top: 20px;">
+                    <button type="button" class="action-btn delete" onclick="closeEditModal()">Annuler</button>
+                    <button type="submit" class="action-btn edit">Enregistrer les modifications</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
-        // Sidebar Toggle Function
-        const sidebar = document.getElementById('sidebar');
-        const mainContent = document.getElementById('mainContent');
-        const sidebarToggle = document.getElementById('sidebarToggle');
+        // Fonction pour ouvrir le modal de modification
+        function openEditModal(id, cin, nom, date, heure, type, nomVilla) {
+            document.getElementById('edit_id_visite').value = id;
+            document.getElementById('edit_id_cin').value = cin;
+            document.getElementById('edit_nom_complet').value = nom;
+            document.getElementById('edit_date_visite').value = date;
+            document.getElementById('edit_heure_visite').value = heure;
+            document.getElementById('edit_type_villa').value = type;
+            document.getElementById('edit_nom_villa').value = nomVilla;
+            
+            document.getElementById('editModal').style.display = 'block';
+        }
         
-        sidebarToggle.addEventListener('click', function() {
-            sidebar.classList.toggle('collapsed');
-            mainContent.classList.toggle('expanded');
-        });
+        // Fonction pour fermer le modal de modification
+        function closeEditModal() {
+            document.getElementById('editModal').style.display = 'none';
+        }
         
-        // Modals
-        const addReservationModal = document.getElementById('addReservationModal');
-        const addVillaModal = document.getElementById('addVillaModal');
-        const viewReservationModal = document.getElementById('viewReservationModal');
-        const openAddReservationModal = document.getElementById('openAddReservationModal');
-        const openAddVillaModal = document.getElementById('openAddVillaModal');
-        const viewBtns = document.querySelectorAll('.action-btn.view');
-        const closeModal = document.getElementById('closeModal');
-        const closeVillaModal = document.getElementById('closeVillaModal');
-        const closeViewModal = document.getElementById('closeViewModal');
-        const cancelAddReservation = document.getElementById('cancelAddReservation');
-        const cancelAddVilla = document.getElementById('cancelAddVilla');
-        
-        openAddReservationModal.addEventListener('click', function() {
-            addReservationModal.style.display = 'flex';
-        });
-        
-        openAddVillaModal.addEventListener('click', function() {
-            addVillaModal.style.display = 'flex';
-        });
-        
-        viewBtns.forEach(btn => {
-            btn.addEventListener('click', function() {
-                viewReservationModal.style.display = 'flex';
-            });
-        });
-        
-        closeModal.addEventListener('click', function() {
-            addReservationModal.style.display = 'none';
-        });
-        
-        closeVillaModal.addEventListener('click', function() {
-            addVillaModal.style.display = 'none';
-        });
-        
-        closeViewModal.addEventListener('click', function() {
-            viewReservationModal.style.display = 'none';
-        });
-        
-        cancelAddReservation.addEventListener('click', function() {
-            addReservationModal.style.display = 'none';
-        });
-        
-        cancelAddVilla.addEventListener('click', function() {
-            addVillaModal.style.display = 'none';
-        });
-        
-        // Close modals when clicking outside
-        window.addEventListener('click', function(event) {
-            if (event.target === addReservationModal) {
-                addReservationModal.style.display = 'none';
+      // Fonction pour confirmer la suppression
+      function confirmDelete(id) {
+            if (confirm('Êtes-vous sûr de vouloir supprimer cette réservation de visite ?')) {
+                window.location.href = 'admin-reservations.php?action=supprimer&id=' + id;
             }
-            if (event.target === addVillaModal) {
-                addVillaModal.style.display = 'none';
-            }
-            if (event.target === viewReservationModal) {
-                viewReservationModal.style.display = 'none';
-            }
-        });
+        }
         
-        // Confirm delete
-        const deleteBtns = document.querySelectorAll('.action-btn.delete');
-        
-        deleteBtns.forEach(btn => {
-            btn.addEventListener('click', function() {
-                if (confirm('Êtes-vous sûr de vouloir supprimer cette réservation ?')) {
-                    // Delete action would happen here
-                    alert('Réservation supprimée avec succès.');
+        // Fonction de recherche dans le tableau
+        document.getElementById('searchInput').addEventListener('keyup', function() {
+            const input = this.value.toLowerCase();
+            const table = document.getElementById('reservationsTable');
+            const rows = table.getElementsByTagName('tr');
+            
+            for (let i = 1; i < rows.length; i++) {
+                const cin = rows[i].getElementsByTagName('td')[1];
+                const nom = rows[i].getElementsByTagName('td')[2];
+                
+                if (cin && nom) {
+                    const cinText = cin.textContent || cin.innerText;
+                    const nomText = nom.textContent || nom.innerText;
+                    
+                    if (cinText.toLowerCase().indexOf(input) > -1 || nomText.toLowerCase().indexOf(input) > -1) {
+                        rows[i].style.display = '';
+                    } else {
+                        rows[i].style.display = 'none';
+                    }
                 }
-            });
+            }
         });
         
-        // Edit buttons
-        const editBtns = document.querySelectorAll('.action-btn.edit');
-        const editReservationBtn = document.getElementById('editReservationBtn');
-        
-        editBtns.forEach(btn => {
-            btn.addEventListener('click', function() {
-                // In a real app, you'd populate the form with reservation data
-                addReservationModal.style.display = 'flex';
-            });
+        // Bouton de rafraîchissement
+        document.getElementById('refreshBtn').addEventListener('click', function() {
+            window.location.reload();
         });
         
-        if (editReservationBtn) {
-            editReservationBtn.addEventListener('click', function() {
-                viewReservationModal.style.display = 'none';
-                setTimeout(() => {
-                    addReservationModal.style.display = 'flex';
-                }, 300);
-            });
+        // Toggle du sidebar
+        document.getElementById('sidebarToggle').addEventListener('click', function() {
+            document.getElementById('sidebar').classList.toggle('collapsed');
+            document.getElementById('mainContent').classList.toggle('expanded');
+        });
+        
+        // Fermer le modal en cliquant à l'extérieur
+        window.onclick = function(event) {
+            const modal = document.getElementById('editModal');
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
         }
         
-        // File upload name display
-        const villaPlanInput = document.getElementById('villaPlan');
-        const villaImagesInput = document.getElementById('villaImages');
-        
-        if (villaPlanInput) {
-            villaPlanInput.addEventListener('change', function() {
-                const fileName = this.files[0]?.name || 'Choisir un fichier';
-                this.nextElementSibling.textContent = fileName;
-            });
-        }
-        
-        if (villaImagesInput) {
-            villaImagesInput.addEventListener('change', function() {
-                const fileCount = this.files.length;
-                this.nextElementSibling.textContent = fileCount > 0 ? `${fileCount} fichier(s) sélectionné(s)` : 'Choisir des fichiers';
-            });
-        }
-        
-        // Add animation when opening modals
-        function animateModalOpen(modal) {
-            modal.style.display = 'flex';
-            const modalContent = modal.querySelector('.modal-content');
+        // Validation de formulaire
+        document.getElementById('editForm').addEventListener('submit', function(e) {
+            const cinInput = document.getElementById('edit_id_cin');
             
-            // Reset any previous transformation
-            modalContent.style.transform = 'scale(0.8)';
-            modalContent.style.opacity = '0';
-            
-            // Force reflow
-            modalContent.offsetHeight;
-            
-            // Apply animation
-            modalContent.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
-            modalContent.style.transform = 'scale(1)';
-            modalContent.style.opacity = '1';
-        }
-        
-        // Update the event listeners to use the animation
-        openAddReservationModal.addEventListener('click', function() {
-            animateModalOpen(addReservationModal);
-        });
-        
-        openAddVillaModal.addEventListener('click', function() {
-            animateModalOpen(addVillaModal);
-        });
-        
-        viewBtns.forEach(btn => {
-            btn.addEventListener('click', function() {
-                animateModalOpen(viewReservationModal);
-            });
-        });
-        
-        // Add smooth scroll to modal content
-        const modalContents = document.querySelectorAll('.modal-content');
-        modalContents.forEach(content => {
-            content.addEventListener('scroll', function() {
-                if (this.scrollTop > 20) {
-                    this.classList.add('scrolled');
-                } else {
-                    this.classList.remove('scrolled');
-                }
-            });
+            // Valider le format du CIN (8 chiffres pour la Tunisie)
+            if (!/^\d{8}$/.test(cinInput.value)) {
+                e.preventDefault();
+                alert('Le numéro CIN doit contenir exactement 8 chiffres.');
+                cinInput.focus();
+            }
         });
     </script>
 </body>
 </html>
-        
