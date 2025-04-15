@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forum Tunisie - Explorez la Tunisie</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <div class="logo">
+                    <img src="logo.png" alt="Logo">
+                    <div class="logo-text">
+                        <h1>TuniFy</h1>
+                        <p>village</p>
+                    </div>
+                </div>
+            </a>
+            <div class="navbar-right">
+                <ul class="list-inline">
+                    <li><a href="#"><i class="fas fa-home"></i> Accueil</a></li>
+                    <li><a href="#"><i class="fas fa-map-marked-alt"></i> Régions</a></li>
+                    <li><a href="#"><i class="fas fa-user"></i> Profil</a></li>
+                    <li><a href="#"><i class="fas fa-envelope"></i> Contact</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Contenu principal -->
+    <main class="container">
+        <!-- Fil d'Ariane -->
+        <div class="breadcrumbBox">
+            <ul class="breadcrumb">
+                <li><a href="#">Accueil</a></li>
+                <li class="active"><a href="#">Forum</a></li>
+            </ul>
+        </div>
+
+        <!-- Barre de recherche -->
+        <div class="search-container">
+            <div class="search-box">
+                <input type="text" id="search-input" placeholder="Rechercher des posts...">
+                <button id="search-btn"><i class="fas fa-search"></i></button>
+            </div>
+            <div class="search-filters">
+                <select id="search-type">
+                    <option value="all">Tout</option>
+                    <option value="title">Titre</option>
+                    <option value="content">Contenu</option>
+                    <option value="author">Auteur</option>
+                    <option value="region">Région</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Section Forum -->
+        <section class="forum-section">
+            <h1>Forum de Discussion</h1>
+            
+            <!-- Nouveau post -->
+            <section id="new-post">
+                <h2>Partager votre expérience en Tunisie</h2>
+                
+                <form id="post-form" enctype="multipart/form-data" class="post-box">
+                    <div class="form-group">
+                        <input type="text" id="post-title" name="title" placeholder="Titre de votre publication" required>
+                    </div>
+                    <div class="textarea-container">
+                        <textarea id="new-post-content" name="content" placeholder="Partagez votre expérience ici..."></textarea>
+                        
+                        <!-- Aperçu des médias -->
+                        <div id="media-preview" class="media-preview-inside"></div>
+
+                        <!-- Icônes d'ajout -->
+                        <div class="textarea-icons">
+                            <label for="image-upload" title="Ajouter une photo">📷</label>
+                            <input type="file" id="image-upload" name="image" accept="image/*" hidden>
+
+                            <label for="video-upload" title="Ajouter une vidéo">🎥</label>
+                            <input type="file" id="video-upload" name="video" accept="video/*" hidden>
+
+                            <span id="emoji-toggle" title="Emoji">😀</span>
+                        </div>
+                        
+                        <!-- Liste des emojis -->
+                        <div id="emoji-list" class="emoji-list hidden">
+                            <span>🌴</span><span>🏜️</span><span>🌅</span><span>🏖️</span>
+                            <span>🍛</span><span>🥙</span><span>🍵</span><span>🍋</span>
+                            <span>🏛️</span><span>🕌</span><span>🎭</span><span>🧵</span>
+                            <span>🐪</span><span>🇹🇳</span><span>❤️</span><span>👍</span>
+                            <span>😍</span><span>🤩</span><span>👏</span><span>🎉</span>
+                        </div>
+                    </div>
+
+                    <button type="submit" id="submit-post">Publier</button>
+                </form>
+            </section>
+
+            <!-- Liste des posts -->
+            <div id="posts-container" class="posts-list">
+                <!-- Les posts seront chargés dynamiquement ici -->
+            </div>
+        </section>
+
+        <!-- Chatbot -->
+        <div class="chatbot-toggle">
+            <i class="fas fa-comment-dots"></i>
+        </div>
+        <div class="chatbot-container">
+            <div class="chatbot-header">
+                <h3>Chatbot d'aide</h3>
+                <button class="close-chatbot"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="chatbot-messages">
+                <div class="message bot-message">
+                    Bonjour! Comment puis-je vous aider à découvrir la Tunisie?
+                </div>
+            </div>
+            <div class="chatbot-input">
+                <input type="text" placeholder="Posez votre question...">
+                <button><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </div>
+
+        <!-- Modal de signalement -->
+        <div id="report-modal" class="modal">
+            <div class="modal-content">
+                <span class="close-modal">&times;</span>
+                <h3>Signaler un contenu</h3>
+                <form id="report-form">
+                    <input type="hidden" id="reported-post-id" name="post_id" value="">
+                    <div class="form-group">
+                        <label for="report-reason">Raison du signalement</label>
+                        <select id="report-reason" name="reason" required>
+                            <option value="">-- Sélectionnez une raison --</option>
+                            <option value="spam">Spam ou publicité</option>
+                            <option value="harassment">Harcèlement ou intimidation</option>
+                            <option value="hate_speech">Discours haineux</option>
+                            <option value="inappropriate">Contenu inapproprié</option>
+                            <option value="other">Autre</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="report-details">Détails (optionnel)</label>
+                        <textarea id="report-details" name="details" placeholder="Fournissez plus de détails si nécessaire..."></textarea>
+                    </div>
+                    <input type="hidden" name="reporter" value="Utilisateur">
+                    <button type="submit" class="btn-gold">Envoyer le signalement</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Modal d'édition -->
+        <div id="edit-modal" class="modal">
+            <div class="modal-content">
+                <span class="close-edit-modal">&times;</span>
+                <h3>Modifier le contenu</h3>
+                <form id="edit-form">
+                    <input type="hidden" id="edit-content-id">
+                    <input type="hidden" id="edit-content-type">
+                    <div class="form-group">
+                        <input type="text" id="edit-title" placeholder="Titre" class="full-width">
+                    </div>
+                    <div class="form-group">
+                        <textarea id="edit-content" placeholder="Contenu" rows="5" class="full-width"></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="cancel-btn">Annuler</button>
+                        <button type="submit" class="save-btn">Enregistrer</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-top">
+                <div class="footer-about">
+                    <div class="logo">
+                        <img src="logo.png" alt="Logo">
+                        <div class="logo-text">
+                            <h1>TuniFy</h1>
+                            <p>village</p>
+                        </div>
+                    </div>
+                    <p>Notre plateforme est dédiée à la découverte des merveilles de la Tunisie. Partagez vos expériences et découvrez les trésors cachés de ce magnifique pays.</p>
+                </div>
+                <div class="footer-links">
+                    <h4 class="footer-heading">Liens rapides</h4>
+                    <ul>
+                        <li><a href="#">Accueil</a></li>
+                        <li><a href="#">Destinations</a></li>
+                        <li><a href="#">Forum</a></li>
+                        <li><a href="#">Galerie</a></li>
+                        <li><a href="#">Blog</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h4 class="footer-heading">Régions</h4>
+                    <ul>
+                        <li><a href="#">Tunis et Nord</a></li>
+                        <li><a href="#">Sahel</a></li>
+                        <li><a href="#">Centre</a></li>
+                        <li><a href="#">Sud</a></li>
+                        <li><a href="#">Îles</a></li>
+                    </ul>
+                </div>
+                <div class="footer-contact">
+                    <h4 class="footer-heading">Contact</h4>
+                    <p><i class="fas fa-map-marker-alt"></i> 123 Avenue Habib Bourguiba, Tunis</p>
+                    <p><i class="fas fa-phone"></i> +216 12 345 678</p>
+                    <p><i class="fas fa-envelope"></i> contact@exploreztunisie.tn</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p class="footer-copyright">© 2025 <a href="#">Explorez la Tunisie</a>. Tous droits réservés.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
