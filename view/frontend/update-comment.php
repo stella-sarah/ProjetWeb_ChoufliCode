@@ -2,7 +2,7 @@
 header('Content-Type: application/json');
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
-require_once 'config.php';
+require_once '../../config.php'; // Include database configuration
 
 $pdo = config::getConnexion();
 
@@ -25,7 +25,6 @@ if (empty($content)) {
 }
 
 try {
-    // Mettre à jour le commentaire sans vérification d'auteur
     $stmt = $pdo->prepare("UPDATE comments SET content = ?, last_updated = NOW() WHERE id = ?");
     $stmt->execute([$content, $comment_id]);
     

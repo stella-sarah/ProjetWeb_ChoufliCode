@@ -241,6 +241,141 @@ a:hover {
     border-color: var(--gold-primary);
 }
 
+.announcements-section {
+    margin: 3rem 0;
+}
+
+.announcements-section h2 {
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    font-family: 'Cinzel', serif;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    position: relative;
+}
+
+.announcements-section h2::after {
+    content: '';
+    position: absolute;
+    bottom: -3px;
+    left: 0;
+    width: 100px;
+    height: 3px;
+    background: linear-gradient(90deg, var(--gold-primary), transparent);
+}
+
+.announcement {
+    background: linear-gradient(135deg, 
+                rgba(201, 168, 108, 0.15) 0%, 
+                rgba(139, 120, 61, 0.3) 100%);
+    padding: 3rem;
+    margin-bottom: 3rem;
+    border-radius: 1.2rem;
+    border: 1px solid rgba(201, 168, 108, 0.5);
+    box-shadow: 0 10px 30px rgba(201, 168, 108, 0.2), 
+                inset 0 0 20px rgba(255, 215, 0, 0.1);
+    position: relative;
+    overflow: hidden;
+    backdrop-filter: blur(5px);
+    transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.announcement::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, rgba(201, 168, 108, 0.2) 1%, transparent 2%),
+                radial-gradient(circle, rgba(233, 217, 182, 0.15) 1%, transparent 2%),
+                radial-gradient(circle, rgba(139, 120, 61, 0.25) 1%, transparent 2%);
+    background-size: 20px 20px;
+    opacity: 0.6;
+    animation: sparkle 8s infinite linear;
+    pointer-events: none;
+}
+
+@keyframes sparkle {
+    0% {
+        background-position: 0 0, 5px 5px, 10px 10px;
+    }
+    100% {
+        background-position: 20px 20px, 25px 25px, 30px 30px;
+    }
+}
+
+.announcement::before {
+    content: '\f0f3';
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    position: absolute;
+    top: -2rem;
+    left: 2rem;
+    background-color: var(--gold-primary);
+    color: var(--darker-bg);
+    width: 4rem;
+    height: 4rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4), 0 0 8px var(--gold-light);
+    transition: transform 0.3s ease, background-color 0.3s ease;
+    z-index: 1;
+}
+
+.announcement:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(201, 168, 108, 0.3), 
+                inset 0 0 25px rgba(255, 215, 0, 0.15);
+    border-color: var(--gold-light);
+}
+
+.announcement:hover::before {
+    transform: scale(1.1);
+    background-color: var(--gold-light);
+}
+
+.announcement h3 {
+    font-family: 'Cinzel', serif;
+    font-size: 2.6rem;
+    color: var(--gold-light);
+    margin-bottom: 1.8rem;
+    font-weight: 700;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    position: relative;
+    display: inline-block;
+}
+
+.announcement h3::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    left: 0;
+    width: 60px;
+    height: 3px;
+    background: var(--gold-primary);
+}
+
+.announcement .meta {
+    font-size: 1.5rem;
+    color: var(--light-gray);
+    margin-bottom: 1.8rem;
+    font-style: italic;
+    border-left: 3px solid var(--gold-primary);
+    padding-left: 1rem;
+}
+
+.announcement p {
+    font-size: 1.7rem;
+    color: var(--light-text);
+    line-height: 1.8;
+    position: relative;
+    z-index: 1;
+}
+
 .forum-section {
     margin-bottom: 5rem;
 }
@@ -272,7 +407,7 @@ a:hover {
 
 #post-title {
     width: 100%;
-    padding: 1rem;
+    padding: 1.2rem;
     background-color: var(--dark-bg);
     border: 1px solid var(--border-color);
     border-radius: 0.5rem;
@@ -280,6 +415,11 @@ a:hover {
     font-family: inherit;
     font-size: 1.6rem;
     margin-bottom: 1rem;
+}
+
+#post-title::placeholder {
+    color: var(--light-gray);
+    opacity: 0.7;
 }
 
 #post-title:focus {
@@ -295,15 +435,20 @@ a:hover {
 #new-post-content {
     width: 100%;
     height: 140px;
-    padding: 1rem;
+    padding: 1.2rem;
     background-color: var(--dark-bg);
     color: var(--light-text);
     font-size: 1.6rem;
-    border-radius: 10px;
+    border-radius: 0.5rem;
     border: 1px solid var(--border-color);
     resize: none;
     font-family: inherit;
     box-sizing: border-box;
+}
+
+#new-post-content::placeholder {
+    color: var(--light-gray);
+    opacity: 0.7;
 }
 
 .textarea-icons {
@@ -402,7 +547,7 @@ a:hover {
     position: relative;
     overflow: hidden;
 }
-  
+
 .btn-gold::before {
     content: '';
     position: absolute;
@@ -414,13 +559,13 @@ a:hover {
     transform: skewX(-25deg);
     transition: all 0.5s ease;
 }
-  
+
 .btn-gold:hover {
     background: linear-gradient(145deg, #ffe066, #ffcc00);
     transform: translateY(-2px);
     box-shadow: 0 6px 14px rgba(0, 0, 0, 0.25);
 }
-  
+
 .btn-gold:hover::before {
     left: 125%;
 }
@@ -429,12 +574,15 @@ a:hover {
     background-color: var(--gold-primary);
     color: var(--darker-bg);
     border: none;
-    padding: 1rem 2rem;
+    padding: 1.2rem 2.4rem;
     border-radius: 0.5rem;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
     font-size: 1.6rem;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
 }
 
 #submit-post:hover {
@@ -620,6 +768,11 @@ a:hover {
     resize: vertical;
 }
 
+.comment-form textarea::placeholder {
+    color: var(--light-gray);
+    opacity: 0.7;
+}
+
 .chatbot-toggle {
     position: fixed;
     bottom: 3rem;
@@ -803,7 +956,7 @@ a:hover {
 #report-form select,
 #report-form textarea {
     width: 100%;
-    padding: 1rem;
+    padding: 1.2rem;
     margin-bottom: 1.5rem;
     background-color: var(--darker-bg);
     border: 1px solid var(--border-color);
@@ -1013,60 +1166,64 @@ a:hover {
 .edit-post-btn:hover, .edit-comment-btn:hover {
     background: rgba(201, 168, 108, 0.1);
     color: var(--gold-light);
+    transform: rotate(15deg) scale(1.2);
 }
 
 .edit-form {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    margin-top: 1rem;
-    padding: 1.5rem;
+    padding: 2rem;
     background-color: var(--dark-bg);
     border: 1px solid var(--border-color);
-    border-radius: 0.5rem;
+    border-radius: 0.8rem;
+    margin-top: 1.5rem;
+    animation: slideIn 0.4s ease-out forwards;
 }
 
-.edit-form input, 
+.edit-form input[type="text"],
 .edit-form textarea {
     width: 100%;
-    padding: 1rem;
+    padding: 1.2rem;
+    margin-bottom: 1.5rem;
     background-color: var(--darker-bg);
     border: 1px solid var(--border-color);
     border-radius: 0.5rem;
     color: var(--light-text);
-    font-family: inherit;
-    font-size: 1.4rem;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.edit-form input[type="text"]:focus,
+.edit-form textarea:focus {
+    outline: none;
+    border-color: var(--gold-primary);
+    box-shadow: 0 0 0 2px rgba(201, 168, 108, 0.2);
 }
 
 .edit-form textarea {
-    min-height: 10rem;
+    min-height: 150px;
     resize: vertical;
 }
 
 .edit-form .form-actions {
     display: flex;
-    gap: 1.5rem;
     justify-content: flex-end;
-    margin-top: 1rem;
-}
-
-.edit-form button {
-    padding: 1rem 2rem;
-    border-radius: 0.8rem;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    font-weight: 600;
-    font-size: 1.4rem;
-    display: flex;
-    align-items: center;
-    gap: 0.8rem;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    gap: 1.5rem;
+    margin-top: 1.5rem;
 }
 
 .edit-form .save-btn {
     background: linear-gradient(145deg, var(--gold-primary), var(--gold-dark));
     color: var(--darker-bg);
     border: none;
+    padding: 1.2rem 2.4rem;
+    border-radius: 0.8rem;
+    font-weight: 600;
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
     position: relative;
     overflow: hidden;
 }
@@ -1086,79 +1243,146 @@ a:hover {
 .edit-form .save-btn:hover {
     background: linear-gradient(145deg, var(--gold-light), var(--gold-primary));
     transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .edit-form .save-btn:hover::before {
     left: 125%;
 }
 
+.edit-form .save-btn i {
+    transition: transform 0.3s ease;
+}
+
+.edit-form .save-btn:hover i {
+    transform: translateX(3px);
+}
+
 .edit-form .cancel-btn {
     background-color: transparent;
     color: var(--light-text);
     border: 1px solid var(--border-color);
+    padding: 1.2rem 2.4rem;
+    border-radius: 0.8rem;
+    font-weight: 600;
+    font-size: 1.5rem;
+    cursor: pointer;
     transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
 }
 
 .edit-form .cancel-btn:hover {
-    background-color: rgba(248, 245, 235, 0.1);
+    background-color: rgba(201, 168, 108, 0.1);
     border-color: var(--gold-primary);
     color: var(--gold-primary);
-    transform: translateY(-2px);
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
-.history-modal {
-    display: none;
+.edit-form .cancel-btn i {
+    transition: transform 0.3s ease;
+}
+
+.edit-form .cancel-btn:hover i {
+    transform: translateX(-3px);
+}
+
+.notification {
     position: fixed;
-    z-index: 2000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.7);
-    backdrop-filter: blur(5px);
+    top: 20px;
+    right: 20px;
+    padding: 15px 25px;
+    border-radius: 8px;
+    color: white;
+    font-size: 1.6rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    z-index: 3000;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transform: translateX(150%);
+    transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    max-width: 350px;
 }
 
-.history-content {
-    background-color: var(--dark-bg);
-    margin: 5% auto;
-    padding: 3rem;
-    border: 1px solid var(--gold-primary);
-    border-radius: 0.8rem;
-    width: 90%;
-    max-width: 800px;
-    max-height: 80vh;
-    overflow-y: auto;
-    position: relative;
+.notification.show {
+    transform: translateX(0);
 }
 
-.history-item {
-    padding: 1.5rem;
-    margin-bottom: 1.5rem;
-    background-color: var(--darker-bg);
-    border-radius: 0.5rem;
-    border: 1px solid var(--border-color);
+.notification.success {
+    background-color: #2ecc71;
+    border-left: 5px solid #27ae60;
 }
 
-.history-date {
-    color: var(--gold-light);
-    font-size: 1.2rem;
-    margin-bottom: 0.5rem;
+.notification.error {
+    background-color: #e74c3c;
+    border-left: 5px solid #c0392b;
 }
 
-.close-history {
-    position: absolute;
-    right: 2rem;
-    top: 1.5rem;
-    font-size: 2.5rem;
-    color: var(--light-text);
-    cursor: pointer;
-    transition: color 0.3s;
+.notification.warning {
+    background-color: #f39c12;
+    border-left: 5px solid #d35400;
 }
 
-.close-history:hover {
-    color: var(--gold-primary);
+.notification i {
+    font-size: 2rem;
+}
+
+@keyframes notificationIn {
+    0% { transform: translateX(150%); }
+    80% { transform: translateX(-10%); }
+    100% { transform: translateX(0); }
+}
+
+@keyframes notificationOut {
+    0% { transform: translateX(0); }
+    20% { transform: translateX(-10%); }
+    100% { transform: translateX(150%); }
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes savePulse {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(201, 168, 108, 0.7);
+    }
+    70% {
+        transform: scale(1.05);
+        box-shadow: 0 0 0 10px rgba(201, 168, 108, 0);
+    }
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(201, 168, 108, 0);
+    }
+}
+
+.save-success {
+    animation: savePulse 1s ease;
+}
+
+@keyframes cancelSlide {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateX(100%);
+    }
+}
+
+.cancel-effect {
+    animation: cancelSlide 0.5s ease forwards;
 }
 
 @media (max-width: 992px) {
@@ -1212,6 +1436,34 @@ a:hover {
     .chatbot-container {
         width: 30rem;
     }
+    
+    .announcement {
+        padding: 2.5rem;
+    }
+    
+    .announcement::before {
+        top: -1.5rem;
+        left: 1.5rem;
+        width: 3rem;
+        height: 3rem;
+        font-size: 1.6rem;
+    }
+    
+    .announcement h3 {
+        font-size: 2.2rem;
+    }
+    
+    .announcement .meta {
+        font-size: 1.4rem;
+    }
+    
+    .announcement p {
+        font-size: 1.6rem;
+    }
+    
+    .announcement::after {
+        background-size: 15px 15px;
+    }
 }
 
 @media (max-width: 576px) {
@@ -1232,6 +1484,16 @@ a:hover {
         flex-direction: column;
     }
     
+    .edit-form .form-actions {
+        flex-direction: column;
+    }
+    
+    .edit-form .save-btn,
+    .edit-form .cancel-btn {
+        width: 100%;
+        justify-content: center;
+    }
+    
     .chatbot-toggle {
         width: 5rem;
         height: 5rem;
@@ -1244,65 +1506,32 @@ a:hover {
         bottom: 8rem;
         width: calc(100% - 2rem);
     }
-}
-
-/* Styles pour les boutons Enregistrer et Annuler dans la modale d'édition */
-#edit-form .form-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 1rem;
-    margin-top: 1.5rem;
-}
-
-#edit-form button[type="submit"] {
-    background-color: var(--gold-primary);
-    color: var(--darker-bg);
-    border: none;
-    padding: 1rem 2rem;
-    border-radius: 0.5rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-#edit-form button[type="submit"]:hover {
-    background-color: var(--gold-light);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-}
-
-#edit-form .cancel-btn {
-    background-color: transparent;
-    color: var(--light-text);
-    border: 1px solid var(--border-color);
-    padding: 1rem 2rem;
-    border-radius: 0.5rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-#edit-form .cancel-btn:hover {
-    background-color: rgba(248, 245, 235, 0.1);
-    border-color: var(--gold-primary);
-    color: var(--gold-primary);
-    transform: translateY(-2px);
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-}
-
-.full-width {
-    width: 100%;
-    padding: 1rem;
-    margin-bottom: 1.5rem;
-    background-color: var(--darker-bg);
-    border: 1px solid var(--border-color);
-    border-radius: 0.5rem;
-    color: var(--light-text);
-    font-family: inherit;
-    font-size: 1.4rem;
-}
-
-.full-width:focus {
-    outline: none;
-    border-color: var(--gold-primary);
+    
+    .announcement {
+        padding: 2rem;
+    }
+    
+    .announcement::before {
+        top: -1rem;
+        left: 1rem;
+        width: 2rem;
+        height: 2rem;
+        font-size: 1.2rem;
+    }
+    
+    .announcement h3 {
+        font-size: 2rem;
+    }
+    
+    .announcement .meta {
+        font-size: 1.3rem;
+    }
+    
+    .announcement p {
+        font-size: 1.5rem;
+    }
+    
+    .announcement::after {
+        background-size: 10px 10px;
+    }
 }

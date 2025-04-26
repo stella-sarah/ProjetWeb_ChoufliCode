@@ -1,5 +1,4 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // Gestion du chatbot
     const chatbotToggle = document.querySelector('.chatbot-toggle');
     const chatbotContainer = document.querySelector('.chatbot-container');
     const closeChatbot = document.querySelector('.close-chatbot');
@@ -12,7 +11,6 @@ document.addEventListener('DOMContentLoaded', function() {
         chatbotContainer.classList.remove('active');
     });
     
-    // Simulation de réponse du chatbot
     const chatbotInput = document.querySelector('.chatbot-input input');
     const chatbotMessages = document.querySelector('.chatbot-messages');
     const chatbotSendBtn = document.querySelector('.chatbot-input button');
@@ -64,7 +62,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Gestion des emojis
     const emojiToggle = document.getElementById('emoji-toggle');
     const emojiList = document.getElementById('emoji-list');
     const newPostTextarea = document.getElementById('new-post-content');
@@ -92,7 +89,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Gestion des médias
     const imageUpload = document.getElementById('image-upload');
     const videoUpload = document.getElementById('video-upload');
     const mediaPreview = document.getElementById('media-preview');
@@ -126,10 +122,9 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Chargement initial des posts
     loadPosts();
+    loadAnnouncements();
 
-    // Gestion du formulaire de post
     const postForm = document.getElementById('post-form');
     if (postForm) {
         postForm.addEventListener('submit', function(e) {
@@ -139,12 +134,12 @@ document.addEventListener('DOMContentLoaded', function() {
             const content = document.getElementById('new-post-content').value.trim();
             
             if (!title) {
-                alert("Veuillez ajouter un titre à votre publication.");
+                showNotification('error', 'Veuillez ajouter un titre à votre publication.');
                 return;
             }
             
             if (!content && !imageUpload.files[0] && !videoUpload.files[0]) {
-                alert("Veuillez écrire quelque chose ou ajouter une image/vidéo.");
+                showNotification('error', 'Veuillez écrire quelque chose ou ajouter une image/vidéo.');
                 return;
             }
 
@@ -161,17 +156,17 @@ document.addEventListener('DOMContentLoaded', function() {
                     document.getElementById('posts-container').prepend(postElement);
                     postForm.reset();
                     mediaPreview.innerHTML = '';
+                    showNotification('success', 'Publication ajoutée avec succès !');
                 } else {
-                    alert('Erreur: ' + data.message);
+                    showNotification('error', 'Erreur: ' + data.message);
                 }
             })
             .catch(error => {
-                alert('Erreur réseau: ' + error);
+                showNotification('error', 'Erreur réseau: ' + error);
             });
         });
     }
 
-    // Fonctionnalité de recherche
     const searchInput = document.getElementById('search-input');
     const searchBtn = document.getElementById('search-btn');
     const searchType = document.getElementById('search-type');
@@ -211,7 +206,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             })
             .catch(error => {
-                console.error('Erreur de recherche:', error);
+                showNotification('error', 'Erreur de recherche: ' + error);
             });
     }
     
@@ -228,7 +223,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Gestion du modal de signalement
     document.querySelector('.close-modal').addEventListener('click', closeReportModal);
 
     window.addEventListener('click', function(event) {
@@ -239,7 +233,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// Fonction pour mettre à jour un post
 async function updatePost(postId, newTitle, newContent) {
     try {
         const response = await fetch('update-post.php', {
@@ -253,17 +246,17 @@ async function updatePost(postId, newTitle, newContent) {
         const data = await response.json();
 
         if (data.success) {
-            loadPosts(); // Recharger les posts
+            loadPosts();
+            showNotification('success', 'Post mis à jour avec succès !');
         } else {
             throw new Error(data.message || 'Erreur lors de la mise à jour');
         }
     } catch (error) {
         console.error('Erreur:', error);
-        alert('Erreur lors de la mise à jour: ' + error.message);
+        showNotification('error', 'Erreur lors de la mise à jour: ' + error.message);
     }
 }
 
-// Fonction pour mettre à jour un commentaire
 async function updateComment(commentId, newContent) {
     try {
         const response = await fetch('update-comment.php', {
@@ -276,19 +269,62 @@ async function updateComment(commentId, newContent) {
 
         const data = await response.json();
 
-        if (data.success) {
-            const postElement = document.querySelector(`.comment[data-comment-id="${commentId}"]`).closest('.post');
-            if (postElement) {
-                const postId = postElement.dataset.postId;
-                loadComments(postId, postElement);
-            }
-        } else {
+        if (!response.ok) {
+            throw new Error(data.message || 'Erreur serveur');
+        }
+
+        if (!data.success) {
             throw new Error(data.message || 'Erreur lors de la mise à jour');
         }
+
+        showNotification('success', 'Commentaire mis à jour avec succès !');
+        return data;
     } catch (error) {
         console.error('Erreur:', error);
-        alert('Erreur lors de la mise à jour: ' + error.message);
+        showNotification('error', 'Erreur: ' + error.message);
+        throw error;
     }
+}
+
+function showNotification(type, message) {
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    
+    let icon;
+    switch(type) {
+        case 'success':
+            icon = '<i class="fas fa-check-circle"></i>';
+            break;
+        case 'error':
+            icon = '<i class="fas fa-exclamation-circle"></i>';
+            break;
+        case 'warning':
+            icon = '<i class="fas fa-exclamation-triangle"></i>';
+            break;
+        default:
+            icon = '<i class="fas fa-info-circle"></i>';
+    }
+    
+    notification.innerHTML = `${icon} ${message}`;
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.classList.add('show');
+    }, 10);
+    
+    setTimeout(() => {
+        notification.classList.remove('show');
+        setTimeout(() => {
+            notification.remove();
+        }, 500);
+    }, 5000);
+    
+    notification.addEventListener('click', () => {
+        notification.classList.remove('show');
+        setTimeout(() => {
+            notification.remove();
+        }, 500);
+    });
 }
 
 function loadPosts() {
@@ -310,7 +346,7 @@ function loadPosts() {
             }
         })
         .catch(error => {
-            console.error('Erreur de chargement des posts:', error);
+            showNotification('error', 'Erreur de chargement des posts: ' + error);
         });
 }
 
@@ -379,10 +415,17 @@ function createPostElement(post) {
     `;
 
     const deleteBtn = article.querySelector('.delete-post-btn');
-    deleteBtn.addEventListener('click', function() {
-        if (confirm('Voulez-vous vraiment supprimer ce post ?')) {
-            deletePost(post.id, article);
-        }
+    deleteBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        
+        this.style.transform = 'rotate(360deg) scale(1.5)';
+        setTimeout(() => {
+            this.style.transform = 'rotate(0) scale(1)';
+            
+            if (confirm('Voulez-vous vraiment supprimer ce post ?')) {
+                deletePost(post.id, article);
+            }
+        }, 500);
     });
 
     const editPostBtn = article.querySelector('.edit-post-btn');
@@ -393,31 +436,48 @@ function createPostElement(post) {
             const title = postElement.querySelector('h3').textContent;
             const content = postElement.querySelector('.post-content p').textContent;
             
+            this.style.transform = 'rotate(360deg) scale(1.5)';
+            setTimeout(() => {
+                this.style.transform = 'rotate(0) scale(1)';
+            }, 500);
+            
             const editForm = document.createElement('div');
             editForm.innerHTML = `
                 <div class="edit-form">
-                    <input type="text" class="edit-title" value="${title.replace(/"/g, '&quot;')}">
-                    <textarea class="edit-content">${content.replace(/"/g, '&quot;')}</textarea>
-                    <button class="save-edit-btn">Enregistrer</button>
-                    <button class="cancel-edit-btn">Annuler</button>
+                    <input type="text" class="full-width" value="${title.replace(/"/g, '"')}">
+                    <textarea class="full-width">${content.replace(/"/g, '"')}</textarea>
+                    <div class="form-actions">
+                        <button type="button" class="cancel-btn">
+                            <i class="fas fa-times"></i> Annuler
+                        </button>
+                        <button type="button" class="save-btn">
+                            <i class="fas fa-check"></i> Enregistrer
+                        </button>
+                    </div>
                 </div>
             `;
             
             postElement.querySelector('.post-content').innerHTML = '';
             postElement.querySelector('.post-content').appendChild(editForm);
             
-            editForm.querySelector('.cancel-edit-btn').addEventListener('click', function() {
-                loadPosts();
+            editForm.querySelector('.cancel-btn').addEventListener('click', function() {
+                editForm.classList.add('cancel-effect');
+                setTimeout(() => {
+                    loadPosts();
+                }, 500);
             });
             
-            editForm.querySelector('.save-edit-btn').addEventListener('click', function() {
-                const newTitle = editForm.querySelector('.edit-title').value.trim();
-                const newContent = editForm.querySelector('.edit-content').value.trim();
+            editForm.querySelector('.save-btn').addEventListener('click', function() {
+                const newTitle = editForm.querySelector('input').value.trim();
+                const newContent = editForm.querySelector('textarea').value.trim();
                 
                 if (newTitle && newContent) {
-                    updatePost(postId, newTitle, newContent);
+                    this.classList.add('save-success');
+                    setTimeout(() => {
+                        updatePost(postId, newTitle, newContent);
+                    }, 1000);
                 } else {
-                    alert('Le titre et le contenu ne peuvent pas être vides');
+                    showNotification('error', 'Le titre et le contenu ne peuvent pas être vides');
                 }
             });
         });
@@ -490,16 +550,23 @@ function createPostElement(post) {
                     
                     const deleteBtn = commentElement.querySelector('.delete-comment-btn');
                     if (deleteBtn) {
-                        deleteBtn.addEventListener('click', function() {
-                            const commentId = this.getAttribute('data-comment-id');
-                            if (!commentId) {
-                                alert('ID de commentaire invalide');
-                                return;
-                            }
+                        deleteBtn.addEventListener('click', function(e) {
+                            e.preventDefault();
                             
-                            if (confirm('Voulez-vous vraiment supprimer ce commentaire ?')) {
-                                deleteComment(commentId, this.closest('.comment'));
-                            }
+                            this.style.transform = 'rotate(360deg) scale(1.5)';
+                            setTimeout(() => {
+                                this.style.transform = 'rotate(0) scale(1)';
+                                
+                                const commentId = this.getAttribute('data-comment-id');
+                                if (!commentId) {
+                                    showNotification('error', 'ID de commentaire invalide');
+                                    return;
+                                }
+                                
+                                if (confirm('Voulez-vous vraiment supprimer ce commentaire ?')) {
+                                    deleteComment(commentId, this.closest('.comment'));
+                                }
+                            }, 500);
                         });
                     }
 
@@ -508,32 +575,58 @@ function createPostElement(post) {
                         editBtn.addEventListener('click', function() {
                             const commentId = this.getAttribute('data-comment-id');
                             const commentElement = this.closest('.comment');
-                            const content = commentElement.querySelector('p').textContent;
+                            const contentElement = commentElement.querySelector('.comment-content p:not(.author)');
+                            const content = contentElement.textContent;
+                            
+                            this.style.transform = 'rotate(360deg) scale(1.5)';
+                            setTimeout(() => {
+                                this.style.transform = 'rotate(0) scale(1)';
+                            }, 500);
                             
                             const editForm = document.createElement('div');
                             editForm.innerHTML = `
                                 <div class="edit-form">
-                                    <textarea class="edit-content">${content.replace(/"/g, '&quot;')}</textarea>
-                                    <button class="save-edit-btn">Enregistrer</button>
-                                    <button class="cancel-edit-btn">Annuler</button>
+                                    <textarea class="full-width">${content.replace(/"/g, '"')}</textarea>
+                                    <div class="form-actions">
+                                        <button type="button" class="cancel-btn">
+                                            <i class="fas fa-times"></i> Annuler
+                                        </button>
+                                        <button type="button" class="save-btn">
+                                            <i class="fas fa-check"></i> Enregistrer
+                                        </button>
+                                    </div>
                                 </div>
                             `;
                             
-                            commentElement.querySelector('p').style.display = 'none';
-                            commentElement.insertBefore(editForm, commentElement.querySelector('.edit-comment-btn'));
+                            contentElement.style.display = 'none';
+                            commentElement.querySelector('.comment-content').insertBefore(editForm, contentElement.nextSibling);
                             
-                            editForm.querySelector('.cancel-edit-btn').addEventListener('click', function() {
-                                editForm.remove();
-                                commentElement.querySelector('p').style.display = 'block';
+                            editForm.querySelector('.cancel-btn').addEventListener('click', function() {
+                                editForm.classList.add('cancel-effect');
+                                setTimeout(() => {
+                                    editForm.remove();
+                                    contentElement.style.display = 'block';
+                                }, 500);
                             });
                             
-                            editForm.querySelector('.save-edit-btn').addEventListener('click', function() {
-                                const newContent = editForm.querySelector('.edit-content').value.trim();
+                            editForm.querySelector('.save-btn').addEventListener('click', function() {
+                                const newContent = editForm.querySelector('textarea').value.trim();
                                 
                                 if (newContent) {
-                                    updateComment(commentId, newContent);
+                                    this.classList.add('save-success');
+                                    setTimeout(() => {
+                                        updateComment(commentId, newContent)
+                                            .then(() => {
+                                                contentElement.textContent = newContent;
+                                                editForm.remove();
+                                                contentElement.style.display = 'block';
+                                            })
+                                            .catch(error => {
+                                                showNotification('error', 'Erreur: ' + error.message);
+                                            });
+                                    }, 500);
                                 } else {
-                                    alert('Le contenu ne peut pas être vide');
+                                    showNotification('error', 'Le contenu ne peut pas être vide');
                                 }
                             });
                         });
@@ -541,27 +634,35 @@ function createPostElement(post) {
                     
                     commentList.appendChild(commentElement);
                     commentInput.value = '';
+                    showNotification('success', 'Commentaire ajouté avec succès !');
                 } else {
-                    alert('Erreur: ' + data.message);
+                    showNotification('error', 'Erreur: ' + data.message);
                 }
             })
             .catch(error => {
-                alert('Erreur réseau: ' + error);
+                showNotification('error', 'Erreur réseau: ' + error);
             });
         }
     });
 
     article.querySelectorAll('.delete-comment-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const commentId = this.getAttribute('data-comment-id');
-            if (!commentId) {
-                alert('ID de commentaire invalide');
-                return;
-            }
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
             
-            if (confirm('Voulez-vous vraiment supprimer ce commentaire ?')) {
-                deleteComment(commentId, this.closest('.comment'));
-            }
+            this.style.transform = 'rotate(360deg) scale(1.5)';
+            setTimeout(() => {
+                this.style.transform = 'rotate(0) scale(1)';
+                
+                const commentId = this.getAttribute('data-comment-id');
+                if (!commentId) {
+                    showNotification('error', 'ID de commentaire invalide');
+                    return;
+                }
+                
+                if (confirm('Voulez-vous vraiment supprimer ce commentaire ?')) {
+                    deleteComment(commentId, this.closest('.comment'));
+                }
+            }, 500);
         });
     });
 
@@ -569,32 +670,58 @@ function createPostElement(post) {
         btn.addEventListener('click', function() {
             const commentId = this.getAttribute('data-comment-id');
             const commentElement = this.closest('.comment');
-            const content = commentElement.querySelector('p').textContent;
+            const contentElement = commentElement.querySelector('.comment-content p:not(.author)');
+            const content = contentElement.textContent;
+            
+            this.style.transform = 'rotate(360deg) scale(1.5)';
+            setTimeout(() => {
+                this.style.transform = 'rotate(0) scale(1)';
+            }, 500);
             
             const editForm = document.createElement('div');
             editForm.innerHTML = `
                 <div class="edit-form">
-                    <textarea class="edit-content">${content.replace(/"/g, '&quot;')}</textarea>
-                    <button class="save-edit-btn">Enregistrer</button>
-                    <button class="cancel-edit-btn">Annuler</button>
+                    <textarea class="full-width">${content.replace(/"/g, '"')}</textarea>
+                    <div class="form-actions">
+                        <button type="button" class="cancel-btn">
+                            <i class="fas fa-times"></i> Annuler
+                        </button>
+                        <button type="button" class="save-btn">
+                            <i class="fas fa-check"></i> Enregistrer
+                        </button>
+                    </div>
                 </div>
             `;
             
-            commentElement.querySelector('p').style.display = 'none';
-            commentElement.insertBefore(editForm, commentElement.querySelector('.edit-comment-btn'));
+            contentElement.style.display = 'none';
+            commentElement.querySelector('.comment-content').insertBefore(editForm, contentElement.nextSibling);
             
-            editForm.querySelector('.cancel-edit-btn').addEventListener('click', function() {
-                editForm.remove();
-                commentElement.querySelector('p').style.display = 'block';
+            editForm.querySelector('.cancel-btn').addEventListener('click', function() {
+                editForm.classList.add('cancel-effect');
+                setTimeout(() => {
+                    editForm.remove();
+                    contentElement.style.display = 'block';
+                }, 500);
             });
             
-            editForm.querySelector('.save-edit-btn').addEventListener('click', function() {
-                const newContent = editForm.querySelector('.edit-content').value.trim();
+            editForm.querySelector('.save-btn').addEventListener('click', function() {
+                const newContent = editForm.querySelector('textarea').value.trim();
                 
                 if (newContent) {
-                    updateComment(commentId, newContent);
+                    this.classList.add('save-success');
+                    setTimeout(() => {
+                        updateComment(commentId, newContent)
+                            .then(() => {
+                                contentElement.textContent = newContent;
+                                editForm.remove();
+                                contentElement.style.display = 'block';
+                            })
+                            .catch(error => {
+                                showNotification('error', 'Erreur: ' + error.message);
+                            });
+                    }, 500);
                 } else {
-                    alert('Le contenu ne peut pas être vide');
+                    showNotification('error', 'Le contenu ne peut pas être vide');
                 }
             });
         });
@@ -604,7 +731,7 @@ function createPostElement(post) {
     reportBtn.addEventListener('click', function() {
         const postId = parseInt(this.closest('.post').dataset.postId);
         if (isNaN(postId) || postId <= 0) {
-            alert('Erreur: ID de post invalide');
+            showNotification('error', 'Erreur: ID de post invalide');
             return;
         }
         openReportModal(postId);
@@ -627,13 +754,13 @@ async function deletePost(postId, postElement) {
 
         if (data.success) {
             postElement.remove();
-            alert('Post supprimé avec succès');
+            showNotification('success', 'Post supprimé avec succès');
         } else {
             throw new Error(data.message || 'Erreur lors de la suppression');
         }
     } catch (error) {
         console.error('Erreur:', error);
-        alert('Erreur lors de la suppression: ' + error.message);
+        showNotification('error', 'Erreur lors de la suppression: ' + error.message);
     }
 }
 
@@ -655,13 +782,13 @@ async function deleteComment(commentId, commentElement) {
 
         if (data.success) {
             commentElement.remove();
-            alert('Commentaire supprimé avec succès');
+            showNotification('success', 'Commentaire supprimé avec succès');
         } else {
             throw new Error(data.message || 'Erreur lors de la suppression');
         }
     } catch (error) {
         console.error('Erreur:', error);
-        alert(error.message);
+        showNotification('error', error.message);
         const postElement = commentElement.closest('.post');
         if (postElement) {
             const postId = postElement.dataset.postId;
@@ -700,11 +827,17 @@ function loadComments(postId, postElement) {
                     
                     const deleteBtn = commentElement.querySelector('.delete-comment-btn');
                     if (deleteBtn) {
-                        deleteBtn.addEventListener('click', function() {
-                            const commentId = this.getAttribute('data-comment-id');
-                            if (confirm('Voulez-vous vraiment supprimer ce commentaire ?')) {
-                                deleteComment(commentId, this.closest('.comment'));
-                            }
+                        deleteBtn.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            
+                            this.style.transform = 'rotate(360deg) scale(1.5)';
+                            setTimeout(() => {
+                                this.style.transform = 'rotate(0) scale(1)';
+                                
+                                if (confirm('Voulez-vous vraiment supprimer ce commentaire ?')) {
+                                    deleteComment(comment.id, commentElement);
+                                }
+                            }, 500);
                         });
                     }
 
@@ -713,32 +846,58 @@ function loadComments(postId, postElement) {
                         editBtn.addEventListener('click', function() {
                             const commentId = this.getAttribute('data-comment-id');
                             const commentElement = this.closest('.comment');
-                            const content = commentElement.querySelector('p').textContent;
+                            const contentElement = commentElement.querySelector('.comment-content p:not(.author)');
+                            const content = contentElement.textContent;
+                            
+                            this.style.transform = 'rotate(360deg) scale(1.5)';
+                            setTimeout(() => {
+                                this.style.transform = 'rotate(0) scale(1)';
+                            }, 500);
                             
                             const editForm = document.createElement('div');
                             editForm.innerHTML = `
                                 <div class="edit-form">
-                                    <textarea class="edit-content">${content.replace(/"/g, '&quot;')}</textarea>
-                                    <button class="save-edit-btn">Enregistrer</button>
-                                    <button class="cancel-edit-btn">Annuler</button>
+                                    <textarea class="full-width">${content.replace(/"/g, '"')}</textarea>
+                                    <div class="form-actions">
+                                        <button type="button" class="cancel-btn">
+                                            <i class="fas fa-times"></i> Annuler
+                                        </button>
+                                        <button type="button" class="save-btn">
+                                            <i class="fas fa-check"></i> Enregistrer
+                                        </button>
+                                    </div>
                                 </div>
                             `;
                             
-                            commentElement.querySelector('p').style.display = 'none';
-                            commentElement.insertBefore(editForm, commentElement.querySelector('.edit-comment-btn'));
+                            contentElement.style.display = 'none';
+                            commentElement.querySelector('.comment-content').insertBefore(editForm, contentElement.nextSibling);
                             
-                            editForm.querySelector('.cancel-edit-btn').addEventListener('click', function() {
-                                editForm.remove();
-                                commentElement.querySelector('p').style.display = 'block';
+                            editForm.querySelector('.cancel-btn').addEventListener('click', function() {
+                                editForm.classList.add('cancel-effect');
+                                setTimeout(() => {
+                                    editForm.remove();
+                                    contentElement.style.display = 'block';
+                                }, 500);
                             });
                             
-                            editForm.querySelector('.save-edit-btn').addEventListener('click', function() {
-                                const newContent = editForm.querySelector('.edit-content').value.trim();
+                            editForm.querySelector('.save-btn').addEventListener('click', function() {
+                                const newContent = editForm.querySelector('textarea').value.trim();
                                 
                                 if (newContent) {
-                                    updateComment(commentId, newContent);
+                                    this.classList.add('save-success');
+                                    setTimeout(() => {
+                                        updateComment(commentId, newContent)
+                                            .then(() => {
+                                                contentElement.textContent = newContent;
+                                                editForm.remove();
+                                                contentElement.style.display = 'block';
+                                            })
+                                            .catch(error => {
+                                                showNotification('error', 'Erreur: ' + error.message);
+                                            });
+                                    }, 500);
                                 } else {
-                                    alert('Le contenu ne peut pas être vide');
+                                    showNotification('error', 'Le contenu ne peut pas être vide');
                                 }
                             });
                         });
@@ -748,7 +907,7 @@ function loadComments(postId, postElement) {
                 });
             }
         })
-        .catch(error => console.error('Erreur:', error));
+        .catch(error => showNotification('error', 'Erreur: ' + error));
 }
 
 function openReportModal(postId) {
@@ -757,7 +916,7 @@ function openReportModal(postId) {
     
     postId = parseInt(postId);
     if (isNaN(postId) || postId <= 0) {
-        alert('Erreur: ID de post invalide');
+        showNotification('error', 'Erreur: ID de post invalide');
         return;
     }
     
@@ -812,18 +971,79 @@ document.getElementById('report-form').addEventListener('submit', async function
             postElement.remove();
         }
         
-        alert('✔️ Signalement envoyé et post supprimé avec succès');
+        showNotification('success', 'Signalement envoyé et post supprimé avec succès');
         closeReportModal();
         
     } catch (error) {
         console.error('Erreur de signalement:', error);
         
         if (error.name === 'AbortError') {
-            alert('Erreur: Le serveur ne répond pas (timeout)');
+            showNotification('error', 'Erreur: Le serveur ne répond pas (timeout)');
         } else if (error.message.includes('Failed to fetch')) {
-            alert('Erreur: Problème de connexion internet');
+            showNotification('error', 'Erreur: Problème de connexion internet');
         } else {
-            alert(`Erreur: ${error.message}`);
+            showNotification('error', `Erreur: ${error.message}`);
         }
     }
 });
+
+function applyFullWidthStyles() {
+    document.querySelectorAll('.full-width').forEach(el => {
+        el.style.width = '100%';
+        el.style.padding = '1rem';
+        el.style.marginBottom = '1.5rem';
+        el.style.backgroundColor = 'var(--darker-bg)';
+        el.style.border = '1px solid var(--border-color)';
+        el.style.borderRadius = '0.5rem';
+        el.style.color = 'var(--light-text)';
+        el.style.fontFamily = 'inherit';
+        el.style.fontSize = '1.4rem';
+    });
+}
+
+function loadAnnouncements() {
+    fetch('get-announcements.php') // Chemin corrigé
+        .then(res => {
+            if (!res.ok) {
+                return res.text().then(text => { 
+                    throw new Error(`Erreur ${res.status}: ${text}`) 
+                });
+            }
+            return res.json();
+        })
+        .then(data => {
+            console.log('Données reçues:', data); // Debug
+            const announcementsList = document.getElementById('announcements-list');
+            
+            if (!data.success) {
+                throw new Error(data.message || 'Erreur inconnue du serveur');
+            }
+
+            announcementsList.innerHTML = data.announcements.length > 0
+                ? data.announcements.map(ann => `
+                    <div class="announcement">
+                        <h3>${ann.title}</h3>
+                        <div class="meta">
+                            Par ${ann.author} le ${new Date(ann.created_at).toLocaleDateString('fr-FR')}
+                        </div>
+                        <p>${ann.content}</p>
+                    </div>
+                  `).join('')
+                : '<p>Aucune annonce disponible.</p>';
+        })
+        .catch(error => {
+            console.error('Erreur complète:', error);
+            const msg = error.message.includes('fetch') 
+                ? 'Impossible de contacter le serveur'
+                : error.message;
+            
+            document.getElementById('announcements-list').innerHTML = `
+                <p class="error">Erreur: ${msg}</p>
+            `;
+        });
+}
+
+// Lancez le chargement au démarrage
+document.addEventListener('DOMContentLoaded', loadAnnouncements);
+
+document.addEventListener('DOMContentLoaded', applyFullWidthStyles);
