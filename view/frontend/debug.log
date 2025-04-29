@@ -1,0 +1,22 @@
+Données reçues : Array
+(
+    [title] => ds
+    [content] => 🏛
+)
+
+Données renvoyées : Array
+(
+    [id] => 60
+    [title] => ds
+    [content] => ????
+    [author] => Anonyme
+    [region] => Non spécifiée
+    [image_url] => 
+    [video_url] => 
+    [created_at] => 2025-04-26 18:44:05
+    [hidden] => 0
+    [is_deleted] => 0
+    [last_updated] => 
+    [original_id] => 
+)
+

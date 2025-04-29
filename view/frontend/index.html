@@ -67,20 +67,20 @@
                 
                 <form id="post-form" enctype="multipart/form-data" class="post-box">
                     <div class="form-group">
-                        <input type="text" id="post-title" name="title" placeholder="Titre de votre publication" required>
+                        <input type="text" id="post-title" name="title" placeholder="Titre de votre publication">
                     </div>
                     <div class="textarea-container">
                         <textarea id="new-post-content" name="content" placeholder="Partagez votre expérience ici..."></textarea>
                         
                         <div id="media-preview" class="media-preview-inside"></div>
-
+            
                         <div class="textarea-icons">
                             <label for="image-upload" title="Ajouter une photo">📷</label>
                             <input type="file" id="image-upload" name="image" accept="image/*" hidden>
-
+            
                             <label for="video-upload" title="Ajouter une vidéo">🎥</label>
                             <input type="file" id="video-upload" name="video" accept="video/*" hidden>
-
+            
                             <span id="emoji-toggle" title="Emoji">😀</span>
                         </div>
                         
@@ -92,11 +92,10 @@
                             <span>😍</span><span>🤩</span><span>👏</span><span>🎉</span>
                         </div>
                     </div>
-
+            
                     <button type="submit" id="submit-post">Publier</button>
                 </form>
             </section>
-
             <div id="posts-container" class="posts-list"></div>
         </section>
 
@@ -116,6 +115,12 @@
             <div class="chatbot-input">
                 <input type="text" placeholder="Posez votre question...">
                 <button><i class="fas fa-paper-plane"></i></button>
+            </div>
+            <div class="quick-suggestions">
+                <div class="quick-suggestion" data-query="plages">Meilleures plages</div>
+                <div class="quick-suggestion" data-query="hotels">Hôtels recommandés</div>
+                <div class="quick-suggestion" data-query="nourriture">Spécialités culinaires</div>
+                <div class="quick-suggestion" data-query="desert">Itinéraires désert</div>
             </div>
         </div>
 

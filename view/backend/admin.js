@@ -129,14 +129,41 @@ document.addEventListener('DOMContentLoaded', function() {
         editForm.addEventListener('submit', function(e) {
             e.preventDefault();
 
-            const formData = new FormData(this);
-            const id = formData.get('id');
+            const idField = document.getElementById('edit-announcement-id');
+            const titleField = document.getElementById('edit-announcement-title');
+            const authorField = document.getElementById('edit-announcement-author');
+            const contentField = document.getElementById('edit-announcement-content');
 
+            if (!idField || !titleField || !authorField || !contentField) {
+                console.error('Champs du formulaire de modification manquants.');
+                showNotification('Erreur: Formulaire de modification incomplet.', 'error');
+                return;
+            }
+
+            const id = idField.value.trim();
+            const title = titleField.value.trim();
+            const author = authorField.value.trim();
+            const content = contentField.value.trim();
+
+            // JavaScript validation
             if (!id) {
-                console.error('ID manquant dans le formulaire de modification.');
                 showNotification('Erreur: ID d\'annonce manquant.', 'error');
                 return;
             }
+            if (!title) {
+                showNotification('Veuillez ajouter un titre à l\'annonce.', 'error');
+                return;
+            }
+            if (!author) {
+                showNotification('Veuillez spécifier un auteur pour l\'annonce.', 'error');
+                return;
+            }
+            if (!content) {
+                showNotification('Veuillez ajouter du contenu à l\'annonce.', 'error');
+                return;
+            }
+
+            const formData = new FormData(this);
 
             fetch('update-announcement.php', {
                 method: 'POST',
@@ -152,7 +179,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 showNotification('Annonce mise à jour avec succès', 'success');
                 if (editModal) editModal.style.display = 'none';
                 loadAnnouncements();
-                loadPublicAnnouncements(); // Recharger les annonces publiques si applicable
+                loadPublicAnnouncements();
             })
             .catch(error => {
                 console.error('Erreur lors de la mise à jour:', error);
@@ -172,13 +199,27 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (!titleField || !contentField || !authorField) {
                 console.error('Champs du formulaire d\'ajout manquants.');
-                showNotification('Erreur: Formulaire d\'ajout incomplet: ' + error.message, 'error');
+                showNotification('Erreur: Formulaire d\'ajout incomplet.', 'error');
                 return;
             }
 
-            const title = titleField.value;
-            const content = contentField.value;
-            const author = authorField.value;
+            const title = titleField.value.trim();
+            const content = contentField.value.trim();
+            const author = authorField.value.trim();
+
+            // JavaScript validation
+            if (!title) {
+                showNotification('Veuillez ajouter un titre à l\'annonce.', 'error');
+                return;
+            }
+            if (!author) {
+                showNotification('Veuillez spécifier un auteur pour l\'annonce.', 'error');
+                return;
+            }
+            if (!content) {
+                showNotification('Veuillez ajouter du contenu à l\'annonce.', 'error');
+                return;
+            }
 
             try {
                 const response = await fetch('add-announcement.php', {
@@ -194,7 +235,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (announcementModal) announcementModal.style.display = 'none';
                     announcementForm.reset();
                     loadAnnouncements();
-                    loadPublicAnnouncements(); // Recharger les annonces publiques
+                    loadPublicAnnouncements();
                 } else {
                     showNotification(`Erreur: ${data.message || 'Échec de l\'ajout'}`, 'error');
                 }
@@ -210,7 +251,7 @@ document.addEventListener('DOMContentLoaded', function() {
     loadComments();
     loadReports();
     loadAnnouncements();
-    loadPublicAnnouncements(); // Charger les annonces publiques au démarrage
+    loadPublicAnnouncements();
 
     // Charger les publications
     function loadPosts() {
@@ -454,7 +495,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (action === 'delete') {
                     showConfirmation(`Êtes-vous sûr de vouloir supprimer cette ${typeFr} ?`, async (confirmed) => {
                         if (confirmed) {
-                            // Le code qui était après le confirm
                             try {
                                 const response = await fetch(`admin-action.php`, {
                                     method: 'POST',
@@ -467,8 +507,21 @@ document.addEventListener('DOMContentLoaded', function() {
                                         id: id
                                     })
                                 });
-                                // ... le reste de votre code
+                                const data = await response.json();
+                                if (data.success) {
+                                    showNotification(`${typeFr.charAt(0).toUpperCase() + typeFr.slice(1)} supprimée avec succès`, 'success');
+                                    if (type === 'post') loadPosts();
+                                    else if (type === 'comment') loadComments();
+                                    else if (type === 'report') loadReports();
+                                    else if (type === 'announcement') {
+                                        loadAnnouncements();
+                                        loadPublicAnnouncements();
+                                    }
+                                } else {
+                                    showNotification(`Erreur: ${data.message || 'Échec de l\'action'}`, 'error');
+                                }
                             } catch (error) {
+                                console.error(`Erreur lors de l'action ${action} sur ${type}:`, error);
                                 showNotification(`Erreur: ${error.message}`, 'error');
                             }
                         }
@@ -490,8 +543,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     });
                     const data = await response.json();
                     if (data.success) {
-                        showNotification(`${typeFr.charAt(0).toUpperCase() + typeFr.slice(1)} ${action === 'delete' ? 'supprimée' : 
-                            action === 'hide' ? 'cachée' : 
+                        showNotification(`${typeFr.charAt(0).toUpperCase() + typeFr.slice(1)} ${action === 'hide' ? 'cachée' : 
                             action === 'restore' ? 'restaurée' : 
                             action === 'resolve' ? 'résolue' : 'rejetée'} avec succès`, 'success');
                         if (type === 'post') loadPosts();
@@ -501,6 +553,8 @@ document.addEventListener('DOMContentLoaded', function() {
                             loadAnnouncements();
                             loadPublicAnnouncements();
                         }
+                    } else {
+                        showNotification(`Erreur: ${data.message || 'Échec de l\'action'}`, 'error');
                     }
                 } catch (error) {
                     console.error(`Erreur lors de l'action ${action} sur ${type}:`, error);
@@ -510,77 +564,78 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Ajoutez cette fonction en haut de votre fichier JS
-function showNotification(message, type = 'info') {
-    const types = {
-        success: { icon: 'fa-check-circle', class: 'success' },
-        error: { icon: 'fa-exclamation-circle', class: 'error' },
-        warning: { icon: 'fa-exclamation-triangle', class: 'warning' },
-        info: { icon: 'fa-info-circle', class: 'info' }
-    };
+    // Fonction pour afficher une notification stylisée
+    function showNotification(message, type = 'info') {
+        const types = {
+            success: { icon: 'fa-check-circle', class: 'success' },
+            error: { icon: 'fa-exclamation-circle', class: 'error' },
+            warning: { icon: 'fa-exclamation-triangle', class: 'warning' },
+            info: { icon: 'fa-info-circle', class: 'info' }
+        };
 
-    // Créer le conteneur s'il n'existe pas
-    let container = document.querySelector('.notification-container');
-    if (!container) {
-        container = document.createElement('div');
-        container.className = 'notification-container';
-        document.body.appendChild(container);
-    }
-
-    // Créer la notification
-    const notification = document.createElement('div');
-    notification.className = `notification ${types[type].class}`;
-    
-    const icon = document.createElement('i');
-    icon.className = `fas ${types[type].icon}`;
-    
-    const text = document.createElement('span');
-    text.textContent = message;
-    
-    notification.appendChild(icon);
-    notification.appendChild(text);
-    container.appendChild(notification);
-
-    // Supprimer la notification après l'animation
-    setTimeout(() => {
-        notification.remove();
-        if (container && container.children.length === 0) {
-            container.remove();
+        // Créer le conteneur s'il n'existe pas
+        let container = document.querySelector('.notification-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.className = 'notification-container';
+            document.body.appendChild(container);
         }
-    }, 3500);
-}
-// Fonction pour afficher une confirmation stylisée
-function showConfirmation(message, callback) {
-    const modal = document.getElementById('confirmation-modal');
-    const messageEl = document.getElementById('confirmation-message');
-    const confirmBtn = document.getElementById('confirm-action');
-    const cancelBtn = document.getElementById('cancel-action');
 
-    if (!modal || !messageEl || !confirmBtn || !cancelBtn) {
-        // Fallback si le modal n'est pas trouvé
-        return callback(confirm(message));
+        // Créer la notification
+        const notification = document.createElement('div');
+        notification.className = `notification ${types[type].class}`;
+        
+        const icon = document.createElement('i');
+        icon.className = `fas ${types[type].icon}`;
+        
+        const text = document.createElement('span');
+        text.textContent = message;
+        
+        notification.appendChild(icon);
+        notification.appendChild(text);
+        container.appendChild(notification);
+
+        // Supprimer la notification après l'animation
+        setTimeout(() => {
+            notification.remove();
+            if (container && container.children.length === 0) {
+                container.remove();
+            }
+        }, 3500);
     }
 
-    messageEl.textContent = message;
-    modal.style.display = 'block';
+    // Fonction pour afficher une confirmation stylisée
+    function showConfirmation(message, callback) {
+        const modal = document.getElementById('confirmation-modal');
+        const messageEl = document.getElementById('confirmation-message');
+        const confirmBtn = document.getElementById('confirm-action');
+        const cancelBtn = document.getElementById('cancel-action');
 
-    const cleanUp = () => {
-        confirmBtn.removeEventListener('click', onConfirm);
-        cancelBtn.removeEventListener('click', onCancel);
-        modal.style.display = 'none';
-    };
+        if (!modal || !messageEl || !confirmBtn || !cancelBtn) {
+            // Fallback si le modal n'est pas trouvé
+            return callback(confirm(message));
+        }
 
-    const onConfirm = () => {
-        cleanUp();
-        callback(true);
-    };
+        messageEl.textContent = message;
+        modal.style.display = 'block';
 
-    const onCancel = () => {
-        cleanUp();
-        callback(false);
-    };
+        const cleanUp = () => {
+            confirmBtn.removeEventListener('click', onConfirm);
+            cancelBtn.removeEventListener('click', onCancel);
+            modal.style.display = 'none';
+        };
 
-    confirmBtn.addEventListener('click', onConfirm);
-    cancelBtn.addEventListener('click', onCancel);
-}
+        const onConfirm = () => {
+            cleanUp();
+            callback(true);
+        };
+
+        const onCancel = () => {
+            cleanUp();
+            callback(false);
+        };
+
+        confirmBtn.addEventListener('click', onConfirm);
+        cancelBtn.addEventListener('click', onCancel);
+    }
 });

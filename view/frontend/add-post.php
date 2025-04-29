@@ -1,5 +1,5 @@
 <?php
-header('Content-Type: application/json');
+header('Content-Type: application/json; charset=UTF-8');
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 require_once '../../config.php'; // Include database configuration
@@ -13,6 +13,9 @@ $author = 'Anonyme';
 $region = $_POST['region'] ?? 'Non spécifiée';
 $imagePath = '';
 $videoPath = '';
+
+// Débogage des données reçues
+file_put_contents('debug.log', "Données reçues : " . print_r($_POST, true) . "\n", FILE_APPEND);
 
 // Configuration du répertoire d'upload
 $uploadDir = 'uploads/';
@@ -61,6 +64,9 @@ try {
     $stmt->execute([$postId]);
     $post = $stmt->fetch();
     
+    // Débogage des données renvoyées
+    file_put_contents('debug.log', "Données renvoyées : " . print_r($post, true) . "\n", FILE_APPEND);
+    
     echo json_encode([
         "success" => true,
         "post" => [
@@ -80,3 +86,4 @@ try {
         "message" => "Erreur d'insertion : " . $e->getMessage()
     ]);
 }
+?>

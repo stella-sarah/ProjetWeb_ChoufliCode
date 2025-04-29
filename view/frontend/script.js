@@ -2,6 +2,36 @@ document.addEventListener('DOMContentLoaded', function() {
     const chatbotToggle = document.querySelector('.chatbot-toggle');
     const chatbotContainer = document.querySelector('.chatbot-container');
     const closeChatbot = document.querySelector('.close-chatbot');
+
+    const quickSuggestions = document.querySelectorAll('.quick-suggestion');
+    const suggestionMessages = {
+        'plages': "Quelles sont les plus belles plages en Tunisie?",
+        'hotels': "Pouvez-vous recommander des hôtels de qualité?",
+        'nourriture': "Quelles sont les spécialités culinaires tunisiennes?",
+        'desert': "Je veux des infos sur les excursions dans le désert"
+    };
+
+    quickSuggestions.forEach(suggestion => {
+        suggestion.addEventListener('click', function() {
+            const queryType = this.dataset.query;
+            const message = suggestionMessages[queryType];
+            
+            if (message) {
+                // Animation
+                this.style.transform = 'scale(0.9)';
+                this.style.backgroundColor = 'rgba(201, 168, 108, 0.3)';
+                
+                setTimeout(() => {
+                    this.style.transform = 'scale(1)';
+                    this.style.backgroundColor = 'rgba(201, 168, 108, 0.1)';
+                }, 200);
+                
+                // Envoyer le message
+                chatbotInput.value = message;
+                sendMessage();
+            }
+        });
+    });
     
     chatbotToggle.addEventListener('click', function() {
         chatbotContainer.classList.toggle('active');
@@ -15,26 +45,190 @@ document.addEventListener('DOMContentLoaded', function() {
     const chatbotMessages = document.querySelector('.chatbot-messages');
     const chatbotSendBtn = document.querySelector('.chatbot-input button');
     
+    function getBotResponse(message) {
+        const lowerMsg = message.toLowerCase();
+        
+        const responses = {
+            'bonjour': "Bonjour! Je suis votre guide virtuel pour découvrir la Tunisie. Comment puis-je vous aider aujourd'hui?",
+            'salut': "Salut! Prêt(e) à explorer les merveilles de la Tunisie? Dites-moi ce qui vous intéresse!",
+            'hello': "Hello! Je suis ravi de vous aider à planifier votre voyage en Tunisie. Par où commencer?",
+            'conseil': "Voici mes recommandations pour votre voyage en Tunisie:\n\n" +
+                      "1. Sidi Bou Said - Village emblématique aux maisons bleues et blanches\n" +
+                      "2. Le désert du Sahara - Expérience inoubliable avec des nuits sous les étoiles\n" +
+                      "3. Djerba - Île paradisiaque avec des plages de sable fin\n" +
+                      "4. Le Colisée d'El Jem - Monument historique impressionnant\n\n" +
+                      "Quel type d'expérience recherchez-vous exactement?",
+            'recommande': "Je peux recommander plusieurs expériences uniques en Tunisie:\n\n" +
+                         "• Dégustation de cuisine locale dans les souks\n" +
+                         "• Randonnée dans les montagnes de Tabarka\n" +
+                         "• Séjour dans un hôtel de luxe à Hammamet\n" +
+                         "• Visite des sites archéologiques romains\n\n" +
+                         "Quel est votre budget et vos centres d'intérêt?",
+            'plage': "Les meilleures plages de Tunisie:\n\n" +
+                    "🏖️ Hammamet - Plages familiales avec infrastructures modernes\n" +
+                    "🏖️ Djerba - Eaux cristallines et sable blanc\n" +
+                    "🏖️ Sousse - Plages animées avec activités nautiques\n" +
+                    "🏖️ Tabarka - Côtes rocheuses idéales pour la plongée\n\n" +
+                    "Quelle période de l'année prévoyez-vous votre visite?",
+            'mer': "La Tunisie offre un littoral méditerranéen exceptionnel. Voici mes préférés:\n\n" +
+                  "• Mahdia - Pour des eaux turquoises et une ambiance paisible\n" +
+                  "• Bizerte - Pour combiner plage et culture\n" +
+                  "• Zarzis - Pour des complexes hôteliers haut de gamme\n\n" +
+                  "Cherchez-vous plutôt du calme ou de l'animation?",
+            'désert': "Une expérience dans le désert tunisien est magique! Voici ce que je recommande:\n\n" +
+                     "📍 Douz - La 'porte du désert', idéale pour les excursions\n" +
+                     "📍 Tozeur - Oasis luxuriante et palmeraies\n" +
+                     "📍 Ksar Ghilane - Sources chaudes en plein désert\n\n" +
+                     "Préférez-vous une excursion d'une journée ou un séjour plus long?",
+            'sahara': "Le Sahara tunisien offre des paysages à couper le souffle:\n\n" +
+                     "• Randonnée à dos de chameau au coucher du soleil\n" +
+                     "• Nuitée dans un campement bédouin traditionnel\n" +
+                     "• Visite des décors de Star Wars à Tataouine\n\n" +
+                     "Quelle durée prévoyez-vous pour votre aventure saharienne?",
+            'nourriture': "La cuisine tunisienne est délicieuse! Voici ce qu'il faut absolument goûter:\n\n" +
+                         "🍽️ Couscous - Le plat national sous diverses variantes\n" +
+                         "🍽️ Brik - Feuilleté croustillant à l'oeuf et au thon\n" +
+                         "🍽️ Lablabi - Soupe de pois chiches réconfortante\n" +
+                         "🍽️ Makroudh - Pâtisserie à base de dattes\n\n" +
+                         "Avez-vous des restrictions alimentaires?",
+            'manger': "Pour une expérience culinaire authentique, je recommande:\n\n" +
+                     "• Les restaurants populaires dans les médinas\n" +
+                     "• Les gargotes locales pour des prix abordables\n" +
+                     "• Les établissements haut de gamme pour une cuisine raffinée\n\n" +
+                     "Quel type d'ambiance recherchez-vous?",
+            'culture': "La Tunisie regorge de trésors culturels:\n\n" +
+                      "🏛️ Le Musée du Bardo à Tunis - Collection de mosaïques romaines\n" +
+                      "🕌 La Grande Mosquée de Kairouan - Site classé au patrimoine de l'UNESCO\n" +
+                      "🎭 Le Festival international de Carthage - Événement culturel majeur\n\n" +
+                      "Quelle période de l'histoire vous intéresse particulièrement?",
+            'hôtel': "Pour choisir votre hébergement en Tunisie:\n\n" +
+                    "⭐ 5 étoiles - Luxe et service impeccable (ex: The Residence)\n" +
+                    "⭐ 4 étoiles - Confort à prix raisonnable\n" +
+                    "⭐ Hôtels de charme - Authenticité et caractère\n" +
+                    "⭐ Auberges - Pour les voyageurs en quête de rencontres\n\n" +
+                    "Dans quelle région cherchez-vous à loger?",
+            'transport': "Se déplacer en Tunisie:\n\n" +
+                        "🚗 Location de voiture - Pour une grande liberté\n" +
+                        "🚆 Train - Confortable entre les grandes villes\n" +
+                        "🚌 Bus - Réseau étendu et économique\n" +
+                        "✈️ Vols intérieurs - Pour gagner du temps\n\n" +
+                        "Quel est votre itinéraire prévu?",
+            'merci': "Avec plaisir! N'hésitez pas si vous avez d'autres questions sur la Tunisie. Bon voyage! 😊",
+            'aide': "Je suis là pour vous aider à découvrir les merveilles de la Tunisie. Voici ce que je peux faire:\n\n" +
+                   "• Donner des conseils sur les destinations\n" +
+                   "• Recommander des activités selon vos goûts\n" +
+                   "• Aider à planifier votre itinéraire\n" +
+                   "• Fournir des infos pratiques (hébergement, transport...)\n\n" +
+                   "Sur quel sujet souhaitez-vous en savoir plus?"
+        };
+
+        if (lowerMsg.includes('merci') || lowerMsg.includes('parfait')) {
+            return responses['merci'];
+        } else if (lowerMsg.includes('aide') || lowerMsg.includes('support')) {
+            return responses['aide'];
+        } else if (lowerMsg.includes('conseil') || lowerMsg.includes('recommande') || lowerMsg.includes('suggère')) {
+            return responses['conseil'];
+        } else if (lowerMsg.includes('plage') || lowerMsg.includes('mer')) {
+            return responses['plage'];
+        } else if (lowerMsg.includes('désert') || lowerMsg.includes('sahara')) {
+            return responses['désert'];
+        } else if (lowerMsg.includes('nourriture') || lowerMsg.includes('manger') || lowerMsg.includes('cuisine')) {
+            return responses['nourriture'];
+        } else if (lowerMsg.includes('culture') || lowerMsg.includes('histoire') || lowerMsg.includes('patrimoine')) {
+            return responses['culture'];
+        } else if (lowerMsg.includes('hôtel') || lowerMsg.includes('hébergement') || lowerMsg.includes('logement')) {
+            return responses['hôtel'];
+        } else if (lowerMsg.includes('transport') || lowerMsg.includes('se déplacer') || lowerMsg.includes('bus') || lowerMsg.includes('train')) {
+            return responses['transport'];
+        } else if (lowerMsg.includes('bonjour') || lowerMsg.includes('salut') || lowerMsg.includes('hello')) {
+            return responses['bonjour'];
+        } else {
+            return "Je suis ravi de vous aider à découvrir la Tunisie! Voici quelques sujets sur lesquels je peux vous informer:\n\n" +
+                   "• Les meilleures destinations selon vos goûts\n" +
+                   "• Les périodes idéales pour visiter\n" +
+                   "• Les spécialités culinaires à ne pas manquer\n" +
+                   "• Les activités culturelles et aventures\n\n" +
+                   "Dites-moi ce qui vous intéresse et je vous guiderai au mieux!";
+        }
+    }
+
     function sendMessage() {
         const message = chatbotInput.value.trim();
         if (message) {
             const userMessage = document.createElement('div');
-            userMessage.classList.add('message');
-            userMessage.textContent = message;
+            userMessage.classList.add('message', 'user-message');
+            
+            const formattedMessage = message.replace(/\n/g, '<br>');
+            userMessage.innerHTML = formattedMessage;
+            
             chatbotMessages.appendChild(userMessage);
             
+            const typingIndicator = document.createElement('div');
+            typingIndicator.classList.add('message', 'typing-indicator');
+            typingIndicator.innerHTML = '<div class="typing-dots"><span></span><span></span><span></span></div>';
+            chatbotMessages.appendChild(typingIndicator);
+            chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
+            
+            const typingTime = Math.min(Math.max(message.length * 50, 1000), 3000);
+            
             setTimeout(() => {
+                typingIndicator.remove();
+                
                 const botMessage = document.createElement('div');
                 botMessage.classList.add('message', 'bot-message');
-                botMessage.textContent = getBotResponse(message);
+                
+                const botResponse = getBotResponse(message);
+                const formattedResponse = botResponse.replace(/\n/g, '<br>');
+                
+                botMessage.innerHTML = formattedResponse;
                 chatbotMessages.appendChild(botMessage);
                 chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
-            }, 1000);
+                
+                saveConversation(message, botResponse);
+            }, typingTime);
             
             chatbotInput.value = '';
+        }
+    }
+
+    function saveConversation(userMessage, botResponse) {
+        let conversations = JSON.parse(localStorage.getItem('chatbotConversations')) || [];
+        
+        if (conversations.length >= 50) {
+            conversations.shift();
+        }
+        
+        conversations.push({
+            user: userMessage,
+            bot: botResponse,
+            timestamp: new Date().toISOString()
+        });
+        
+        localStorage.setItem('chatbotConversations', JSON.stringify(conversations));
+    }
+
+    function loadConversationHistory() {
+        const conversations = JSON.parse(localStorage.getItem('chatbotConversations')) || [];
+        const lastConversations = conversations.slice(-3);
+        
+        lastConversations.forEach(conv => {
+            const userMsg = document.createElement('div');
+            userMsg.classList.add('message', 'user-message');
+            userMsg.textContent = conv.user;
+            chatbotMessages.appendChild(userMsg);
+            
+            const botMsg = document.createElement('div');
+            botMsg.classList.add('message', 'bot-message');
+            botMsg.textContent = conv.bot;
+            chatbotMessages.appendChild(botMsg);
+        });
+        
+        if (lastConversations.length > 0) {
             chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
         }
     }
+
+    loadConversationHistory();
     
     chatbotSendBtn.addEventListener('click', sendMessage);
     
@@ -44,37 +238,26 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    function getBotResponse(message) {
-        const lowerMsg = message.toLowerCase();
-        
-        if (lowerMsg.includes('bonjour') || lowerMsg.includes('salut')) {
-            return "Bonjour! Comment puis-je vous aider à découvrir la Tunisie?";
-        } else if (lowerMsg.includes('conseil') || lowerMsg.includes('recommande')) {
-            return "Je vous recommande de visiter Sidi Bou Said pour ses magnifiques vues et son architecture bleue et blanche.";
-        } else if (lowerMsg.includes('plage') || lowerMsg.includes('mer')) {
-            return "Les meilleures plages se trouvent à Hammamet et Djerba. Le sable est fin et l'eau est cristalline!";
-        } else if (lowerMsg.includes('désert') || lowerMsg.includes('sahara')) {
-            return "Une excursion dans le désert du Sahara est inoubliable. Pensez à visiter Douz, la porte du désert.";
-        } else if (lowerMsg.includes('merci')) {
-            return "Avec plaisir! N'hésitez pas si vous avez d'autres questions.";
-        } else {
-            return "Je suis là pour vous aider à découvrir la Tunisie. Posez-moi vos questions sur les destinations, la culture ou la gastronomie!";
-        }
-    }
-    
     const emojiToggle = document.getElementById('emoji-toggle');
     const emojiList = document.getElementById('emoji-list');
     const newPostTextarea = document.getElementById('new-post-content');
 
-    if (emojiToggle && emojiList) {
+    if (emojiToggle && emojiList && newPostTextarea) {
+        console.log('Nombre d\'emojis trouvés:', emojiList.querySelectorAll('span').length);
+
         emojiToggle.addEventListener('click', function(e) {
             e.stopPropagation();
+            console.log('Emoji toggle clicked');
             emojiList.classList.toggle('hidden');
         });
 
         emojiList.querySelectorAll('span').forEach(emoji => {
             emoji.addEventListener('click', function() {
-                newPostTextarea.value += this.textContent;
+                const emojiText = this.textContent;
+                const unicode = [...emojiText].map(c => c.codePointAt(0).toString(16)).join('-');
+                console.log('Emoji clicked:', emojiText, 'Unicode:', unicode);
+                const emojiChar = String.fromCodePoint(parseInt(unicode.split('-')[0], 16));
+                newPostTextarea.value += emojiChar;
                 newPostTextarea.focus();
                 emojiList.classList.add('hidden');
             });
@@ -87,6 +270,8 @@ document.addEventListener('DOMContentLoaded', function() {
         emojiList.addEventListener('click', function(e) {
             e.stopPropagation();
         });
+    } else {
+        console.error('Un ou plusieurs éléments manquants:', { emojiToggle, emojiList, newPostTextarea });
     }
 
     const imageUpload = document.getElementById('image-upload');
@@ -125,6 +310,34 @@ document.addEventListener('DOMContentLoaded', function() {
     loadPosts();
     loadAnnouncements();
 
+    const frenchBadWords = [
+        'merde',
+        'putain',
+        'connard',
+        'salope'
+    ];
+
+    const englishBadWords = [
+        'shit',
+        'fuck',
+        'asshole',
+        'bitch'
+    ];
+
+    const arabicBadWords = [
+        'كلب',
+        'حقير',
+        'غبي',
+        'سخيف'
+    ];
+
+    const allBadWords = [...frenchBadWords, ...englishBadWords, ...arabicBadWords];
+
+    function containsBadWords(text) {
+        const regex = new RegExp(`\\b(${allBadWords.join('|')})\\b`, 'i');
+        return regex.test(text);
+    }
+
     const postForm = document.getElementById('post-form');
     if (postForm) {
         postForm.addEventListener('submit', function(e) {
@@ -132,14 +345,21 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const title = document.getElementById('post-title').value.trim();
             const content = document.getElementById('new-post-content').value.trim();
+            const hasImage = imageUpload.files.length > 0;
+            const hasVideo = videoUpload.files.length > 0;
             
             if (!title) {
                 showNotification('error', 'Veuillez ajouter un titre à votre publication.');
                 return;
             }
             
-            if (!content && !imageUpload.files[0] && !videoUpload.files[0]) {
+            if (!content && !hasImage && !hasVideo) {
                 showNotification('error', 'Veuillez écrire quelque chose ou ajouter une image/vidéo.');
+                return;
+            }
+
+            if (containsBadWords(title) || containsBadWords(content)) {
+                showNotification('error', 'Veuillez éviter l\'utilisation de langage inapproprié.');
                 return;
             }
 
@@ -231,6 +451,8 @@ document.addEventListener('DOMContentLoaded', function() {
             closeReportModal();
         }
     });
+
+    applyFullWidthStyles();
 });
 
 async function updatePost(postId, newTitle, newContent) {
@@ -287,6 +509,13 @@ async function updateComment(commentId, newContent) {
 }
 
 function showNotification(type, message) {
+    let container = document.querySelector('.notification-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.className = 'notification-container';
+        document.body.appendChild(container);
+    }
+
     const notification = document.createElement('div');
     notification.className = `notification ${type}`;
     
@@ -303,10 +532,11 @@ function showNotification(type, message) {
             break;
         default:
             icon = '<i class="fas fa-info-circle"></i>';
+            type = 'info';
     }
     
     notification.innerHTML = `${icon} ${message}`;
-    document.body.appendChild(notification);
+    container.appendChild(notification);
     
     setTimeout(() => {
         notification.classList.add('show');
@@ -316,6 +546,9 @@ function showNotification(type, message) {
         notification.classList.remove('show');
         setTimeout(() => {
             notification.remove();
+            if (container && container.children.length === 0) {
+                container.remove();
+            }
         }, 500);
     }, 5000);
     
@@ -323,6 +556,9 @@ function showNotification(type, message) {
         notification.classList.remove('show');
         setTimeout(() => {
             notification.remove();
+            if (container && container.children.length === 0) {
+                container.remove();
+            }
         }, 500);
     });
 }
@@ -361,6 +597,40 @@ function createPostElement(post) {
 
     const initials = post.author ? post.author.split(' ').map(n => n[0]).join('').toUpperCase() : 'ANON';
     
+    // Remplacer les emojis dans le contenu du post
+    const contentWithEmojis = post.content.replace(/[\u{1F600}-\u{1F6FF}]/gu, 
+        match => `<span class="emoji">${match}</span>`);
+    
+    // Générer le HTML pour les commentaires avec les emojis
+    let commentsHTML = '';
+    if (post.comments) {
+        commentsHTML = post.comments.map(comment => {
+            const commentWithEmojis = comment.content.replace(/[\u{1F600}-\u{1F6FF}]/gu, 
+                match => `<span class="emoji">${match}</span>`);
+            return `
+                <div class="comment" data-comment-id="${comment.id}">
+                    <div class="default-avatar">${comment.author ? comment.author.split(' ').map(n => n[0]).join('').toUpperCase() : 'ANON'}</div>
+                    <div class="comment-content">
+                        <p class="author">${comment.author || 'Anonyme'} <span class="date">- ${new Date(comment.created_at).toLocaleDateString('fr-FR')}</span></p>
+                        <p>${commentWithEmojis}</p>
+                        <div class="comment-actions">
+                            <button class="like-comment-btn" data-comment-id="${comment.id}">
+                                <i class="far fa-heart"></i>
+                                <span class="like-count">${comment.likes || 0}</span>
+                            </button>
+                            <button class="delete-comment-btn" data-comment-id="${comment.id}" title="Supprimer ce commentaire">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                            <button class="edit-comment-btn" data-comment-id="${comment.id}" title="Modifier ce commentaire">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
     article.innerHTML = `
         <div class="post-header">
             <div class="default-avatar">${initials}</div>
@@ -377,7 +647,7 @@ function createPostElement(post) {
             </button>
         </div>
         <div class="post-content">
-            <p>${post.content}</p>
+            <p>${contentWithEmojis}</p>
             ${post.image_url ? `<img src="${post.image_url}" alt="Image">` : ''}
             ${post.video_url ? `<video src="${post.video_url}" controls></video>` : ''}
         </div>
@@ -391,25 +661,23 @@ function createPostElement(post) {
         </div>
         <div class="comments-section" style="display: none;">
             <div class="comment-form">
-                <textarea placeholder="Ajouter un commentaire..."></textarea>
+                <div class="textarea-container">
+                    <textarea placeholder="Ajouter un commentaire..."></textarea>
+                    <div class="textarea-icons">
+                        <span class="comment-emoji-toggle" title="Emoji">😀</span>
+                    </div>
+                    <div class="emoji-list hidden">
+                        <span>🌴</span><span>🏜️</span><span>🌅</span><span>🏖️</span>
+                        <span>🍛</span><span>🥙</span><span>🍵</span><span>🍋</span>
+                        <span>🏛️</span><span>🕌</span><span>🎭</span><span>🧵</span>
+                        <span>🐪</span><span>🇹🇳</span><span>❤️</span><span>👍</span>
+                        <span>😍</span><span>🤩</span><span>👏</span><span>🎉</span>
+                    </div>
+                </div>
                 <button class="btn-gold">Publier</button>
             </div>
             <div class="comment-list">
-                ${post.comments ? post.comments.map(comment => `
-                    <div class="comment" data-comment-id="${comment.id}">
-                        <div class="default-avatar">${comment.author ? comment.author.split(' ').map(n => n[0]).join('').toUpperCase() : 'ANON'}</div>
-                        <div class="comment-content">
-                            <p class="author">${comment.author || 'Anonyme'} <span class="date">- ${new Date(comment.created_at).toLocaleDateString('fr-FR')}</span></p>
-                            <p>${comment.content}</p>
-                            <button class="delete-comment-btn" data-comment-id="${comment.id}" title="Supprimer ce commentaire">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                            <button class="edit-comment-btn" data-comment-id="${comment.id}" title="Modifier ce commentaire">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                        </div>
-                    </div>
-                `).join('') : ''}
+                ${commentsHTML}
             </div>
         </div>
     `;
@@ -422,9 +690,12 @@ function createPostElement(post) {
         setTimeout(() => {
             this.style.transform = 'rotate(0) scale(1)';
             
-            if (confirm('Voulez-vous vraiment supprimer ce post ?')) {
-                deletePost(post.id, article);
-            }
+            showConfirmation('Voulez-vous vraiment supprimer ce post ?', (confirmed) => {
+                if (confirmed) {
+                    const postId = this.closest('.post').dataset.postId;
+                    deletePost(postId, article);
+                }
+            });
         }, 500);
     });
 
@@ -434,7 +705,7 @@ function createPostElement(post) {
             const postId = this.getAttribute('data-post-id');
             const postElement = this.closest('.post');
             const title = postElement.querySelector('h3').textContent;
-            const content = postElement.querySelector('.post-content p').textContent;
+            const content = postElement.querySelector('.post-content p').innerHTML; // Utilisation de innerHTML
             
             this.style.transform = 'rotate(360deg) scale(1.5)';
             setTimeout(() => {
@@ -515,30 +786,42 @@ function createPostElement(post) {
     });
 
     commentFormBtn.addEventListener('click', function() {
-        const commentInput = this.previousElementSibling;
+        const commentInput = this.previousElementSibling.querySelector('textarea');
         const commentText = commentInput.value.trim();
-        if (commentText) {
-            const postId = this.closest('.post').dataset.postId;
-            
-            fetch('add-comment.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: `post_id=${postId}&content=${encodeURIComponent(commentText)}`
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    const commentList = article.querySelector('.comment-list');
-                    const commentElement = document.createElement('div');
-                    commentElement.classList.add('comment');
-                    commentElement.dataset.commentId = data.comment.id;
-                    commentElement.innerHTML = `
-                        <div class="default-avatar">${data.comment.author ? data.comment.author.split(' ').map(n => n[0]).join('').toUpperCase() : 'ANON'}</div>
-                        <div class="comment-content">
-                            <p class="author">${data.comment.author || 'Anonyme'} <span class="date">- ${new Date(data.comment.created_at).toLocaleDateString('fr-FR')}</span></p>
-                            <p>${data.comment.content}</p>
+        
+        if (!commentText) {
+            showNotification('error', 'Veuillez écrire un commentaire.');
+            return;
+        }
+
+        const postId = this.closest('.post').dataset.postId;
+        
+        fetch('add-comment.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `post_id=${postId}&content=${encodeURIComponent(commentText)}`
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                const commentList = article.querySelector('.comment-list');
+                const commentElement = document.createElement('div');
+                commentElement.classList.add('comment');
+                commentElement.dataset.commentId = data.comment.id;
+                const commentWithEmojis = data.comment.content.replace(/[\u{1F600}-\u{1F6FF}]/gu, 
+                    match => `<span class="emoji">${match}</span>`);
+                commentElement.innerHTML = `
+                    <div class="default-avatar">${data.comment.author ? data.comment.author.split(' ').map(n => n[0]).join('').toUpperCase() : 'ANON'}</div>
+                    <div class="comment-content">
+                        <p class="author">${data.comment.author || 'Anonyme'} <span class="date">- ${new Date(data.comment.created_at).toLocaleDateString('fr-FR')}</span></p>
+                        <p>${commentWithEmojis}</p>
+                        <div class="comment-actions">
+                            <button class="like-comment-btn" data-comment-id="${data.comment.id}">
+                                <i class="far fa-heart"></i>
+                                <span class="like-count">${data.comment.likes || 0}</span>
+                            </button>
                             <button class="delete-comment-btn" data-comment-id="${data.comment.id}" title="Supprimer ce commentaire">
                                 <i class="fas fa-trash"></i>
                             </button>
@@ -546,103 +829,107 @@ function createPostElement(post) {
                                 <i class="fas fa-edit"></i>
                             </button>
                         </div>
-                    `;
-                    
-                    const deleteBtn = commentElement.querySelector('.delete-comment-btn');
-                    if (deleteBtn) {
-                        deleteBtn.addEventListener('click', function(e) {
-                            e.preventDefault();
+                    </div>
+                `;
+                
+                const deleteBtn = commentElement.querySelector('.delete-comment-btn');
+                if (deleteBtn) {
+                    deleteBtn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        
+                        this.style.transform = 'rotate(360deg) scale(1.5)';
+                        setTimeout(() => {
+                            this.style.transform = 'rotate(0) scale(1)';
                             
-                            this.style.transform = 'rotate(360deg) scale(1.5)';
-                            setTimeout(() => {
-                                this.style.transform = 'rotate(0) scale(1)';
-                                
-                                const commentId = this.getAttribute('data-comment-id');
-                                if (!commentId) {
-                                    showNotification('error', 'ID de commentaire invalide');
-                                    return;
-                                }
-                                
-                                if (confirm('Voulez-vous vraiment supprimer ce commentaire ?')) {
-                                    deleteComment(commentId, this.closest('.comment'));
-                                }
-                            }, 500);
-                        });
-                    }
-
-                    const editBtn = commentElement.querySelector('.edit-comment-btn');
-                    if (editBtn) {
-                        editBtn.addEventListener('click', function() {
-                            const commentId = this.getAttribute('data-comment-id');
-                            const commentElement = this.closest('.comment');
-                            const contentElement = commentElement.querySelector('.comment-content p:not(.author)');
-                            const content = contentElement.textContent;
-                            
-                            this.style.transform = 'rotate(360deg) scale(1.5)';
-                            setTimeout(() => {
-                                this.style.transform = 'rotate(0) scale(1)';
-                            }, 500);
-                            
-                            const editForm = document.createElement('div');
-                            editForm.innerHTML = `
-                                <div class="edit-form">
-                                    <textarea class="full-width">${content.replace(/"/g, '"')}</textarea>
-                                    <div class="form-actions">
-                                        <button type="button" class="cancel-btn">
-                                            <i class="fas fa-times"></i> Annuler
-                                        </button>
-                                        <button type="button" class="save-btn">
-                                            <i class="fas fa-check"></i> Enregistrer
-                                        </button>
-                                    </div>
-                                </div>
-                            `;
-                            
-                            contentElement.style.display = 'none';
-                            commentElement.querySelector('.comment-content').insertBefore(editForm, contentElement.nextSibling);
-                            
-                            editForm.querySelector('.cancel-btn').addEventListener('click', function() {
-                                editForm.classList.add('cancel-effect');
-                                setTimeout(() => {
-                                    editForm.remove();
-                                    contentElement.style.display = 'block';
-                                }, 500);
-                            });
-                            
-                            editForm.querySelector('.save-btn').addEventListener('click', function() {
-                                const newContent = editForm.querySelector('textarea').value.trim();
-                                
-                                if (newContent) {
-                                    this.classList.add('save-success');
-                                    setTimeout(() => {
-                                        updateComment(commentId, newContent)
-                                            .then(() => {
-                                                contentElement.textContent = newContent;
-                                                editForm.remove();
-                                                contentElement.style.display = 'block';
-                                            })
-                                            .catch(error => {
-                                                showNotification('error', 'Erreur: ' + error.message);
-                                            });
-                                    }, 500);
-                                } else {
-                                    showNotification('error', 'Le contenu ne peut pas être vide');
+                            showConfirmation('Voulez-vous vraiment supprimer ce commentaire ?', (confirmed) => {
+                                if (confirmed) {
+                                    deleteComment(data.comment.id, this.closest('.comment'));
                                 }
                             });
-                        });
-                    }
-                    
-                    commentList.appendChild(commentElement);
-                    commentInput.value = '';
-                    showNotification('success', 'Commentaire ajouté avec succès !');
-                } else {
-                    showNotification('error', 'Erreur: ' + data.message);
+                        }, 500);
+                    });
                 }
-            })
-            .catch(error => {
-                showNotification('error', 'Erreur réseau: ' + error);
-            });
-        }
+
+                const editBtn = commentElement.querySelector('.edit-comment-btn');
+                if (editBtn) {
+                    editBtn.addEventListener('click', function() {
+                        const commentId = this.getAttribute('data-comment-id');
+                        const commentElement = this.closest('.comment');
+                        const contentElement = commentElement.querySelector('.comment-content p:not(.author)');
+                        const content = contentElement.innerHTML; // Utilisation de innerHTML
+                        
+                        this.style.transform = 'rotate(360deg) scale(1.5)';
+                        setTimeout(() => {
+                            this.style.transform = 'rotate(0) scale(1)';
+                        }, 500);
+                        
+                        const editForm = document.createElement('div');
+                        editForm.innerHTML = `
+                            <div class="edit-form">
+                                <textarea class="full-width">${content.replace(/"/g, '"')}</textarea>
+                                <div class="form-actions">
+                                    <button type="button" class="cancel-btn">
+                                        <i class="fas fa-times"></i> Annuler
+                                    </button>
+                                    <button type="button" class="save-btn">
+                                        <i class="fas fa-check"></i> Enregistrer
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                        
+                        contentElement.style.display = 'none';
+                        commentElement.querySelector('.comment-content').insertBefore(editForm, contentElement.nextSibling);
+                        
+                        editForm.querySelector('.cancel-btn').addEventListener('click', function() {
+                            editForm.classList.add('cancel-effect');
+                            setTimeout(() => {
+                                editForm.remove();
+                                contentElement.style.display = 'block';
+                            }, 500);
+                        });
+                        
+                        editForm.querySelector('.save-btn').addEventListener('click', function() {
+                            const newContent = editForm.querySelector('textarea').value.trim();
+                            
+                            if (newContent) {
+                                this.classList.add('save-success');
+                                setTimeout(() => {
+                                    updateComment(commentId, newContent)
+                                        .then(() => {
+                                            const newContentWithEmojis = newContent.replace(/[\u{1F600}-\u{1F6FF}]/gu, 
+                                                match => `<span class="emoji">${match}</span>`);
+                                            contentElement.innerHTML = newContentWithEmojis; // Utilisation de innerHTML
+                                            editForm.remove();
+                                            contentElement.style.display = 'block';
+                                        })
+                                        .catch(error => {
+                                            showNotification('error', 'Erreur: ' + error.message);
+                                        });
+                                }, 500);
+                            } else {
+                                showNotification('error', 'Le contenu ne peut pas être vide');
+                            }
+                        });
+                    });
+                }
+                
+                commentList.appendChild(commentElement);
+                commentInput.value = '';
+                showNotification('success', 'Commentaire ajouté avec succès !');
+                
+                // Réinitialiser les sélecteurs d'emojis après ajout d'un commentaire
+                setTimeout(() => {
+                    setupCommentEmojiSelectors();
+                    setupCommentLikes(); // Ajout pour gérer les likes des nouveaux commentaires
+                }, 0);
+            } else {
+                showNotification('error', 'Erreur: ' + data.message);
+            }
+        })
+        .catch(error => {
+            showNotification('error', 'Erreur réseau: ' + error);
+        });
     });
 
     article.querySelectorAll('.delete-comment-btn').forEach(btn => {
@@ -659,9 +946,11 @@ function createPostElement(post) {
                     return;
                 }
                 
-                if (confirm('Voulez-vous vraiment supprimer ce commentaire ?')) {
-                    deleteComment(commentId, this.closest('.comment'));
-                }
+                showConfirmation('Voulez-vous vraiment supprimer ce commentaire ?', (confirmed) => {
+                    if (confirmed) {
+                        deleteComment(commentId, this.closest('.comment'));
+                    }
+                });
             }, 500);
         });
     });
@@ -671,7 +960,7 @@ function createPostElement(post) {
             const commentId = this.getAttribute('data-comment-id');
             const commentElement = this.closest('.comment');
             const contentElement = commentElement.querySelector('.comment-content p:not(.author)');
-            const content = contentElement.textContent;
+            const content = contentElement.innerHTML; // Utilisation de innerHTML
             
             this.style.transform = 'rotate(360deg) scale(1.5)';
             setTimeout(() => {
@@ -712,7 +1001,9 @@ function createPostElement(post) {
                     setTimeout(() => {
                         updateComment(commentId, newContent)
                             .then(() => {
-                                contentElement.textContent = newContent;
+                                const newContentWithEmojis = newContent.replace(/[\u{1F600}-\u{1F6FF}]/gu, 
+                                    match => `<span class="emoji">${match}</span>`);
+                                contentElement.innerHTML = newContentWithEmojis; // Utilisation de innerHTML
                                 editForm.remove();
                                 contentElement.style.display = 'block';
                             })
@@ -737,10 +1028,136 @@ function createPostElement(post) {
         openReportModal(postId);
     });
 
+    // Initialiser les sélecteurs d'emojis et les likes après la création du post
+    setTimeout(() => {
+        setupCommentEmojiSelectors();
+        setupCommentLikes();
+    }, 0);
+
     return article;
 }
 
+function setupCommentEmojiSelectors() {
+    document.querySelectorAll('.comment-form').forEach(form => {
+        const emojiToggle = form.querySelector('.comment-emoji-toggle');
+        const emojiList = form.querySelector('.emoji-list');
+        const textarea = form.querySelector('textarea');
+
+        if (emojiToggle && emojiList && textarea) {
+            // Supprimez d'abord les anciens écouteurs pour éviter les duplications
+            emojiToggle.replaceWith(emojiToggle.cloneNode(true));
+            emojiList.replaceWith(emojiList.cloneNode(true));
+            
+            const newEmojiToggle = form.querySelector('.comment-emoji-toggle');
+            const newEmojiList = form.querySelector('.emoji-list');
+
+            newEmojiToggle.addEventListener('click', function(e) {
+                e.stopPropagation();
+                e.preventDefault();
+                newEmojiList.classList.toggle('hidden');
+            });
+
+            newEmojiList.querySelectorAll('span').forEach(emoji => {
+                emoji.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    const emojiText = this.textContent;
+                    const startPos = textarea.selectionStart;
+                    const endPos = textarea.selectionEnd;
+                    
+                    // Insère l'emoji à la position actuelle du curseur
+                    textarea.value = textarea.value.substring(0, startPos) + 
+                                   emojiText + 
+                                   textarea.value.substring(endPos);
+                    
+                    // Replace le curseur après l'emoji inséré
+                    textarea.selectionStart = textarea.selectionEnd = startPos + emojiText.length;
+                    
+                    textarea.focus();
+                    newEmojiList.classList.add('hidden');
+                }, { once: true }); // L'option { once: true } garantit que l'événement ne se déclenche qu'une fois
+            });
+
+            document.addEventListener('click', function(e) {
+                if (!newEmojiList.contains(e.target) && e.target !== newEmojiToggle) {
+                    newEmojiList.classList.add('hidden');
+                }
+            }, { capture: true });
+        }
+    });
+}
+
+function setupCommentLikes() {
+    document.querySelectorAll('.like-comment-btn:not(.initialized)').forEach(btn => {
+        // Marquer le bouton comme initialisé
+        btn.classList.add('initialized');
+        
+        const commentId = btn.getAttribute('data-comment-id');
+        let likedComments = JSON.parse(localStorage.getItem('likedComments')) || [];
+
+        // Initialisation de l'état
+        const isLiked = likedComments.includes(commentId);
+        if (isLiked) {
+            btn.classList.add('liked');
+            btn.querySelector('i').classList.replace('far', 'fas');
+        }
+
+        btn.addEventListener('click', async function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const likeCountElement = this.querySelector('.like-count');
+            const currentLikes = parseInt(likeCountElement.textContent);
+            const isCurrentlyLiked = this.classList.contains('liked');
+            const newLikeStatus = !isCurrentlyLiked;
+
+            try {
+                const response = await fetch('like-comment.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `comment_id=${commentId}&action=${newLikeStatus ? 'like' : 'unlike'}`
+                });
+
+                const data = await response.json();
+
+                if (!response.ok || !data.success) {
+                    throw new Error(data.message || 'Erreur inconnue');
+                }
+
+                // Mise à jour UI
+                likeCountElement.textContent = data.like_count;
+
+                if (newLikeStatus) {
+                    // Ajout du like
+                    this.classList.add('liked');
+                    this.querySelector('i').classList.replace('far', 'fas');
+                    likedComments.push(commentId);
+                } else {
+                    // Retrait du like
+                    this.classList.remove('liked');
+                    this.querySelector('i').classList.replace('fas', 'far');
+                    likedComments = likedComments.filter(id => id !== commentId);
+                }
+
+                localStorage.setItem('likedComments', JSON.stringify(likedComments));
+
+            } catch (error) {
+                console.error('Erreur:', error);
+                showNotification('error', "Erreur lors de la mise à jour du like: " + error.message);
+            }
+        });
+    });
+}
+
 async function deletePost(postId, postElement) {
+    postId = parseInt(postId);
+    if (isNaN(postId)) {
+        showNotification('error', 'ID de post invalide');
+        return;
+    }
+
     try {
         const response = await fetch('delete-post.php', {
             method: 'POST',
@@ -751,6 +1168,10 @@ async function deletePost(postId, postElement) {
         });
 
         const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || 'Erreur serveur');
+        }
 
         if (data.success) {
             postElement.remove();
@@ -765,6 +1186,12 @@ async function deletePost(postId, postElement) {
 }
 
 async function deleteComment(commentId, commentElement) {
+    commentId = parseInt(commentId);
+    if (isNaN(commentId)) {
+        showNotification('error', 'ID de commentaire invalide');
+        return;
+    }
+
     try {
         const response = await fetch('delete-comment.php', {
             method: 'POST',
@@ -789,6 +1216,7 @@ async function deleteComment(commentId, commentElement) {
     } catch (error) {
         console.error('Erreur:', error);
         showNotification('error', error.message);
+        
         const postElement = commentElement.closest('.post');
         if (postElement) {
             const postId = postElement.dataset.postId;
@@ -810,18 +1238,26 @@ function loadComments(postId, postElement) {
                     commentElement.classList.add('comment');
                     commentElement.dataset.commentId = comment.id;
                     const initials = comment.author ? comment.author.split(' ').map(n => n[0]).join('').toUpperCase() : 'ANON';
+                    const commentWithEmojis = comment.content.replace(/[\u{1F600}-\u{1F6FF}]/gu, 
+                        match => `<span class="emoji">${match}</span>`);
                     
                     commentElement.innerHTML = `
                         <div class="default-avatar">${initials}</div>
                         <div class="comment-content">
                             <p class="author">${comment.author || 'Anonyme'} <span class="date">- ${new Date(comment.created_at).toLocaleDateString('fr-FR')}</span></p>
-                            <p>${comment.content}</p>
-                            <button class="delete-comment-btn" data-comment-id="${comment.id}" title="Supprimer ce commentaire">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                            <button class="edit-comment-btn" data-comment-id="${comment.id}" title="Modifier ce commentaire">
-                                <i class="fas fa-edit"></i>
-                            </button>
+                            <p>${commentWithEmojis}</p>
+                            <div class="comment-actions">
+                                <button class="like-comment-btn" data-comment-id="${comment.id}">
+                                    <i class="far fa-heart"></i>
+                                    <span class="like-count">${comment.likes || 0}</span>
+                                </button>
+                                <button class="delete-comment-btn" data-comment-id="${comment.id}" title="Supprimer ce commentaire">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                                <button class="edit-comment-btn" data-comment-id="${comment.id}" title="Modifier ce commentaire">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </div>
                         </div>
                     `;
                     
@@ -834,9 +1270,11 @@ function loadComments(postId, postElement) {
                             setTimeout(() => {
                                 this.style.transform = 'rotate(0) scale(1)';
                                 
-                                if (confirm('Voulez-vous vraiment supprimer ce commentaire ?')) {
-                                    deleteComment(comment.id, commentElement);
-                                }
+                                showConfirmation('Voulez-vous vraiment supprimer ce commentaire ?', (confirmed) => {
+                                    if (confirmed) {
+                                        deleteComment(comment.id, this.closest('.comment'));
+                                    }
+                                });                                
                             }, 500);
                         });
                     }
@@ -847,7 +1285,7 @@ function loadComments(postId, postElement) {
                             const commentId = this.getAttribute('data-comment-id');
                             const commentElement = this.closest('.comment');
                             const contentElement = commentElement.querySelector('.comment-content p:not(.author)');
-                            const content = contentElement.textContent;
+                            const content = contentElement.innerHTML; // Utilisation de innerHTML
                             
                             this.style.transform = 'rotate(360deg) scale(1.5)';
                             setTimeout(() => {
@@ -888,7 +1326,9 @@ function loadComments(postId, postElement) {
                                     setTimeout(() => {
                                         updateComment(commentId, newContent)
                                             .then(() => {
-                                                contentElement.textContent = newContent;
+                                                const newContentWithEmojis = newContent.replace(/[\u{1F600}-\u{1F6FF}]/gu, 
+                                                    match => `<span class="emoji">${match}</span>`);
+                                                contentElement.innerHTML = newContentWithEmojis; // Utilisation de innerHTML
                                                 editForm.remove();
                                                 contentElement.style.display = 'block';
                                             })
@@ -905,6 +1345,9 @@ function loadComments(postId, postElement) {
                     
                     commentList.appendChild(commentElement);
                 });
+
+                // Réinitialiser les écouteurs de like après avoir chargé les commentaires
+                setupCommentLikes();
             }
         })
         .catch(error => showNotification('error', 'Erreur: ' + error));
@@ -1002,7 +1445,7 @@ function applyFullWidthStyles() {
 }
 
 function loadAnnouncements() {
-    fetch('get-announcements.php') // Chemin corrigé
+    fetch('get-announcements.php')
         .then(res => {
             if (!res.ok) {
                 return res.text().then(text => { 
@@ -1012,7 +1455,7 @@ function loadAnnouncements() {
             return res.json();
         })
         .then(data => {
-            console.log('Données reçues:', data); // Debug
+            console.log('Données reçues:', data);
             const announcementsList = document.getElementById('announcements-list');
             
             if (!data.success) {
@@ -1043,7 +1486,35 @@ function loadAnnouncements() {
         });
 }
 
-// Lancez le chargement au démarrage
-document.addEventListener('DOMContentLoaded', loadAnnouncements);
-
-document.addEventListener('DOMContentLoaded', applyFullWidthStyles);
+function showConfirmation(message, callback) {
+    const modal = document.createElement('div');
+    modal.className = 'confirmation-modal';
+    modal.innerHTML = `
+        <div class="confirmation-content">
+            <p>${message}</p>
+            <div class="confirmation-buttons">
+                <button class="confirm-btn">Confirmer</button>
+                <button class="cancel-btn">Annuler</button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    const confirmBtn = modal.querySelector('.confirm-btn');
+    const cancelBtn = modal.querySelector('.cancel-btn');
+    
+    const cleanUp = () => {
+        modal.remove();
+    };
+    
+    confirmBtn.addEventListener('click', () => {
+        cleanUp();
+        callback(true);
+    });
+    
+    cancelBtn.addEventListener('click', () => {
+        cleanUp();
+        callback(false);
+    });
+}
