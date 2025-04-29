@@ -1,226 +1,180 @@
 <?php
-class Visite {
-    // Propriétés de la classe
+// Visite.php - Contrôleur pour les visites
+
+// Utiliser require_once pour inclure le modèle Visiteclass
+// Visiteclass contient maintenant les propriétés protected et les getters/setters
+require_once __DIR__ . '/../Model/Visiteclass.php';
+
+// Assurez-vous qu'il n'y a pas d'inclusion répétée d'autres contrôleurs ici
+// require_once __DIR__ . '/ReservationSejourController.php'; // Vérifiez/supprimez si inutile
+
+class VisiteFunctions extends Visite { // Hérite de Visite
+
+    // La connexion à la base de données est spécifique à ce contrôleur
     private $conn;
-    private $id_visite;
-    private $id_cin;
-    private $nom_complet;
-    private $date_visite;
-    private $heure_visite;
-    private $type_villa;
-    private $nom_villa;
 
-    // Constructeur
+    // PAS DE DÉCLARATION DE PROPRIÉTÉS ICI ($id_visite, $id_cin, etc.)
+    // Elles sont héritées de la classe parent 'Visite'
+
     public function __construct($db) {
+        if (!$db instanceof PDO) {
+            throw new InvalidArgumentException("Invalid DB connection provided to VisiteFunctions");
+        }
         $this->conn = $db;
+        // Optionnel: Appeler le constructeur parent si celui de Visite fait quelque chose
+        // parent::__construct();
     }
 
-    // Getters et Setters
-    public function getIdVisite() {
-        return $this->id_visite;
-    }
-
-    public function setIdVisite($id_visite) {
-        $this->id_visite = $id_visite;
-    }
-
-    public function getCin() {
-        return $this->id_cin;
-    }
-
-    public function setCin($id_cin) {
-        $this->id_cin = $id_cin;
-    }
-
-    public function getNomComplet() {
-        return $this->nom_complet;
-    }
-
-    public function setNomComplet($nom_complet) {
-        $this->nom_complet = $nom_complet;
-    }
-
-    public function getDateVisite() {
-        return $this->date_visite;
-    }
-
-    public function setDateVisite($date_visite) {
-        $this->date_visite = $date_visite;
-    }
-
-    public function getHeureVisite() {
-        return $this->heure_visite;
-    }
-
-    public function setHeureVisite($heure_visite) {
-        $this->heure_visite = $heure_visite;
-    }
-
-    public function getTypeVilla() {
-        return $this->type_villa;
-    }
-
-    public function setTypeVilla($type_villa) {
-        $this->type_villa = $type_villa;
-    }
-
-    public function getNomVilla() {
-        return $this->nom_villa;
-    }
-
-    public function setNomVilla($nom_villa) {
-        $this->nom_villa = $nom_villa;
-    }
+    // PAS DE GETTERS/SETTERS DUPLIQUÉS ICI
+    // Le contrôleur utilisera ceux hérités de la classe Visite
+    // ou accédera aux propriétés protected directement ($this->id_cin)
 
     /**
-     * Ajoute une nouvelle visite dans la base de données
-     * @return bool True si l'ajout a réussi, False sinon
+     * Ajoute une nouvelle visite dans la base de données.
+     * Utilise les propriétés héritées.
      */
     public function ajouterVisite() {
+        $query = "INSERT INTO visites (id_cin, nom_complet, date_visite, heure_visite, type_villa, nom_villa)
+                  VALUES (:id_cin, :nom_complet, :date_visite, :heure_visite, :type_villa, :nom_villa)";
         try {
-            // Créer la requête d'insertion
-            $query = "INSERT INTO visites (id_cin, nom_complet, date_visite, heure_visite, type_villa, nom_villa) 
-                      VALUES (:id_cin, :nom_complet, :date_visite, :heure_visite, :type_villa, :nom_villa)";
-            
-            // Préparer la requête
             $stmt = $this->conn->prepare($query);
-            
-            // Nettoyer les données
-            $this->id_cin = htmlspecialchars(strip_tags($this->id_cin));
-            $this->nom_complet = htmlspecialchars(strip_tags($this->nom_complet));
-            $this->date_visite = htmlspecialchars(strip_tags($this->date_visite));
-            $this->heure_visite = htmlspecialchars(strip_tags($this->heure_visite));
-            $this->type_villa = htmlspecialchars(strip_tags($this->type_villa ?? ''));
-            $this->nom_villa = htmlspecialchars(strip_tags($this->nom_villa ?? ''));
-            
-            // Lier les paramètres
-            $stmt->bindParam(':id_cin', $this->id_cin);
-            $stmt->bindParam(':nom_complet', $this->nom_complet);
-            $stmt->bindParam(':date_visite', $this->date_visite);
-            $stmt->bindParam(':heure_visite', $this->heure_visite);
-            $stmt->bindParam(':type_villa', $this->type_villa);
-            $stmt->bindParam(':nom_villa', $this->nom_villa);
-            
-            // Exécuter la requête
-            if($stmt->execute()) {
-                return true;
+
+            // Accéder aux propriétés héritées (protected)
+            $cin_to_bind = $this->id_cin;
+            $nom_to_bind = $this->nom_complet;
+            $date_to_bind = $this->date_visite;
+            $heure_to_bind = $this->heure_visite;
+            $type_villa_to_bind = $this->type_villa ?? '';
+            $nom_villa_to_bind = $this->nom_villa ?? '';
+
+            // Validation
+            if (empty($cin_to_bind) || empty($nom_to_bind) || empty($date_to_bind) || empty($heure_to_bind)) {
+                error_log("Erreur Contrôleur Visite: Données ajout obligatoires manquantes.");
+                return false;
             }
-            
-            return false;
+
+            // Lier les paramètres
+            $stmt->bindParam(':id_cin', $cin_to_bind);
+            $stmt->bindParam(':nom_complet', $nom_to_bind);
+            $stmt->bindParam(':date_visite', $date_to_bind);
+            $stmt->bindParam(':heure_visite', $heure_to_bind);
+            $stmt->bindParam(':type_villa', $type_villa_to_bind);
+            $stmt->bindParam(':nom_villa', $nom_villa_to_bind);
+
+            if($stmt->execute()) {
+                // $this->id_visite = $this->conn->lastInsertId(); // Mettre à jour l'ID hérité si besoin
+                return true;
+            } else {
+                error_log("PDO Error ajoutVisite: " . implode(":", $stmt->errorInfo()));
+                return false;
+            }
         } catch(PDOException $e) {
-            echo "Erreur lors de l'ajout de la visite: " . $e->getMessage();
+            error_log("PDO Exception ajoutVisite: " . $e->getMessage());
             return false;
         }
     }
 
     /**
-     * Récupère toutes les visites de la base de données
-     * @return array Tableau contenant toutes les visites
+     * Récupère toutes les visites.
      */
     public function afficherVisites() {
+        $query = "SELECT * FROM visites ORDER BY date_visite DESC, heure_visite DESC";
         try {
-            $query = "SELECT * FROM visites ORDER BY date_visite DESC";
             $stmt = $this->conn->prepare($query);
             $stmt->execute();
-            
-            return $stmt->fetchAll();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch(PDOException $e) {
-            echo "Erreur lors de la récupération des visites: " . $e->getMessage();
+            error_log("PDO Exception afficherVisites: " . $e->getMessage());
             return [];
         }
     }
 
     /**
-     * Récupère une visite spécifique par son ID
-     * @param int $id_visite ID de la visite à récupérer
-     * @return array Les détails de la visite ou null si non trouvée
+     * Récupère une visite par ID.
      */
-    public function getVisiteById($id_visite) {
+     public function getVisiteById($id_visite) {
+        $query = "SELECT * FROM visites WHERE id_visite = :id_visite";
         try {
-            $query = "SELECT * FROM visites WHERE id_visite = :id_visite";
             $stmt = $this->conn->prepare($query);
-            
-            // Nettoyer et lier l'ID
-            $id_visite = htmlspecialchars(strip_tags($id_visite));
-            $stmt->bindParam(':id_visite', $id_visite);
-            
-            // Exécuter la requête
+            $id_visite_clean = filter_var($id_visite, FILTER_SANITIZE_NUMBER_INT);
+            if ($id_visite_clean === false || $id_visite_clean <= 0) { return false; }
+            $stmt->bindParam(':id_visite', $id_visite_clean, PDO::PARAM_INT);
             $stmt->execute();
-            
-            return $stmt->fetch();
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $result ?: false;
         } catch(PDOException $e) {
-            echo "Erreur lors de la récupération de la visite: " . $e->getMessage();
-            return null;
+            error_log("PDO Exception getVisiteById: " . $e->getMessage());
+            return false;
         }
     }
 
+
     /**
-     * Modifie une visite existante dans la base de données
-     * @return bool True si la modification a réussi, False sinon
+     * Modifie une visite existante.
+     * Utilise les propriétés héritées. L'ID doit être défini sur l'objet avant d'appeler.
      */
     public function modifierVisite() {
+         // L'ID de la visite à modifier doit être dans $this->id_visite (hérité)
+         if (empty($this->id_visite)) {
+             error_log("Erreur modifierVisite: ID de visite non défini dans l'objet VisiteFunctions.");
+             return false;
+         }
+
+        $query = "UPDATE visites SET id_cin = :id_cin, nom_complet = :nom_complet, date_visite = :date_visite, heure_visite = :heure_visite WHERE id_visite = :id_visite";
         try {
-            $query = "UPDATE visites 
-                     SET id_cin = :id_cin, 
-                         nom_complet = :nom_complet, 
-                         date_visite = :date_visite, 
-                         heure_visite = :heure_visite 
-                     WHERE id_visite = :id_visite";
-            
             $stmt = $this->conn->prepare($query);
-            
-            // Nettoyer les données
-            $this->id_visite = htmlspecialchars(strip_tags($this->id_visite));
-            $this->id_cin = htmlspecialchars(strip_tags($this->id_cin));
-            $this->nom_complet = htmlspecialchars(strip_tags($this->nom_complet));
-            $this->date_visite = htmlspecialchars(strip_tags($this->date_visite));
-            $this->heure_visite = htmlspecialchars(strip_tags($this->heure_visite));
-            
-            // Lier les paramètres
-            $stmt->bindParam(':id_visite', $this->id_visite);
-            $stmt->bindParam(':id_cin', $this->id_cin);
-            $stmt->bindParam(':nom_complet', $this->nom_complet);
-            $stmt->bindParam(':date_visite', $this->date_visite);
-            $stmt->bindParam(':heure_visite', $this->heure_visite);
-            
-            // Exécuter la requête
+
+            // Accéder aux propriétés héritées
+            $id_visite_to_bind = $this->id_visite;
+            $cin_to_bind = $this->id_cin;
+            $nom_to_bind = $this->nom_complet;
+            $date_to_bind = $this->date_visite;
+            $heure_to_bind = $this->heure_visite;
+
+            if (empty($cin_to_bind) || empty($nom_to_bind) || empty($date_to_bind) || empty($heure_to_bind)) {
+                error_log("Erreur Contrôleur Visite: Données modification manquantes.");
+                return false;
+            }
+
+            $stmt->bindParam(':id_visite', $id_visite_to_bind, PDO::PARAM_INT);
+            $stmt->bindParam(':id_cin', $cin_to_bind);
+            $stmt->bindParam(':nom_complet', $nom_to_bind);
+            $stmt->bindParam(':date_visite', $date_to_bind);
+            $stmt->bindParam(':heure_visite', $heure_to_bind);
+
             if($stmt->execute()) {
                 return true;
+            } else {
+                error_log("PDO Error modifierVisite: " . implode(":", $stmt->errorInfo()));
+                return false;
             }
-            
-            return false;
         } catch(PDOException $e) {
-            echo "Erreur lors de la modification de la visite: " . $e->getMessage();
+            error_log("PDO Exception modifierVisite: " . $e->getMessage());
             return false;
         }
     }
 
     /**
-     * Supprime une visite de la base de données
-     * @param int $id_visite L'ID de la visite à supprimer
-     * @return bool True si la suppression a réussi, False sinon
+     * Supprime une visite.
      */
     public function supprimerVisite($id_visite) {
+        $query = "DELETE FROM visites WHERE id_visite = :id_visite";
         try {
-            $query = "DELETE FROM visites WHERE id_visite = :id_visite";
             $stmt = $this->conn->prepare($query);
-            
-            // Nettoyer les données
-            $id_visite = htmlspecialchars(strip_tags($id_visite));
-            
-            // Lier les paramètres
-            $stmt->bindParam(':id_visite', $id_visite);
-            
-            // Exécuter la requête
+            $id_visite_clean = filter_var($id_visite, FILTER_VALIDATE_INT);
+            if (empty($id_visite_clean) || $id_visite_clean <= 0) { return false; }
+            $stmt->bindParam(':id_visite', $id_visite_clean, PDO::PARAM_INT);
             if($stmt->execute()) {
-                return true;
+                return $stmt->rowCount() > 0; // Vrai si une ligne a été supprimée
+            } else {
+                error_log("PDO Error supprimerVisite: " . implode(":", $stmt->errorInfo()));
+                return false;
             }
-            
-            return false;
         } catch(PDOException $e) {
-            echo "Erreur lors de la suppression de la visite: " . $e->getMessage();
+            error_log("PDO Exception supprimerVisite: " . $e->getMessage());
             return false;
         }
     }
-}
+
+} // Fin de la classe VisiteFunctions
 ?>

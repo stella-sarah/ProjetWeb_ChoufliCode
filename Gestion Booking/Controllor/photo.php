@@ -109,5 +109,31 @@ class Photo {
         $base64 = 'data:' . $fileType . ';base64,' . base64_encode($fileContent);
         return $base64;
     }
+    public function deletePhotoByName($nom) {
+        if (empty($nom)) {
+            return true; // Considérer comme succès si pas de nom fourni
+        }
+        try {
+            // 1. Trouver l'ID de la photo par son nom
+            $sql_find = "SELECT id FROM photos WHERE nom = :nom LIMIT 1";
+            $stmt_find = $this->db->prepare($sql_find);
+            $stmt_find->bindParam(':nom', $nom, PDO::PARAM_STR);
+            $stmt_find->execute();
+            $result = $stmt_find->fetch(PDO::FETCH_ASSOC);
+
+            if ($result && isset($result['id'])) {
+                $id_photo = $result['id'];
+                // 2. Appeler la méthode de suppression par ID existante
+                return $this->deletePhoto($id_photo);
+            } else {
+                // Photo non trouvée par nom, considérer comme succès (rien à supprimer)
+                 error_log("Photo::deletePhotoByName: Photo non trouvée pour le nom: " . $nom);
+                return true;
+            }
+        } catch (PDOException $e) {
+            error_log("PDOException deletePhotoByName: " . $e->getMessage());
+            return false;
+        }
+    }
 }
 ?>

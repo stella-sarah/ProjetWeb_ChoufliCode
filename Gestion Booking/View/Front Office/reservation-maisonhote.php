@@ -1,80 +1,188 @@
 <?php
-// Reservation-maisonhote.php - Form for booking a maison d'hôte
+// reservation-maisonhote.php - Formulaire de réservation (Dynamique)
 
-// Get maison type from URL parameters
-$maisonType = isset($_GET['type']) ? $_GET['type'] : '';
-$categorie = isset($_GET['categorie']) ? $_GET['categorie'] : 'maison';
+// --- Inclusion des fichiers ---
+require_once __DIR__ . '/../../config.php';
+require_once __DIR__ . '/../../Controllor/ReservationSejourController.php';
+require_once __DIR__ . '/../../Model/ReservationSejour.php';
+require_once __DIR__ . '/../../Controllor/Photo.php';
+require_once __DIR__ . '/../../Controllor/ProprieteController.php';
+// --- Fin Inclusion ---
 
-// Maison d'hôte details based on type
-$maisonDetails = [
-    'dar' => [
-        'type' => 'Dar Traditionnel',
-        'chambres' => '2',
-        'surface' => '150',
-        'prix_nuit' => '350',
-        'capacite' => '4 personnes'
-    ],
-    'riad' => [
-        'type' => 'Riad Luxueux',
-        'chambres' => '3',
-        'surface' => '220',
-        'prix_nuit' => '550',
-        'capacite' => '6 personnes'
-    ],
-    'villa' => [
-        'type' => 'Villa d\'Hôtes',
-        'chambres' => '4',
-        'surface' => '300',
-        'prix_nuit' => '750',
-        'capacite' => '8 personnes'
-    ]
-];
+// --- Gestion Session ---
+session_start();
+$utilisateur_connecte = isset($_SESSION['user_id']);
+$id_utilisateur = $_SESSION['user_id'] ?? null;
+$nom_utilisateur = $_SESSION['user_nom'] ?? 'Utilisateur'; // Default name if not logged in
+$email_utilisateur = $_SESSION['user_email'] ?? null;
+// --- Fin Gestion Session ---
 
-// Default to Dar Traditionnel if type not specified or invalid
-if (!array_key_exists($maisonType, $maisonDetails)) {
-    $maisonType = 'dar';
+// Initialisation
+$proprieteDetails = null;
+$photo_principale_src = "/api/placeholder/400/250/1c1c1c/c9a86c?text=Image+Indisponible"; // Default image
+$message = '';
+$error = '';
+$form_data = $_POST; // Keep form data on POST, even if error
+$capacite_max_js = 0; // For JS validation
+
+try {
+    $db = config::getConnexion();
+    $reservationController = new ReservationSejourController($db);
+    $photoController = new Photo($db);
+    $proprieteController = new ProprieteController($db);
+
+    // --- Récupérer les détails par nom ---
+    $maisonNomGET = filter_input(INPUT_GET, 'nom', FILTER_SANITIZE_SPECIAL_CHARS);
+
+    if (empty($maisonNomGET)) {
+        $error = "Aucune maison d'hôte spécifiée.";
+    } else {
+        $proprieteDetails = $proprieteController->getMaisonHoteByNom($maisonNomGET);
+
+        if (!$proprieteDetails) {
+            $error = "Maison d'hôte non trouvée ou invalide.";
+            error_log("Tentative d'accès à une maison inexistante : " . $maisonNomGET);
+        } else {
+            // Récupérer photo
+            if (!empty($proprieteDetails['photo_nom_associe'])) {
+                 $photos_logement = $photoController->getPhotosByNom($proprieteDetails['photo_nom_associe']);
+                 if (!empty($photos_logement) && isset($photos_logement[0]['image_base64'])) {
+                     $imageData = $photos_logement[0]['image_base64'];
+                     // Ensure base64 prefix
+                     if (strpos($imageData, 'data:image') !== 0) {
+                        if (strpos(substr($imageData, 0, 20), 'iVBORw0KGgo') === 0) $mime = 'png';
+                        elseif (strpos(substr($imageData, 0, 20), '/9j/') === 0) $mime = 'jpeg';
+                        elseif (strpos(substr($imageData, 0, 20), 'R0lGOD') === 0) $mime = 'gif';
+                        else $mime = 'jpeg';
+                        $imageData = 'data:image/' . $mime . ';base64,' . $imageData;
+                     }
+                     $photo_principale_src = $imageData;
+                 }
+            }
+            $capacite_max_js = $proprieteDetails['capacite_personnes'] ?? 0; // For JS
+        }
+    }
+    // --- Fin Récupération Détails ---
+
+} catch (Exception $e) {
+    error_log("Erreur Init/Fetch dans " . basename(__FILE__) . ": " . $e->getMessage());
+    $error = "Erreur critique lors du chargement des informations de la maison d'hôtes.";
+    $proprieteDetails = null;
 }
 
-$details = $maisonDetails[$maisonType];
+// --- Traitement du formulaire (POST) ---
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $proprieteDetails) {
+    // Récupérer données POST
+    $date_debut = $_POST['date_debut'] ?? '';
+    $date_fin = $_POST['date_fin'] ?? '';
+    $nb_personnes = $_POST['nb_personnes'] ?? '';
+    $demandes_speciales = $_POST['demandes_speciales'] ?? '';
+    $maisonNom_post = $_POST['maison_nom'] ?? ''; // Depuis champ caché
 
-// Handle form submission
-$formSubmitted = false;
-$errorMessage = '';
+    $current_error = ''; // Error specific to POST validation
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Process form data here
-    // In a real application, you would validate inputs and save to database
-    
-    // Simple validation
-    if (empty($_POST['nom']) || empty($_POST['email']) || empty($_POST['telephone']) || empty($_POST['date_debut']) || empty($_POST['date_fin'])) {
-        $errorMessage = 'Veuillez remplir tous les champs obligatoires.';
+    // Validations (côté serveur pour sécurité)
+    if (empty($date_debut) || empty($date_fin) || empty($nb_personnes)) {
+        $current_error = "Les dates et le nombre de personnes sont requis.";
+    } elseif (strtotime($date_fin) <= strtotime($date_debut)) {
+        $current_error = "La date de départ doit être postérieure à la date d'arrivée.";
+    } elseif (strtotime($date_debut) < strtotime(date('Y-m-d'))) {
+        $current_error = "La date d'arrivée ne peut pas être dans le passé.";
+    } elseif (!filter_var($nb_personnes, FILTER_VALIDATE_INT) || $nb_personnes <= 0) {
+        $current_error = "Le nombre de personnes doit être un entier positif.";
+    } elseif (isset($proprieteDetails['capacite_personnes']) && $nb_personnes > $proprieteDetails['capacite_personnes']) {
+        $current_error = "Le nombre de personnes dépasse la capacité maximale (" . $proprieteDetails['capacite_personnes'] . ").";
+    } elseif ($proprieteDetails['nom_maison'] !== $maisonNom_post) {
+        $current_error = "Erreur : Incohérence dans les informations de la maison d'hôte. Veuillez réessayer.";
+        error_log("Incohérence maison POST: DB(".$proprieteDetails['nom_maison'].") vs POST(".$maisonNom_post.")");
+    }
+    // Add other necessary validations
+
+    if (empty($current_error)) {
+        try {
+            $nouvelleReservation = new ReservationSejour();
+            $nouvelleReservation->setIdUtilisateur($id_utilisateur);
+            $nouvelleReservation->setNomUtilisateur($nom_utilisateur);
+            $nouvelleReservation->setEmailUtilisateur($email_utilisateur);
+            $nouvelleReservation->setTypeLogement('maison_hote');
+            $nouvelleReservation->setNomLogement($proprieteDetails['nom_maison']); // Utiliser nom de la BD
+            $nouvelleReservation->setDateDebut($date_debut);
+            $nouvelleReservation->setDateFin($date_fin);
+            $nouvelleReservation->setNbPersonnes($nb_personnes);
+            $nouvelleReservation->setDemandesSpeciales(strip_tags($demandes_speciales));
+            $nouvelleReservation->setStatut('En attente');
+
+            if ($reservationController->ajouterReservation($nouvelleReservation)) {
+                $message = "Votre demande de réservation pour la maison d'hôtes '" . htmlspecialchars($proprieteDetails['nom_maison']) . "' a été enregistrée avec succès. Nous vous contacterons pour confirmer.";
+                $form_data = []; // Clear form data on success
+                $proprieteDetails = null; // Hide form after success
+            } else {
+                 // Check controller/model logs for specific PDO errors
+                $error = "Une erreur serveur s'est produite lors de l'enregistrement de votre réservation. Veuillez réessayer.";
+            }
+        } catch (Exception $e) {
+            $error = "Une exception serveur s'est produite lors du traitement de votre demande.";
+            error_log("Exception dans " . basename(__FILE__) . " POST: " . $e->getMessage());
+        }
     } else {
-        $formSubmitted = true;
-        
-        // In a real application, you would:
-        // 1. Sanitize inputs
-        // 2. Save to database
-        // 3. Perhaps send confirmation email
-        // 4. Redirect to thank you page or display confirmation
+        $error = $current_error; // Assign POST validation error
     }
 }
+// --- Fin Traitement POST ---
 ?>
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TuniFy Village - Réservation de Maison d'Hôtes</title>
-    <link rel="stylesheet" href="../../style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>TuniFy Village - Réservation <?php echo $proprieteDetails ? htmlspecialchars($proprieteDetails['nom_maison']) : 'Maison d\'Hôtes'; ?></title>
+    <link rel="stylesheet" href="../../style.css"> <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Styles CSS (identiques à reservation-villa.php et reservation-hotel.php) */
+        .form-container { display: flex; gap: 40px; background-color: rgba(28, 28, 28, 0.7); border: 1px solid rgba(201, 168, 108, 0.2); border-radius: 8px; padding: 40px; max-width: 1100px; margin: 40px auto; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4); }
+        .form-column { flex: 1; }
+        .logement-info-box { background-color: rgba(17, 17, 17, 0.5); border: 1px solid rgba(201, 168, 108, 0.1); border-radius: 5px; padding: 20px; margin-bottom: 20px; }
+        .logement-info-box h3 { font-family: 'Montserrat', sans-serif; font-size: 20px; color: var(--gold-primary); margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid rgba(201, 168, 108, 0.3); }
+        .logement-info-box p { font-size: 15px; line-height: 1.6; color: rgba(248, 245, 235, 0.8); margin-bottom: 8px; }
+        .logement-info-box p strong { color: var(--light-text); font-weight: 600; min-width: 100px; display: inline-block; }
+        .logement-info-box img { width:100%; margin-top:15px; border-radius:5px; border: 1px solid rgba(201, 168, 108, 0.2); object-fit: cover; height: 250px; }
+        .alert { padding: 15px; margin-bottom: 20px; border-radius: 4px; font-size: 15px; border: 1px solid transparent; display: flex; align-items: center; gap: 10px; }
+        .alert i { font-size: 1.2em; }
+        .alert-success { background-color: rgba(76, 175, 80, 0.1); border-color: rgba(76, 175, 80, 0.4); color: #98FB98; }
+        .alert-danger { background-color: rgba(244, 67, 54, 0.1); border-color: rgba(244, 67, 54, 0.4); color: #FFA07A; }
+        .form-header { margin-bottom: 30px; }
+        .form-header h2 { font-family: 'Playfair Display', serif; color: var(--gold-primary); font-size: 26px; margin-bottom: 10px; }
+        .form-header p { color: rgba(248, 245, 235, 0.8); }
+        .form-row { display: flex; gap: 20px; margin-bottom: 20px; }
+        .form-group { flex: 1; display: flex; flex-direction: column; }
+        .form-group label { color: var(--gold-light); font-size: 14px; margin-bottom: 8px; font-weight: 500; }
+        .form-control { width: 100%; padding: 12px 15px; background-color: rgba(17, 17, 17, 0.7); border: 1px solid rgba(201, 168, 108, 0.3); color: var(--light-text); border-radius: 4px; font-size: 15px; transition: border-color 0.3s ease, box-shadow 0.3s ease; font-family: 'Montserrat', sans-serif; }
+        .form-control:focus { outline: none; border-color: var(--gold-primary); box-shadow: 0 0 0 3px rgba(201, 168, 108, 0.2); }
+        textarea.form-control { min-height: 100px; resize: vertical; }
+        .contact-btn { background-color: var(--gold-primary); color: var(--darker-bg); font-family: 'Montserrat', sans-serif; font-weight: 600; font-size: 16px; text-transform: uppercase; letter-spacing: 1px; padding: 15px; border: none; cursor: pointer; transition: all 0.3s ease; width: 100%; margin-top: 10px; border-radius: 5px; text-align: center; display: inline-block; text-decoration: none;}
+        .contact-btn:hover { background-color: var(--light-text); transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2); }
+        @media (max-width: 992px) { .form-container { flex-direction: column; } }
+        @media (max-width: 768px) { .form-row { flex-direction: column; gap: 0; } .form-group { margin-bottom: 20px; } }
+
+        /* --- Styles Popup de Validation --- */
+        .custom-popup-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.75); z-index: 3000; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(4px); padding: 20px; opacity: 0; pointer-events: none; transition: opacity 0.3s ease-out; }
+        .custom-popup-overlay.visible { opacity: 1; pointer-events: auto; }
+        .custom-popup-content { background-color: var(--dark-bg); padding: 35px 45px; border-radius: 8px; border: 1px solid var(--gold-primary); box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6); text-align: center; max-width: 480px; width: 95%; position: relative; transform: scale(0.95); opacity: 0; transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease-out; }
+        .custom-popup-overlay.visible .custom-popup-content { transform: scale(1); opacity: 1; }
+        .custom-popup-close { position: absolute; top: 12px; right: 18px; font-size: 28px; font-weight: bold; line-height: 1; color: var(--gold-light); cursor: pointer; transition: color 0.3s ease, transform 0.3s ease; }
+        .custom-popup-close:hover { color: #fff; transform: rotate(90deg) scale(1.1); }
+        .custom-popup-content h3 { font-family: 'Cinzel', serif; color: var(--gold-primary); margin-top: 0; margin-bottom: 20px; font-size: 22px; font-weight: 600; }
+        .custom-popup-content p { color: rgba(248, 245, 235, 0.9); font-size: 16px; line-height: 1.7; margin-bottom: 30px; }
+        .popup-ok-button { background-color: var(--gold-primary); color: var(--darker-bg); border: none; padding: 12px 35px; border-radius: 5px; cursor: pointer; font-weight: 600; font-size: 16px; text-transform: uppercase; letter-spacing: 0.5px; transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease; }
+        .popup-ok-button:hover { background-color: var(--gold-light); transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3); }
+        /* --- Fin Styles Popup --- */
+    </style>
 </head>
 <body>
-    <!-- Header / Navigation -->
     <header>
         <div class="container nav-container">
             <div class="logo">
-                <img src="logo.png" alt="TuniFy Logo">
-                <div class="logo-text">
+                <img src="logo.png" alt="TuniFy Logo"> <div class="logo-text">
                     <h1>TuniFy</h1>
                     <p>Village</p>
                 </div>
@@ -89,222 +197,263 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <li><a href="index.php#contact">Contact</a></li>
                 </ul>
             </nav>
-            <?php if(isset($_SESSION['user_id'])): ?>
-                <a href="logout.php" class="contact-btn">Déconnexion</a>
-            <?php else: ?>
-                <a href="login.php" class="contact-btn">Connexion</a>
-            <?php endif; ?>
+             <?php if($utilisateur_connecte): ?>
+                 <a href="logout.php" class="contact-btn" style="width: auto; padding: 10px 20px; margin-top: 0;">Déconnexion</a>
+             <?php else: ?>
+                 <a href="login.php" class="contact-btn" style="width: auto; padding: 10px 20px; margin-top: 0;">Connexion</a>
+             <?php endif; ?>
         </div>
     </header>
 
-    <!-- Reservation Form Section -->
-    <section class="contact" style="padding-top: 120px;">
-        <div class="container contact-container">
-            <?php if ($formSubmitted): ?>
-                <!-- Success Message -->
-                <div style="text-align: center; max-width: 800px; margin: 0 auto; padding: 50px 20px;">
-                    <div style="font-size: 60px; color: var(--gold-primary); margin-bottom: 20px;">
-                        <i class="fas fa-check-circle"></i>
+    <section class="contact-section" style="padding-top: 120px; padding-bottom: 80px; background: var(--darker-bg);">
+        <div class="container">
+             <?php if(!empty($message)): ?>
+                 <div class="alert alert-success" style="max-width: 1100px; margin: 20px auto;"><i class="fas fa-check-circle"></i> <?php echo $message; ?></div>
+                 <div style="text-align: center; margin-top: 30px;">
+                    <a href="reservation.php" class="contact-btn">
+                         <i class="fas fa-arrow-left"></i> Retour aux propriétés
+                    </a>
+                 </div>
+            <?php endif; ?>
+            <?php if(!empty($error) && !$proprieteDetails && empty($message)): // Initial loading error ?>
+                 <div class="alert alert-danger" style="max-width: 1100px; margin: 20px auto;"><i class="fas fa-exclamation-triangle"></i> <?php echo htmlspecialchars($error); ?></div>
+                 <div style="text-align: center; margin-top: 20px;">
+                    <a href="reservation.php" class="contact-btn">Retour aux propriétés</a>
+                 </div>
+            <?php endif; ?>
+
+            <?php if($proprieteDetails && empty($message)): ?>
+            <div class="form-container">
+                 <div class="form-column">
+                     <div class="form-header">
+                        <h2>Informations Maison d'Hôte</h2>
+                     </div>
+                    <div class="logement-info-box">
+                        <h3><?php echo htmlspecialchars($proprieteDetails['nom_maison']); ?></h3>
+                        <p><strong>Type :</strong> <?php echo htmlspecialchars($proprieteDetails['type_maison']); ?></p>
+                        <?php if($proprieteDetails['nb_chambres']): ?><p><strong>Chambres :</strong> <?php echo htmlspecialchars($proprieteDetails['nb_chambres']); ?></p><?php endif; ?>
+                        <?php if($proprieteDetails['surface_m2']): ?><p><strong>Surface :</strong> <?php echo htmlspecialchars($proprieteDetails['surface_m2']); ?> m²</p><?php endif; ?>
+                        <?php if($proprieteDetails['capacite_personnes']): ?><p><strong>Capacité Max :</strong> <?php echo htmlspecialchars($proprieteDetails['capacite_personnes']); ?> personnes</p><?php endif; ?>
+                        <p><strong>Piscine :</strong> <?php echo $proprieteDetails['piscine'] ? 'Oui' : 'Non'; ?></p>
+                        <p><strong>Petit Déj. Inclus :</strong> <?php echo $proprieteDetails['petit_dejeuner_inclus'] ? 'Oui' : 'Non'; ?></p>
+                        <?php if($proprieteDetails['prix_nuit']): ?><p><strong>Prix / Nuit :</strong> <?php echo number_format($proprieteDetails['prix_nuit'], 0, ',', ' '); ?> DT</p><?php endif; ?>
+                        <img src="<?php echo htmlspecialchars($photo_principale_src); ?>"
+                             alt="Image <?php echo htmlspecialchars($proprieteDetails['nom_maison']); ?>"
+                             onerror="this.onerror=null; this.src='/api/placeholder/400/250/1c1c1c/c9a86c?text=Image+Erreur';">
+                        <?php if($proprieteDetails['description']): ?>
+                            <p style="margin-top: 15px;"><strong>Description :</strong><br><?php echo nl2br(htmlspecialchars($proprieteDetails['description'])); ?></p>
+                         <?php endif; ?>
                     </div>
-                    <h2 class="section-title">Réservation <span>Confirmée</span></h2>
-                    <p class="about-text" style="margin-bottom: 30px;">
-                        Merci pour votre réservation du <?php echo htmlspecialchars($details['type']); ?>. 
-                        Un membre de notre équipe vous contactera prochainement pour confirmer les détails de votre séjour.
-                    </p>
-                    <a href="index.php" class="hero-cta" style="display: inline-block;">Retour à l'Accueil</a>
-                </div>
-            <?php else: ?>
-                <div class="contact-info">
-                    <p class="section-subtitle">Formulaire de Réservation</p>
-                    <h2 class="section-title">Réserver votre <span>Maison d'Hôtes</span></h2>
-                    <p class="about-text">Remplissez le formulaire ci-dessous pour réserver votre séjour dans notre <?php echo htmlspecialchars($details['type']); ?>.</p>
-                    
-                    <div class="villa-summary" style="margin-top: 30px; background: rgba(201, 168, 108, 0.1); padding: 25px; border-radius: 5px; border: 1px solid rgba(201, 168, 108, 0.3);">
-                        <h3 style="color: var(--gold-primary); margin-bottom: 15px; font-size: 20px;">Détails de la Maison d'Hôtes</h3>
-                        <table style="width: 100%; border-collapse: collapse;">
-                            <tr>
-                                <td style="padding: 10px 0; border-bottom: 1px solid rgba(201, 168, 108, 0.2);"><strong>Type</strong></td>
-                                <td style="padding: 10px 0; border-bottom: 1px solid rgba(201, 168, 108, 0.2);"><?php echo htmlspecialchars($details['type']); ?></td>
-                            </tr>
-                            <tr>
-                                <td style="padding: 10px 0; border-bottom: 1px solid rgba(201, 168, 108, 0.2);"><strong>Nombre de Chambres</strong></td>
-                                <td style="padding: 10px 0; border-bottom: 1px solid rgba(201, 168, 108, 0.2);"><?php echo htmlspecialchars($details['chambres']); ?></td>
-                            </tr>
-                            <tr>
-                                <td style="padding: 10px 0; border-bottom: 1px solid rgba(201, 168, 108, 0.2);"><strong>Surface</strong></td>
-                                <td style="padding: 10px 0; border-bottom: 1px solid rgba(201, 168, 108, 0.2);"><?php echo htmlspecialchars($details['surface']); ?> m²</td>
-                            </tr>
-                            <tr>
-                                <td style="padding: 10px 0; border-bottom: 1px solid rgba(201, 168, 108, 0.2);"><strong>Capacité</strong></td>
-                                <td style="padding: 10px 0; border-bottom: 1px solid rgba(201, 168, 108, 0.2);"><?php echo htmlspecialchars($details['capacite']); ?></td>
-                            </tr>
-                            <tr>
-                                <td style="padding: 10px 0;"><strong>Prix par nuit</strong></td>
-                                <td style="padding: 10px 0; color: var(--gold-primary); font-weight: bold;"><?php echo htmlspecialchars($details['prix_nuit']); ?> DT</td>
-                            </tr>
-                        </table>
-                    </div>
-                    
-                    <div class="contact-social" style="margin-top: 40px;">
-                        <a href="#" class="social-icon"><i class="fab fa-facebook-f"></i></a>
-                        <a href="#" class="social-icon"><i class="fab fa-linkedin-in"></i></a>
-                        <a href="#" class="social-icon"><i class="fab fa-instagram"></i></a>
-                        <a href="#" class="social-icon"><i class="fab fa-twitter"></i></a>
-                    </div>
-                </div>
-                
-                <div class="contact-form">
-                    <?php if (!empty($errorMessage)): ?>
-                        <div style="background-color: rgba(255, 99, 132, 0.1); border: 1px solid rgba(255, 99, 132, 0.3); color: #ff6384; padding: 15px; margin-bottom: 20px; border-radius: 4px;">
-                            <i class="fas fa-exclamation-circle"></i> <?php echo htmlspecialchars($errorMessage); ?>
+                    <?php if ($utilisateur_connecte): ?>
+                     <div class="logement-info-box" style="margin-top: 20px;">
+                        <h3>Vos Informations</h3>
+                        <p><strong>Nom :</strong> <?php echo htmlspecialchars($nom_utilisateur); ?></p>
+                        <?php if ($email_utilisateur): ?> <p><strong>Email :</strong> <?php echo htmlspecialchars($email_utilisateur); ?></p> <?php endif; ?>
+                        <p><small>(Connecté)</small></p>
+                     </div>
+                    <?php else: ?>
+                        <div class="logement-info-box" style="margin-top: 20px;">
+                            <p><small>Vous réservez en tant qu'invité. <a href="login.php" style="color: var(--gold-primary);">Connectez-vous</a> ou <a href="register.php" style="color: var(--gold-primary);">créez un compte</a> pour suivre vos réservations.</small></p>
                         </div>
                     <?php endif; ?>
+                </div>
 
-                    <form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]) . '?type=' . htmlspecialchars($maisonType); ?>" method="post">
-                        <div class="form-group">
-                            <input type="text" name="nom" class="form-control" placeholder="Votre Nom Complet *" required>
-                        </div>
-                        <div class="form-group">
-                            <input type="email" name="email" class="form-control" placeholder="Votre Email *" required>
-                        </div>
-                        <div class="form-group">
-                            <input type="tel" name="telephone" class="form-control" placeholder="Votre Téléphone *" required>
-                        </div>
-                        
-                        <!-- Hidden fields to store maison information -->
-                        <input type="hidden" name="maison_type" value="<?php echo htmlspecialchars($details['type']); ?>">
-                        <input type="hidden" name="type_logement" value="maison">
-                        
-                        <div class="form-group">
-                            <label for="date_debut" style="display: block; margin-bottom: 8px; color: rgba(248, 245, 235, 0.7);">Date d'arrivée *</label>
-                            <input type="date" id="date_debut" name="date_debut" class="form-control" required min="<?php echo date('Y-m-d'); ?>">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="date_fin" style="display: block; margin-bottom: 8px; color: rgba(248, 245, 235, 0.7);">Date de départ *</label>
-                            <input type="date" id="date_fin" name="date_fin" class="form-control" required min="<?php echo date('Y-m-d', strtotime('+1 day')); ?>">
-                        </div>
-                        
-                        <div class="form-group">
-                            <select name="nb_personnes" class="form-control" required>
-                                <option value="" disabled selected>Nombre de personnes *</option>
-                                <?php
-                                $max_capacite = intval($details['capacite']);
-                                for ($i = 1; $i <= $max_capacite; $i++) {
-                                    echo "<option value=\"$i\">$i personne" . ($i > 1 ? "s" : "") . "</option>";
-                                }
-                                ?>
-                            </select>
-                        </div>
-                        
-                        <div class="form-group">
-                            <textarea name="message" class="form-control" placeholder="Demandes spéciales (Optionnel)"></textarea>
-                        </div>
-                        
-                        <div class="form-group" style="margin-bottom: 30px;">
-                            <div style="display: flex; align-items: center; gap: 10px;">
-                                <input type="checkbox" id="privacy" name="privacy" required style="width: auto; margin: 0;">
-                                <label for="privacy" style="margin: 0; font-size: 14px; color: rgba(248, 245, 235, 0.7);">
-                                    J'accepte les <a href="#" style="color: var(--gold-primary);">conditions générales</a> et la <a href="#" style="color: var(--gold-primary);">politique de confidentialité</a> *
-                                </label>
+                 <div class="form-column">
+                    <div class="form-header">
+                        <h2>Réserver votre Séjour</h2>
+                        <p>Indiquez vos dates et le nombre de personnes.</p>
+                    </div>
+                     <?php if(!empty($error) && $_SERVER['REQUEST_METHOD'] === 'POST'): ?>
+                        <div class="alert alert-danger"><i class="fas fa-exclamation-triangle"></i> <?php echo htmlspecialchars($error); ?></div>
+                    <?php endif; ?>
+
+                    <form id="reservationMaisonForm"
+                          action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>?nom=<?php echo urlencode($proprieteDetails['nom_maison']); ?>"
+                          method="POST"
+                          onsubmit="return validateReservationMaison();">
+
+                        <input type="hidden" name="maison_nom" value="<?php echo htmlspecialchars($proprieteDetails['nom_maison']); ?>">
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="date_debut">Date d'arrivée *</label>
+                                <input type="date" id="date_debut" name="date_debut" class="form-control" value="<?php echo htmlspecialchars($form_data['date_debut'] ?? ''); ?>">
+                            </div>
+                            <div class="form-group">
+                                <label for="date_fin">Date de départ *</label>
+                                <input type="date" id="date_fin" name="date_fin" class="form-control" value="<?php echo htmlspecialchars($form_data['date_fin'] ?? ''); ?>">
                             </div>
                         </div>
-                        
-                        <button type="submit" class="form-submit animated-word">Confirmer la Réservation</button>
-                    </form>
-                </div>
-            <?php endif; ?>
-        </div>
-    </section>
 
-    <!-- Footer -->
+                        <div class="form-row">
+                             <div class="form-group">
+                                 <label for="nb_personnes">Nombre de personnes *</label>
+                                 <input type="text" inputmode="numeric" pattern="[0-9]*" id="nb_personnes" name="nb_personnes" class="form-control" placeholder="Max: <?php echo $capacite_max_js ?: '?'; ?>" value="<?php echo htmlspecialchars($form_data['nb_personnes'] ?? ''); ?>">
+                                 <small style="color: rgba(248, 245, 235, 0.6); font-size: 12px; margin-top: 5px;">Capacité maximale: <?php echo htmlspecialchars($proprieteDetails['capacite_personnes'] ?? 'Non définie'); ?> personnes.</small>
+                             </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="demandes_speciales">Demandes spéciales (Optionnel)</label>
+                            <textarea id="demandes_speciales" name="demandes_speciales" class="form-control" rows="3" placeholder="Préférences, allergies, heure d'arrivée..."><?php echo htmlspecialchars($form_data['demandes_speciales'] ?? ''); ?></textarea>
+                        </div>
+
+                        <div class="form-group" style="margin-top: 30px;">
+                            <button type="submit" class="contact-btn">Envoyer la demande de réservation</button>
+                        </div>
+                    </form>
+                 </div> </div> <?php endif; ?> </div> </section>
+
     <footer class="footer">
         <div class="container">
-            <div class="footer-top">
-                <div class="footer-about">
-                    <div class="logo">
-                        <img src="logo.png" alt="TuniFy Logo">
-                        <div class="logo-text">
-                            <h1>TuniFy</h1>
-                            <p>Village</p>
-                        </div>
-                    </div>
-                    <p>TuniFy Village est l'incarnation du luxe, offrant une expérience résidentielle exclusive avec des équipements haut de gamme et un service exceptionnel dans un cadre magnifique.</p>
-                </div>
-                
-                <div class="footer-links">
-                    <h3 class="footer-heading">Liens Rapides</h3>
-                    <ul>
-                        <li><a href="index.php#home">Accueil</a></li>
-                        <li><a href="index.php#about">À Propos</a></li>
-                        <li><a href="index.php#gallery">Propriétés</a></li>
-                        <li><a href="index.php#features">Services</a></li>
-                        <li><a href="reservation.php">Réservation</a></li>
-                        <li><a href="index.php#contact">Contact</a></li>
-                    </ul>
-                </div>
-                
-                <div class="footer-links">
-                    <h3 class="footer-heading">Nos Services</h3>
-                    <ul>
-                        <li><a href="#">Vente Immobilière</a></li>
-                        <li><a href="#">Gestion de Propriété</a></li>
-                        <li><a href="#">Design d'Intérieur</a></li>
-                        <li><a href="#">Aménagement Paysager</a></li>
-                        <li><a href="#">Services de Conciergerie</a></li>
-                    </ul>
-                </div>
-                
-                <div class="footer-contact">
-                    <h3 class="footer-heading">Informations de Contact</h3>
-                    <p><i class="fas fa-map-marker-alt"></i> 123 Boulevard du Luxe, Quartier Doré, Ville</p>
-                    <p><i class="fas fa-phone"></i> +216 12 345 678</p>
-                    <p><i class="fas fa-envelope"></i> info@tunifyvillage.com</p>
-                    <p><i class="fas fa-clock"></i> Lun-Sam: 9:00 - 18:00</p>
-                </div>
-            </div>
-            
-            <div class="footer-bottom">
-                <div class="footer-copyright">
-                    &copy; 2025 TuniFy Village. Tous Droits Réservés. Conçu par <a href="#">Kaptin</a>
-                </div>
-            </div>
+             <div class="footer-top">
+                  </div>
+             <div class="footer-bottom">
+                 <div class="footer-copyright">
+                     &copy; <?php echo date("Y"); ?> TuniFy Village. Tous Droits Réservés. Conçu par <a href="#">Kaptin</a>
+                 </div>
+             </div>
         </div>
     </footer>
 
-    <!-- JavaScript -->
+    <div class="custom-popup-overlay" id="validationPopupOverlay">
+        <div class="custom-popup-content">
+            <span class="custom-popup-close" id="validationPopupClose">&times;</span>
+            <h3 id="validationPopupTitle">Erreur de Validation</h3>
+            <p id="validationPopupMessage">Message d'erreur détaillé ici.</p>
+            <button class="popup-ok-button" id="validationPopupOk">OK</button>
+        </div>
+    </div>
     <script>
-        // Scroll Header Effect
-        window.addEventListener('scroll', function() {
-            const header = document.querySelector('header');
-            if (window.scrollY > 50) {
-                header.classList.add('scrolled');
-            } else {
-                header.classList.remove('scrolled');
+        // --- Nouvelle fonction pour afficher la popup personnalisée ---
+        function showCustomPopup(title, message) {
+            const popupOverlay = document.getElementById('validationPopupOverlay');
+            const popupTitle = document.getElementById('validationPopupTitle');
+            const popupMessage = document.getElementById('validationPopupMessage');
+            const closeButton = document.getElementById('validationPopupClose');
+            const okButton = document.getElementById('validationPopupOk');
+
+            if (!popupOverlay || !popupTitle || !popupMessage || !closeButton || !okButton) {
+                console.error("Éléments du popup de validation introuvables ! Fallback sur alert.");
+                alert(title + "\n" + message); // Utiliser alert comme secours
+                return;
             }
-        });
-        
-        // Validate dates
+
+            popupTitle.textContent = title;
+            popupMessage.textContent = message;
+
+            const closePopupHandler = () => {
+                popupOverlay.classList.remove('visible');
+                closeButton.removeEventListener('click', closePopupHandler);
+                okButton.removeEventListener('click', closePopupHandler);
+            };
+
+            closeButton.addEventListener('click', closePopupHandler);
+            okButton.addEventListener('click', closePopupHandler);
+            popupOverlay.classList.add('visible');
+        }
+
+        // --- Fonction de validation MODIFIÉE ---
+        function validateReservationMaison() {
+            const dateDebutInput = document.getElementById('date_debut');
+            const dateFinInput = document.getElementById('date_fin');
+            const nbPersonnesInput = document.getElementById('nb_personnes');
+            const capaciteMax = <?php echo $capacite_max_js; ?>; // Capacité max depuis PHP
+
+            const dateDebut = dateDebutInput.value;
+            const dateFin = dateFinInput.value;
+            const nbPersonnesStr = nbPersonnesInput.value.trim();
+
+            if (dateDebut === '') {
+                showCustomPopup("Date Manquante", "Veuillez sélectionner une date d'arrivée.");
+                dateDebutInput.focus();
+                return false;
+            }
+            if (dateFin === '') {
+                showCustomPopup("Date Manquante", "Veuillez sélectionner une date de départ.");
+                dateFinInput.focus();
+                return false;
+            }
+
+            const today = new Date();
+            const selectedDateDebut = new Date(dateDebut);
+            const selectedDateFin = new Date(dateFin);
+            today.setHours(0, 0, 0, 0); // Comparer uniquement les dates
+
+            if (selectedDateDebut < today) {
+                showCustomPopup("Date Invalide", "La date d'arrivée ne peut pas être dans le passé.");
+                dateDebutInput.focus();
+                return false;
+            }
+             if (selectedDateFin <= selectedDateDebut) {
+                showCustomPopup("Date Invalide", "La date de départ doit être postérieure à la date d'arrivée.");
+                dateFinInput.focus();
+                return false;
+            }
+
+            if (nbPersonnesStr === '') {
+                 showCustomPopup("Information Requise", "Veuillez indiquer le nombre de personnes.");
+                 nbPersonnesInput.focus();
+                 return false;
+            }
+            // Vérifier si c'est un nombre entier positif
+            const nbPersonnes = parseInt(nbPersonnesStr, 10);
+             if (isNaN(nbPersonnes) || nbPersonnes <= 0 || nbPersonnesStr !== String(nbPersonnes)) {
+                 showCustomPopup("Nombre Invalide", "Veuillez entrer un nombre de personnes valide (entier positif).");
+                 nbPersonnesInput.focus();
+                 return false;
+             }
+
+             // Vérifier la capacité maximale si elle est définie (capaciteMax > 0)
+             if (capaciteMax > 0 && nbPersonnes > capaciteMax) {
+                 showCustomPopup("Capacité Dépassée", "Le nombre de personnes (" + nbPersonnes + ") dépasse la capacité maximale de cette maison (" + capaciteMax + ").");
+                 nbPersonnesInput.focus();
+                 return false;
+             }
+
+            // Si tout est valide
+            return true; // Autorise la soumission
+        }
+
+        // --- Code existant pour la gestion des dates min ---
         document.addEventListener('DOMContentLoaded', function() {
-            const dateDebut = document.getElementById('date_debut');
-            const dateFin = document.getElementById('date_fin');
-            
-            if (dateDebut && dateFin) {
-                dateDebut.addEventListener('change', function() {
-                    // Ensure the end date is at least the day after the start date
-                    const nextDay = new Date(dateDebut.value);
-                    nextDay.setDate(nextDay.getDate() + 1);
-                    
-                    const formattedDate = nextDay.toISOString().split('T')[0];
-                    dateFin.min = formattedDate;
-                    
-                    // If the current end date is before the new start date, update it
-                    if (dateFin.value && new Date(dateFin.value) <= new Date(dateDebut.value)) {
-                        dateFin.value = formattedDate;
-                    }
-                });
-            }
-        });
+             const dateDebutInput = document.getElementById('date_debut');
+             const dateFinInput = document.getElementById('date_fin');
+
+             if (dateDebutInput && dateFinInput) {
+                 const todayString = new Date().toISOString().split('T')[0];
+                 dateDebutInput.min = todayString;
+
+                 dateDebutInput.addEventListener('change', function() {
+                     const debutVal = this.value;
+                     if (debutVal) {
+                         const debutDate = new Date(debutVal);
+                         const lendemain = new Date(debutDate);
+                         lendemain.setDate(lendemain.getDate() + 1);
+                         const lendemainString = lendemain.toISOString().split('T')[0];
+                         dateFinInput.min = lendemainString;
+                         if (dateFinInput.value && new Date(dateFinInput.value) < lendemain) {
+                             dateFinInput.value = '';
+                         }
+                     } else {
+                         const defaultLendemain = new Date();
+                         defaultLendemain.setDate(defaultLendemain.getDate() + 1);
+                         dateFinInput.min = defaultLendemain.toISOString().split('T')[0];
+                     }
+                 });
+
+                  const lendemainInitial = new Date();
+                  lendemainInitial.setDate(lendemainInitial.getDate() + 1);
+                  if(dateDebutInput.value) {
+                      const currentDebut = new Date(dateDebutInput.value);
+                      const currentLendemain = new Date(currentDebut);
+                      currentLendemain.setDate(currentLendemain.getDate() + 1);
+                      dateFinInput.min = currentLendemain.toISOString().split('T')[0];
+                  } else {
+                      dateFinInput.min = lendemainInitial.toISOString().split('T')[0];
+                  }
+             }
+         });
     </script>
 </body>
 </html>
