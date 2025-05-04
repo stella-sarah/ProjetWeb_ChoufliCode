@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="36px" height="36px" viewBox="0 0 36 36" version="1.1" xmlns="http://www.w3.org/2000/svg">
+    <title>Profile</title>
+    <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <circle fill="#E3E6F0" cx="18" cy="18" r="18"/>
+        <path d="M18,24 C21.3137085,24 24,21.3137085 24,18 C24,14.6862915 21.3137085,12 18,12 C14.6862915,12 12,14.6862915 12,18 C12,21.3137085 14.6862915,24 18,24 Z M18,25 C13.581722,25 10,21.418278 10,17 C10,12.581722 13.581722,9 18,9 C22.418278,9 26,12.581722 26,17 C26,21.418278 22.418278,25 18,25 Z" fill="#858796" fill-rule="nonzero"/>
+        <circle fill="#858796" cx="18" cy="14" r="2"/>
+        <path d="M18,26 C15.790861,26 14,24.209139 14,22 L22,22 C22,24.209139 20.209139,26 18,26 Z" fill="#858796"/>
+    </g>
+</svg> 

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TuniFy - Portail</title>
+    <style>
+        :root {
+            --gold: #c9a86c;
+            --dark: #1c1c1c;
+            --light: #f8f5eb;
+        }
+        body {
+            font-family: 'Arial', sans-serif;
+            background: var(--dark) url('assets/hero-bg.jpg') center/cover no-repeat;
+            height: 100vh;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--light);
+        }
+        .portal-container {
+            background: rgba(28, 28, 28, 0.9);
+            padding: 3rem;
+            border-radius: 10px;
+            text-align: center;
+            border: 1px solid var(--gold);
+            max-width: 500px;
+            width: 90%;
+        }
+        .logo {
+            width: 150px;
+            margin-bottom: 1.5rem;
+        }
+        .btn {
+            display: inline-block;
+            background: var(--gold);
+            color: var(--dark);
+            padding: 12px 30px;
+            margin: 0.5rem;
+            border-radius: 4px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(201, 168, 108, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <div class="portal-container">
+        <img src="assets/logo.png" alt="TuniFy" class="logo">
+        <h1>Bienvenue chez TuniFy</h1>
+        <p>Choisissez votre espace :</p>
+        <div class="btn-group">
+            <a href="frontend/index.html" class="btn">Espace Client</a>
+            <a href="backend/index.html" class="btn">Espace Admin</a>
+        </div>
+    </div>
+</body>
+</html>

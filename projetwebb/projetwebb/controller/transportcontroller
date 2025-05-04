@@ -1,0 +1,45 @@
+<?php
+require_once '../config.php';
+require_once '../model/transport.php';
+
+class TransportController 
+{
+    private $pdo;
+
+    public function __construct() {
+        $this->pdo = config::getConnexion();
+    }
+
+    public function ajouterTransport($image, $nom, $type, $prix, $statut, $description) 
+    {
+        try {
+            $query = $this->pdo->prepare('
+                INSERT INTO transport (image, nom, type, prix, statut, description) 
+                VALUES (:image, :nom, :type, :prix, :statut, :description)
+            ');
+            
+            return $query->execute([
+                'image' => $image,
+                'nom' => $nom,
+                'type' => $type,
+                'prix' => $prix,
+                'statut' => $statut,
+                'description' => $description
+            ]);
+            
+        } catch (PDOException $e) {
+            die('Erreur lors de l\'ajout du transport: ' . $e->getMessage());
+        }
+    }
+    
+    public function getAllTransports() {
+        try {
+            $query = $this->pdo->prepare('SELECT * FROM transport');
+            $query->execute();
+            return $query->fetchAll();
+        } catch (PDOException $e) {
+            die('Erreur lors de la récupération des transports: ' . $e->getMessage());
+        }
+    }
+}
+?>
