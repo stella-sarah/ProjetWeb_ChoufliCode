@@ -17,17 +17,30 @@ try {
     $title = filter_var($_POST['title'], FILTER_SANITIZE_STRING);
     $content = filter_var($_POST['content'], FILTER_SANITIZE_STRING);
     $author = filter_var($_POST['author'], FILTER_SANITIZE_STRING);
+    $publish_at = isset($_POST['publish_at']) ? filter_var($_POST['publish_at'], FILTER_SANITIZE_STRING) : null;
 
     if (empty($title) || empty($content) || empty($author)) {
         throw new Exception('Le titre, le contenu et l\'auteur ne peuvent pas être vides');
     }
 
-    $query = 'INSERT INTO announcements (title, content, author, created_at) VALUES (:title, :content, :author, NOW())';
+    // Valider le format de publish_at si fourni
+    if ($publish_at) {
+        $dateTime = DateTime::createFromFormat('Y-m-d H:i:s', $publish_at);
+        if (!$dateTime || $dateTime->format('Y-m-d H:i:s') !== $publish_at) {
+            throw new Exception('Format de date de publication invalide');
+        }
+        if ($dateTime <= new DateTime()) {
+            throw new Exception('La date de publication doit être dans le futur');
+        }
+    }
+
+    $query = 'INSERT INTO announcements (title, content, author, created_at, publish_at) VALUES (:title, :content, :author, NOW(), :publish_at)';
     $stmt = $pdo->prepare($query);
     $stmt->execute([
         'title' => $title,
         'content' => $content,
-        'author' => $author
+        'author' => $author,
+        'publish_at' => $publish_at
     ]);
 
     echo json_encode([

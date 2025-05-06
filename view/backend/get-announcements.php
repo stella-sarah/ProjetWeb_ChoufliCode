@@ -1,34 +1,16 @@
 <?php
-ini_set('display_errors', 0); // Désactiver l'affichage HTML des erreurs
-error_reporting(E_ALL);
+// get-announcements.php - Récupérer toutes les annonces depuis la base de données TuniFy
+
 header('Content-Type: application/json');
 
 try {
-    require_once __DIR__ . '/../../config.php'; // Chemin absolu
+    require_once '../../config.php'; // Inclure la configuration de la base de données
 
-    if (!class_exists('Config')) {
-        throw new Exception("Classe Config manquante");
-    }
-
+    // Obtenir la connexion à la base de données
     $pdo = Config::getConnexion();
-    if (!$pdo) {
-        throw new Exception("Connexion DB échouée");
-    }
 
-    // Vérifie si la colonne is_deleted existe
-    $stmt = $pdo->query("DESCRIBE announcements");
-    $columns = $stmt->fetchAll(PDO::FETCH_COLUMN);
-    if (!in_array('is_deleted', $columns)) {
-        throw new Exception("La colonne is_deleted n'existe pas");
-    }
-
-    // Récupère les annonces (y compris les supprimées pour l'admin)
-    $stmt = $pdo->query("
-        SELECT id, title, content, author, created_at, is_deleted
-        FROM announcements 
-        ORDER BY created_at DESC
-    ");
-    
+    $query = 'SELECT id, title, content, author, created_at, publish_at, is_deleted FROM announcements';
+    $stmt = $pdo->query($query);
     $announcements = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     echo json_encode([
@@ -37,7 +19,8 @@ try {
     ]);
 
 } catch (Exception $e) {
-    http_response_code(500);
+    error_log("Erreur lors de la récupération des annonces : " . $e->getMessage(), 3, __DIR__ . '/error.log');
+    http_response_code(400);
     echo json_encode([
         'success' => false,
         'message' => 'Erreur : ' . $e->getMessage()

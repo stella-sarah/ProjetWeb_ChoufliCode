@@ -24,7 +24,7 @@
                     <li><a href="#"><i class="fas fa-home"></i> Accueil</a></li>
                     <li><a href="#"><i class="fas fa-map-marked-alt"></i> Régions</a></li>
                     <li><a href="#"><i class="fas fa-user"></i> Profil</a></li>
-                    <li><a href="#"><i class="fas fa-envelope"></i> Contact</a></li>
+                    <li><a href="#" id="messages-link"><i class="fas fa-envelope"></i> Messages</a></li>
                 </ul>
             </div>
         </div>
@@ -121,6 +121,69 @@
                 <div class="quick-suggestion" data-query="hotels">Hôtels recommandés</div>
                 <div class="quick-suggestion" data-query="nourriture">Spécialités culinaires</div>
                 <div class="quick-suggestion" data-query="desert">Itinéraires désert</div>
+            </div>
+        </div>
+
+        <!-- Modale de messagerie améliorée -->
+        <div id="messages-modal" class="modal">
+            <div class="modal-content" style="max-width: 800px; height: 80vh; display: flex; flex-direction: column;">
+                <span class="close-modal">×</span>
+                <h3>Messagerie <span id="total-unread-count" class="unread-count-badge" style="display: none;"></span></h3>
+                <div class="messages-container" style="flex: 1; display: flex; overflow: hidden;">
+                    <div class="conversations-list" style="width: 300px; border-right: 1px solid var(--border-color); overflow-y: auto; display: flex; flex-direction: column;">
+                        <div style="padding: 15px; border-bottom: 1px solid var(--border-color);">
+                            <button id="new-conversation-btn" class="btn-gold" style="width: 100%;">
+                                <i class="fas fa-plus"></i> Nouvelle conversation
+                            </button>
+                        </div>
+                        <div id="conversations" style="flex: 1; overflow-y: auto;"></div>
+                    </div>
+                    <div class="messages-view" style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
+                        <div id="current-conversation-header" style="padding: 15px; border-bottom: 1px solid var(--border-color);">
+                            <h4 id="conversation-with" style="margin: 0;">Sélectionnez une conversation</h4>
+                        </div>
+                        <div id="messages-display" style="flex: 1; overflow-y: auto; padding: 15px; background-color: var(--darker-bg);"></div>
+                        <div id="typing-indicator-container" style="padding: 0 15px;"></div>
+                        <div class="message-input-container" style="padding: 15px; border-top: 1px solid var(--border-color);">
+                            <div style="display: flex; gap: 10px;">
+                                <textarea id="message-input" placeholder="Écrivez votre message..." style="flex: 1; min-height: 80px;"></textarea>
+                                <button id="send-message-btn" class="btn-gold" style="align-self: flex-end;">
+                                    <i class="fas fa-paper-plane"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modale de nouvelle conversation améliorée -->
+        <div id="new-message-modal" class="modal">
+            <div class="modal-content" style="max-width: 500px;">
+                <span class="close-modal">×</span>
+                <h3>Nouveau message</h3>
+                <div class="form-group">
+                    <label for="recipient-select">Destinataire:</label>
+                    <div style="position: relative;">
+                        <select id="recipient-select" style="width: 100%; padding: 10px;">
+                            <option value="">Sélectionnez un utilisateur</option>
+                        </select>
+                        <div id="recipient-loading" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); display: none;">
+                            <i class="fas fa-spinner fa-spin"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <textarea id="new-message-content" placeholder="Votre message..." style="width: 100%; min-height: 150px;"></textarea>
+                </div>
+                <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                    <button type="button" class="cancel-btn" onclick="document.getElementById('new-message-modal').style.display='none'; document.getElementById('messages-modal').style.display='block';">
+                        Annuler
+                    </button>
+                    <button id="start-conversation-btn" class="btn-gold">
+                        <i class="fas fa-paper-plane"></i> Envoyer
+                    </button>
+                </div>
             </div>
         </div>
 

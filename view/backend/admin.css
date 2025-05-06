@@ -245,6 +245,34 @@ td {
     color: var(--light-gray);
 }
 
+.sortable {
+    cursor: pointer;
+    position: relative;
+    user-select: none;
+}
+
+.sortable:hover {
+    background-color: rgba(201, 168, 108, 0.1);
+}
+
+.sort-arrow {
+    display: inline-block;
+    width: 0;
+    height: 0;
+    margin-left: 0.5rem;
+    vertical-align: middle;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+}
+
+.sort-arrow.asc {
+    border-bottom: 4px solid var(--gold-light);
+}
+
+.sort-arrow.desc {
+    border-top: 4px solid var(--gold-light);
+}
+
 .action-btn {
     background: none;
     border: 1px solid var(--border-color);
@@ -294,12 +322,32 @@ td {
 
 .modal-content {
     background-color: var(--dark-bg);
-    margin: 10% auto;
+    margin: 5vh auto;
     padding: 3rem;
     border: 1px solid var(--gold-primary);
     border-radius: 0.8rem;
     width: 90%;
     max-width: 500px;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.modal-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.modal-content::-webkit-scrollbar-track {
+    background: var(--darker-bg);
+    border-radius: 4px;
+}
+
+.modal-content::-webkit-scrollbar-thumb {
+    background: var(--gold-primary);
+    border-radius: 4px;
+}
+
+.modal-content::-webkit-scrollbar-thumb:hover {
+    background: var(--gold-light);
 }
 
 .close-modal {
@@ -325,7 +373,10 @@ td {
     color: var(--gold-light);
 }
 
-.form-group input {
+.form-group input,
+.form-group input[type="date"],
+.form-group input[type="time"],
+.form-group input[type="checkbox"] {
     width: 100%;
     padding: 1rem;
     background-color: var(--darker-bg);
@@ -333,6 +384,19 @@ td {
     border-radius: 0.5rem;
     color: var(--light-text);
     font-size: 1.4rem;
+}
+
+.form-group input[type="checkbox"] {
+    width: auto;
+    margin-right: 1rem;
+    vertical-align: middle;
+}
+
+.form-group input:disabled {
+    background-color: rgba(17, 17, 17, 0.5);
+    border-color: rgba(201, 168, 108, 0.1);
+    color: var(--light-gray);
+    opacity: 0.5;
 }
 
 .form-group textarea {
@@ -345,6 +409,14 @@ td {
     font-size: 1.4rem;
     min-height: 10rem;
     resize: vertical;
+}
+
+.schedule-fields {
+    transition: opacity 0.3s ease;
+}
+
+.schedule-fields.hidden {
+    opacity: 0.5;
 }
 
 .btn-gold {
@@ -504,7 +576,6 @@ td {
     background-color: rgba(76, 175, 80, 0.1);
 }
 
-/* Ajoutez ceci à votre fichier CSS */
 .notification-container {
     position: fixed;
     top: 20px;
@@ -567,7 +638,6 @@ td {
     }
 }
 
-/* Ajoutez ceci à votre CSS */
 #confirmation-modal .modal-content {
     max-width: 500px;
 }

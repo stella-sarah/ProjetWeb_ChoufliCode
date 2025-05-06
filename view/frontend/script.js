@@ -1,4 +1,9 @@
 document.addEventListener('DOMContentLoaded', function() {
+    const messagingSystem = new MessagingSystem();
+    
+    // Make it available globally if needed
+    window.messagingSystem = messagingSystem;
+
     const chatbotToggle = document.querySelector('.chatbot-toggle');
     const chatbotContainer = document.querySelector('.chatbot-container');
     const closeChatbot = document.querySelector('.close-chatbot');
@@ -17,7 +22,6 @@ document.addEventListener('DOMContentLoaded', function() {
             const message = suggestionMessages[queryType];
             
             if (message) {
-                // Animation
                 this.style.transform = 'scale(0.9)';
                 this.style.backgroundColor = 'rgba(201, 168, 108, 0.3)';
                 
@@ -26,7 +30,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     this.style.backgroundColor = 'rgba(201, 168, 108, 0.1)';
                 }, 200);
                 
-                // Envoyer le message
                 chatbotInput.value = message;
                 sendMessage();
             }
@@ -237,26 +240,21 @@ document.addEventListener('DOMContentLoaded', function() {
             sendMessage();
         }
     });
-    
+
     const emojiToggle = document.getElementById('emoji-toggle');
     const emojiList = document.getElementById('emoji-list');
     const newPostTextarea = document.getElementById('new-post-content');
 
     if (emojiToggle && emojiList && newPostTextarea) {
-        console.log('Nombre d\'emojis trouvés:', emojiList.querySelectorAll('span').length);
-
         emojiToggle.addEventListener('click', function(e) {
             e.stopPropagation();
-            console.log('Emoji toggle clicked');
             emojiList.classList.toggle('hidden');
         });
 
         emojiList.querySelectorAll('span').forEach(emoji => {
             emoji.addEventListener('click', function() {
                 const emojiText = this.textContent;
-                const unicode = [...emojiText].map(c => c.codePointAt(0).toString(16)).join('-');
-                console.log('Emoji clicked:', emojiText, 'Unicode:', unicode);
-                const emojiChar = String.fromCodePoint(parseInt(unicode.split('-')[0], 16));
+                const emojiChar = String.fromCodePoint(parseInt([...emojiText].map(c => c.codePointAt(0).toString(16)).join('-').split('-')[0], 16));
                 newPostTextarea.value += emojiChar;
                 newPostTextarea.focus();
                 emojiList.classList.add('hidden');
@@ -270,8 +268,6 @@ document.addEventListener('DOMContentLoaded', function() {
         emojiList.addEventListener('click', function(e) {
             e.stopPropagation();
         });
-    } else {
-        console.error('Un ou plusieurs éléments manquants:', { emojiToggle, emojiList, newPostTextarea });
     }
 
     const imageUpload = document.getElementById('image-upload');
@@ -310,27 +306,9 @@ document.addEventListener('DOMContentLoaded', function() {
     loadPosts();
     loadAnnouncements();
 
-    const frenchBadWords = [
-        'merde',
-        'putain',
-        'connard',
-        'salope'
-    ];
-
-    const englishBadWords = [
-        'shit',
-        'fuck',
-        'asshole',
-        'bitch'
-    ];
-
-    const arabicBadWords = [
-        'كلب',
-        'حقير',
-        'غبي',
-        'سخيف'
-    ];
-
+    const frenchBadWords = ['merde', 'putain', 'connard', 'salope'];
+    const englishBadWords = ['shit', 'fuck', 'asshole', 'bitch'];
+    const arabicBadWords = ['كلب', 'حقير', 'غبي', 'سخيف'];
     const allBadWords = [...frenchBadWords, ...englishBadWords, ...arabicBadWords];
 
     function containsBadWords(text) {
@@ -450,10 +428,453 @@ document.addEventListener('DOMContentLoaded', function() {
         if (event.target === modal) {
             closeReportModal();
         }
+        if (event.target.classList.contains('modal')) {
+            event.target.style.display = 'none';
+        }
     });
 
     applyFullWidthStyles();
 });
+
+class MessagingSystem {
+    constructor() {
+        this.currentUserId = null;
+        this.currentConversationId = null;
+        this.currentRecipientId = null;
+        this.currentRecipientName = null;
+        this.typingTimeout = null;
+        this.initialize();
+    }
+
+    async initialize() {
+        await this.loadCurrentUser();
+        this.initEventListeners();
+        this.setupAutoRefresh();
+    }
+
+    async loadCurrentUser() {
+        try {
+            const response = await fetch('get-current-user.php', {
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            const data = await response.json();
+            
+            if (data.success) {
+                this.currentUserId = data.user.id;
+                document.querySelectorAll('.user-name').forEach(el => {
+                    el.textContent = data.user.name;
+                });
+            } else {
+                console.error('Failed to load user:', data.message);
+            }
+        } catch (error) {
+            console.error('Error loading current user:', error);
+        }
+    }
+
+    initEventListeners() {
+        document.getElementById('messages-link').addEventListener('click', (e) => {
+            e.preventDefault();
+            this.openMessagingModal();
+        });
+
+        document.getElementById('new-conversation-btn').addEventListener('click', () => {
+            this.openNewConversationModal();
+        });
+
+        document.getElementById('send-message-btn').addEventListener('click', () => {
+            this.sendMessage();
+        });
+
+        document.getElementById('start-conversation-btn').addEventListener('click', () => {
+            this.startNewConversation();
+        });
+
+        document.querySelectorAll('.close-modal').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.modal').forEach(modal => {
+                    modal.style.display = 'none';
+                });
+            });
+        });
+
+        document.getElementById('message-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                this.sendMessage();
+            }
+        });
+
+        document.getElementById('message-input').addEventListener('input', () => {
+            this.sendTypingIndicator();
+        });
+    }
+
+    setupAutoRefresh() {
+        setInterval(() => {
+            if (this.currentConversationId) {
+                this.loadMessages(this.currentConversationId);
+            }
+            this.loadConversations();
+        }, 5000);
+    }
+
+    async openMessagingModal() {
+        const modal = document.getElementById('messages-modal');
+        modal.style.display = 'block';
+        
+        document.getElementById('conversations').innerHTML = '<div class="loading">Chargement...</div>';
+        
+        await this.loadConversations();
+    }
+
+    async loadConversations() {
+        const container = document.getElementById('conversations');
+        if (!container) {
+            console.error('Conteneur des conversations introuvable');
+            return;
+        }
+    
+        try {
+            container.innerHTML = '<div class="loading">Chargement...</div>';
+            
+            const response = await fetch('get-conversations.php', {
+                credentials: 'include',
+                headers: {
+                    'Accept': 'application/json'
+                }
+            });
+    
+            // Vérifier le type de contenu
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                const errorText = await response.text();
+                console.error('Réponse non-JSON:', errorText);
+                throw new Error('Le serveur a renvoyé une réponse inattendue');
+            }
+    
+            const data = await response.json();
+            
+            if (!data.success) {
+                throw new Error(data.message || 'Erreur lors du chargement');
+            }
+    
+            container.innerHTML = '';
+    
+            if (!data.conversations || data.conversations.length === 0) {
+                container.innerHTML = '<p class="no-conversations">Aucune conversation</p>';
+                return;
+            }
+    
+            // Traitement des conversations...
+            data.conversations.forEach(conv => {
+                const convElement = document.createElement('div');
+                convElement.className = 'conversation';
+                convElement.innerHTML = `
+                    <div class="conversation-header">
+                        <strong>${conv.recipient_name}</strong>
+                        <span class="conversation-date">
+                            ${conv.last_message_time ? new Date(conv.last_message_time).toLocaleString() : ''}
+                        </span>
+                    </div>
+                    <p class="conversation-preview">${conv.last_message || 'Aucun message'}</p>
+                    ${conv.unread_count > 0 ? `<span class="unread-count">${conv.unread_count}</span>` : ''}
+                `;
+                container.appendChild(convElement);
+            });
+    
+        } catch (error) {
+            console.error('Erreur:', error);
+            container.innerHTML = `
+                <div class="error-message">
+                    <p>Erreur de chargement</p>
+                    <button onclick="window.messagingSystem.loadConversations()">
+                        Réessayer
+                    </button>
+                    <p class="error-detail">${error.message}</p>
+                </div>
+            `;
+        }
+    }
+
+    updateUnreadBadge(count) {
+        const badge = document.getElementById('total-unread-count');
+        if (count > 0) {
+            badge.textContent = count;
+            badge.style.display = 'inline-flex';
+        } else {
+            badge.style.display = 'none';
+        }
+    }
+
+    async openConversation(conversationId, recipientId, recipientName) {
+        this.currentConversationId = conversationId;
+        this.currentRecipientId = recipientId;
+        this.currentRecipientName = recipientName;
+        
+        document.getElementById('conversation-with').textContent = `Conversation avec ${recipientName}`;
+        
+        document.querySelectorAll('.conversation').forEach(c => {
+            c.classList.remove('active');
+        });
+        document.querySelector(`.conversation[data-conversation-id="${conversationId}"]`).classList.add('active');
+        
+        await this.loadMessages(conversationId);
+        
+        const messagesDisplay = document.getElementById('messages-display');
+        messagesDisplay.scrollTop = messagesDisplay.scrollHeight;
+    }
+
+    async loadMessages(conversationId) {
+        try {
+            const response = await fetch(`get-messages.php?conversation_id=${conversationId}`, {
+                credentials: 'include'
+            });
+            const data = await response.json();
+            
+            if (data.success) {
+                const container = document.getElementById('messages-display');
+                container.innerHTML = '';
+                
+                data.messages.forEach(msg => {
+                    const messageElement = document.createElement('div');
+                    messageElement.className = `message-item ${
+                        msg.sender_id == this.currentUserId ? 'message-sender' : 'message-receiver'
+                    }`;
+                    
+                    const msgDate = new Date(msg.sent_at);
+                    const formattedTime = msgDate.toLocaleTimeString('fr-FR', {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                    
+                    messageElement.innerHTML = `
+                        <div class="message-content">
+                            <p>${msg.content.replace(/\n/g, '<br>')}</p>
+                            <div class="message-meta">${formattedTime} ${msg.is_read ? '✓✓' : '✓'}</div>
+                        </div>
+                    `;
+                    container.appendChild(messageElement);
+                });
+                
+                container.scrollTop = container.scrollHeight;
+            }
+        } catch (error) {
+            console.error('Error loading messages:', error);
+            showNotification('error', 'Erreur lors du chargement des messages');
+        }
+    }
+
+    async sendMessage() {
+        const input = document.getElementById('message-input');
+        const message = input.value.trim();
+        
+        if (!message || !this.currentConversationId) {
+            showNotification('error', 'Veuillez écrire un message');
+            return;
+        }
+        
+        try {
+            const formData = new FormData();
+            formData.append('conversation_id', this.currentConversationId);
+            formData.append('content', message);
+            
+            const response = await fetch('send-message.php', {
+                method: 'POST',
+                body: formData,
+                credentials: 'include'
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                input.value = '';
+                await this.loadMessages(this.currentConversationId);
+                await this.loadConversations();
+            } else {
+                showNotification('error', data.message || 'Erreur lors de l\'envoi');
+            }
+        } catch (error) {
+            console.error('Error sending message:', error);
+            showNotification('error', 'Erreur réseau lors de l\'envoi');
+        }
+    }
+
+    async sendTypingIndicator() {
+        if (!this.currentConversationId) return;
+        
+        if (this.typingTimeout) {
+            clearTimeout(this.typingTimeout);
+        }
+        
+        const container = document.getElementById('typing-indicator-container');
+        container.innerHTML = `
+            <div class="typing-indicator">
+                <div class="typing-dots">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        `;
+        
+        this.typingTimeout = setTimeout(() => {
+            container.innerHTML = '';
+        }, 3000);
+    }
+
+    async openNewConversationModal() {
+        document.getElementById('messages-modal').style.display = 'none';
+        const modal = document.getElementById('new-message-modal');
+        modal.style.display = 'block';
+        
+        await this.loadUsersForNewConversation();
+    }
+
+    async loadUsersForNewConversation() {
+        const selectElement = document.getElementById('recipient-select');
+        const loadingIndicator = document.getElementById('recipient-loading');
+        
+        try {
+            // Réinitialiser et afficher le chargement
+            selectElement.innerHTML = '<option value="">Chargement des contacts...</option>';
+            loadingIndicator.style.display = 'block';
+    
+            const response = await fetch('get-users.php', {
+                credentials: 'include',
+                headers: {
+                    'Accept': 'application/json'
+                }
+            });
+    
+            // Vérification cruciale de la réponse
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Erreur serveur: ${response.status} - ${errorText}`);
+            }
+    
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                throw new Error('Réponse non-JSON reçue du serveur');
+            }
+    
+            const data = await response.json();
+            
+            if (!data.success) {
+                throw new Error(data.message || 'Le serveur a retourné une erreur');
+            }
+    
+            // Mise à jour de l'interface
+            selectElement.innerHTML = '<option value="">Sélectionnez un destinataire</option>';
+    
+            if (data.users && data.users.length > 0) {
+                data.users.forEach(user => {
+                    const option = new Option(
+                        user.name || user.email, // Texte affiché
+                        user.id,                // Valeur
+                        false,                 // selected
+                        false                  // disabled
+                    );
+                    selectElement.add(option);
+                });
+            } else {
+                selectElement.innerHTML += '<option value="" disabled>Aucun contact disponible</option>';
+                showNotification('info', 'Aucun autre utilisateur trouvé');
+            }
+    
+        } catch (error) {
+            console.error('Échec du chargement des utilisateurs:', error);
+            
+            selectElement.innerHTML = `
+                <option value="" disabled>Erreur de chargement</option>
+                <option value="retry" onclick="window.messagingSystem.loadUsersForNewConversation()">
+                    Réessayer - ${error.message}
+                </option>
+            `;
+            
+            showNotification('error', `Échec du chargement: ${error.message}`);
+        } finally {
+            loadingIndicator.style.display = 'none';
+        }
+    }
+        
+    async startNewConversation() {
+        const recipientId = document.getElementById('recipient-select').value;
+        const message = document.getElementById('new-message-content').value.trim();
+        
+        if (!recipientId || !message) {
+            showNotification('error', 'Veuillez sélectionner un destinataire et écrire un message');
+            return;
+        }
+        
+        try {
+            const formData = new FormData();
+            formData.append('recipient_id', recipientId);
+            formData.append('content', message);
+            
+            const response = await fetch('start-conversation.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json', // Changez ceci
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ // Modifiez ceci
+                    recipient_id: recipientId,
+                    content: message
+                }),
+                credentials: 'include'
+            });
+            
+            // Ajoutez cette vérification
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => null);
+                throw new Error(errorData?.message || `Erreur HTTP: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                showNotification('success', 'Conversation démarrée avec succès');
+                
+                document.getElementById('new-message-modal').style.display = 'none';
+                document.getElementById('messages-modal').style.display = 'block';
+                
+                const recipientName = document.getElementById('recipient-select')
+                    .selectedOptions[0].textContent.trim();
+                
+                this.openConversation(data.conversation_id, recipientId, recipientName);
+                this.loadConversations();
+            } else {
+                showNotification('error', data.message || 'Erreur lors de la création');
+            }
+        }  catch (error) {
+            console.error('Error starting conversation:', error);
+            
+            let errorMsg = 'Erreur réseau lors de la création';
+            if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+                errorMsg = 'Impossible de se connecter au serveur';
+            } else if (error.message) {
+                errorMsg = error.message;
+            }
+            
+            showNotification('error', errorMsg);
+            
+            // Affichez plus de détails en développement
+            if (Config.DEBUG_MODE) {
+                console.group('Détails de l\'erreur');
+                console.log('URL:', 'start-conversation.php');
+                console.log('Données envoyées:', {
+                    recipient_id: recipientId,
+                    content: message
+                });
+                console.groupEnd();
+            }
+        }
+    }
+}
 
 async function updatePost(postId, newTitle, newContent) {
     try {
@@ -597,11 +1018,9 @@ function createPostElement(post) {
 
     const initials = post.author ? post.author.split(' ').map(n => n[0]).join('').toUpperCase() : 'ANON';
     
-    // Remplacer les emojis dans le contenu du post
     const contentWithEmojis = post.content.replace(/[\u{1F600}-\u{1F6FF}]/gu, 
         match => `<span class="emoji">${match}</span>`);
     
-    // Générer le HTML pour les commentaires avec les emojis
     let commentsHTML = '';
     if (post.comments) {
         commentsHTML = post.comments.map(comment => {
@@ -705,7 +1124,7 @@ function createPostElement(post) {
             const postId = this.getAttribute('data-post-id');
             const postElement = this.closest('.post');
             const title = postElement.querySelector('h3').textContent;
-            const content = postElement.querySelector('.post-content p').innerHTML; // Utilisation de innerHTML
+            const content = postElement.querySelector('.post-content p').innerHTML;
             
             this.style.transform = 'rotate(360deg) scale(1.5)';
             setTimeout(() => {
@@ -856,7 +1275,7 @@ function createPostElement(post) {
                         const commentId = this.getAttribute('data-comment-id');
                         const commentElement = this.closest('.comment');
                         const contentElement = commentElement.querySelector('.comment-content p:not(.author)');
-                        const content = contentElement.innerHTML; // Utilisation de innerHTML
+                        const content = contentElement.innerHTML;
                         
                         this.style.transform = 'rotate(360deg) scale(1.5)';
                         setTimeout(() => {
@@ -899,7 +1318,7 @@ function createPostElement(post) {
                                         .then(() => {
                                             const newContentWithEmojis = newContent.replace(/[\u{1F600}-\u{1F6FF}]/gu, 
                                                 match => `<span class="emoji">${match}</span>`);
-                                            contentElement.innerHTML = newContentWithEmojis; // Utilisation de innerHTML
+                                            contentElement.innerHTML = newContentWithEmojis;
                                             editForm.remove();
                                             contentElement.style.display = 'block';
                                         })
@@ -918,10 +1337,9 @@ function createPostElement(post) {
                 commentInput.value = '';
                 showNotification('success', 'Commentaire ajouté avec succès !');
                 
-                // Réinitialiser les sélecteurs d'emojis après ajout d'un commentaire
                 setTimeout(() => {
                     setupCommentEmojiSelectors();
-                    setupCommentLikes(); // Ajout pour gérer les likes des nouveaux commentaires
+                    setupCommentLikes();
                 }, 0);
             } else {
                 showNotification('error', 'Erreur: ' + data.message);
@@ -960,7 +1378,7 @@ function createPostElement(post) {
             const commentId = this.getAttribute('data-comment-id');
             const commentElement = this.closest('.comment');
             const contentElement = commentElement.querySelector('.comment-content p:not(.author)');
-            const content = contentElement.innerHTML; // Utilisation de innerHTML
+            const content = contentElement.innerHTML;
             
             this.style.transform = 'rotate(360deg) scale(1.5)';
             setTimeout(() => {
@@ -1003,7 +1421,7 @@ function createPostElement(post) {
                             .then(() => {
                                 const newContentWithEmojis = newContent.replace(/[\u{1F600}-\u{1F6FF}]/gu, 
                                     match => `<span class="emoji">${match}</span>`);
-                                contentElement.innerHTML = newContentWithEmojis; // Utilisation de innerHTML
+                                contentElement.innerHTML = newContentWithEmojis;
                                 editForm.remove();
                                 contentElement.style.display = 'block';
                             })
@@ -1028,7 +1446,6 @@ function createPostElement(post) {
         openReportModal(postId);
     });
 
-    // Initialiser les sélecteurs d'emojis et les likes après la création du post
     setTimeout(() => {
         setupCommentEmojiSelectors();
         setupCommentLikes();
@@ -1044,7 +1461,6 @@ function setupCommentEmojiSelectors() {
         const textarea = form.querySelector('textarea');
 
         if (emojiToggle && emojiList && textarea) {
-            // Supprimez d'abord les anciens écouteurs pour éviter les duplications
             emojiToggle.replaceWith(emojiToggle.cloneNode(true));
             emojiList.replaceWith(emojiList.cloneNode(true));
             
@@ -1065,17 +1481,15 @@ function setupCommentEmojiSelectors() {
                     const startPos = textarea.selectionStart;
                     const endPos = textarea.selectionEnd;
                     
-                    // Insère l'emoji à la position actuelle du curseur
                     textarea.value = textarea.value.substring(0, startPos) + 
                                    emojiText + 
                                    textarea.value.substring(endPos);
                     
-                    // Replace le curseur après l'emoji inséré
                     textarea.selectionStart = textarea.selectionEnd = startPos + emojiText.length;
                     
                     textarea.focus();
                     newEmojiList.classList.add('hidden');
-                }, { once: true }); // L'option { once: true } garantit que l'événement ne se déclenche qu'une fois
+                }, { once: true });
             });
 
             document.addEventListener('click', function(e) {
@@ -1089,13 +1503,11 @@ function setupCommentEmojiSelectors() {
 
 function setupCommentLikes() {
     document.querySelectorAll('.like-comment-btn:not(.initialized)').forEach(btn => {
-        // Marquer le bouton comme initialisé
         btn.classList.add('initialized');
         
         const commentId = btn.getAttribute('data-comment-id');
         let likedComments = JSON.parse(localStorage.getItem('likedComments')) || [];
 
-        // Initialisation de l'état
         const isLiked = likedComments.includes(commentId);
         if (isLiked) {
             btn.classList.add('liked');
@@ -1126,16 +1538,13 @@ function setupCommentLikes() {
                     throw new Error(data.message || 'Erreur inconnue');
                 }
 
-                // Mise à jour UI
                 likeCountElement.textContent = data.like_count;
 
                 if (newLikeStatus) {
-                    // Ajout du like
                     this.classList.add('liked');
                     this.querySelector('i').classList.replace('far', 'fas');
                     likedComments.push(commentId);
                 } else {
-                    // Retrait du like
                     this.classList.remove('liked');
                     this.querySelector('i').classList.replace('fas', 'far');
                     likedComments = likedComments.filter(id => id !== commentId);
@@ -1285,7 +1694,7 @@ function loadComments(postId, postElement) {
                             const commentId = this.getAttribute('data-comment-id');
                             const commentElement = this.closest('.comment');
                             const contentElement = commentElement.querySelector('.comment-content p:not(.author)');
-                            const content = contentElement.innerHTML; // Utilisation de innerHTML
+                            const content = contentElement.innerHTML;
                             
                             this.style.transform = 'rotate(360deg) scale(1.5)';
                             setTimeout(() => {
@@ -1328,7 +1737,7 @@ function loadComments(postId, postElement) {
                                             .then(() => {
                                                 const newContentWithEmojis = newContent.replace(/[\u{1F600}-\u{1F6FF}]/gu, 
                                                     match => `<span class="emoji">${match}</span>`);
-                                                contentElement.innerHTML = newContentWithEmojis; // Utilisation de innerHTML
+                                                contentElement.innerHTML = newContentWithEmojis;
                                                 editForm.remove();
                                                 contentElement.style.display = 'block';
                                             })
@@ -1346,7 +1755,6 @@ function loadComments(postId, postElement) {
                     commentList.appendChild(commentElement);
                 });
 
-                // Réinitialiser les écouteurs de like après avoir chargé les commentaires
                 setupCommentLikes();
             }
         })
@@ -1455,7 +1863,6 @@ function loadAnnouncements() {
             return res.json();
         })
         .then(data => {
-            console.log('Données reçues:', data);
             const announcementsList = document.getElementById('announcements-list');
             
             if (!data.success) {

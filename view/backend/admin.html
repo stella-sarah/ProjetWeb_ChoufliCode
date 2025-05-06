@@ -55,7 +55,9 @@
                     <table id="posts-table">
                         <thead>
                             <tr>
-                                <th>ID</th>
+                                <th class="sortable" data-sort="id" data-table="posts">
+                                    ID <span class="sort-arrow"></span>
+                                </th>
                                 <th>Titre</th>
                                 <th>Auteur</th>
                                 <th>Créé le</th>
@@ -74,7 +76,9 @@
                     <table id="comments-table">
                         <thead>
                             <tr>
-                                <th>ID</th>
+                                <th class="sortable" data-sort="id" data-table="comments">
+                                    ID <span class="sort-arrow"></span>
+                                </th>
                                 <th>ID Publication</th>
                                 <th>Auteur</th>
                                 <th>Contenu</th>
@@ -94,7 +98,9 @@
                     <table id="reports-table">
                         <thead>
                             <tr>
-                                <th>ID</th>
+                                <th class="sortable" data-sort="id" data-table="reports">
+                                    ID <span class="sort-arrow"></span>
+                                </th>
                                 <th>Type de contenu</th>
                                 <th>ID Contenu</th>
                                 <th>Signaleur</th>
@@ -115,11 +121,13 @@
                     <table id="announcements-table">
                         <thead>
                             <tr>
-                                <th>ID</th>
+                                <th class="sortable" data-sort="id" data-table="announcements">
+                                    ID <span class="sort-arrow"></span>
+                                </th>
                                 <th>Titre</th>
                                 <th>Auteur</th>
                                 <th>Contenu</th>
-                                <th>Créé le</th>
+                                <th>Publication prévue</th>
                                 <th>Statut</th>
                                 <th>Actions</th>
                                 <th>Modifier</th>
@@ -148,6 +156,20 @@
                             <label for="announcement-content">Contenu</label>
                             <textarea id="announcement-content" name="content" placeholder="Entrez le contenu"></textarea>
                         </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="announcement-schedule" name="schedule">
+                                Planifier la publication
+                            </label>
+                        </div>
+                        <div class="form-group schedule-fields" style="display: none;">
+                            <label for="announcement-publish-date">Date de publication</label>
+                            <input type="date" id="announcement-publish-date" name="publish_date" disabled>
+                        </div>
+                        <div class="form-group schedule-fields" style="display: none;">
+                            <label for="announcement-publish-time">Heure de publication</label>
+                            <input type="time" id="announcement-publish-time" name="publish_time" disabled>
+                        </div>
                         <button type="submit" class="btn-gold">Enregistrer l'annonce</button>
                     </form>
                 </div>
@@ -171,6 +193,20 @@
                         <div class="form-group">
                             <label for="edit-announcement-content">Contenu</label>
                             <textarea id="edit-announcement-content" name="content"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="edit-announcement-schedule" name="schedule">
+                                Planifier la publication
+                            </label>
+                        </div>
+                        <div class="form-group schedule-fields" style="display: none;">
+                            <label for="edit-announcement-publish-date">Date de publication</label>
+                            <input type="date" id="edit-announcement-publish-date" name="publish_date" disabled>
+                        </div>
+                        <div class="form-group schedule-fields" style="display: none;">
+                            <label for="edit-announcement-publish-time">Heure de publication</label>
+                            <input type="time" id="edit-announcement-publish-time" name="publish_time" disabled>
                         </div>
                         <button type="submit" class="btn-gold">Enregistrer</button>
                     </form>

@@ -20,3 +20,40 @@ Données renvoyées : Array
     [original_id] => 
 )
 
+Données reçues : Array
+(
+    [title] => djkazd
+    [content] => efez
+)
+
+Données renvoyées : Array
+(
+    [id] => 61
+    [title] => djkazd
+    [content] => efez
+    [author] => Anonyme
+    [region] => Non spécifiée
+    [image_url] => 
+    [video_url] => 
+    [created_at] => 2025-04-29 10:38:25
+    [hidden] => 0
+    [is_deleted] => 0
+    [last_updated] => 
+    [original_id] => 
+)
+
+
+2025-05-05 19:52:08 - Début get-users
+Session ID: nehg3jvd2r19nl4e2b62h8snn2
+Session data: Array
+(
+)
+
+General error: Non authentifié
+2025-05-05 19:52:47 - Début get-users
+Session ID: nehg3jvd2r19nl4e2b62h8snn2
+Session data: Array
+(
+)
+
+General error: Non authentifié

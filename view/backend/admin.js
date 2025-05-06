@@ -40,6 +40,42 @@ document.addEventListener('DOMContentLoaded', function() {
     if (!closeEditModal) console.error('Bouton #close-edit-modal non trouvé.');
     if (!editForm) console.error('Formulaire #edit-announcement-form non trouvé.');
 
+    // Gestion de la case à cocher pour planifier (ajout)
+    const scheduleCheckbox = document.getElementById('announcement-schedule');
+    const scheduleFields = document.querySelectorAll('#add-announcement-modal .schedule-fields');
+    const publishDateInput = document.getElementById('announcement-publish-date');
+    const publishTimeInput = document.getElementById('announcement-publish-time');
+
+    if (scheduleCheckbox) {
+        scheduleCheckbox.addEventListener('change', () => {
+            const isChecked = scheduleCheckbox.checked;
+            scheduleFields.forEach(field => {
+                field.style.display = isChecked ? 'block' : 'none';
+                field.classList.toggle('hidden', !isChecked);
+            });
+            publishDateInput.disabled = !isChecked;
+            publishTimeInput.disabled = !isChecked;
+        });
+    }
+
+    // Gestion de la case à cocher pour planifier (modification)
+    const editScheduleCheckbox = document.getElementById('edit-announcement-schedule');
+    const editScheduleFields = document.querySelectorAll('#edit-announcement-modal .schedule-fields');
+    const editPublishDateInput = document.getElementById('edit-announcement-publish-date');
+    const editPublishTimeInput = document.getElementById('edit-announcement-publish-time');
+
+    if (editScheduleCheckbox) {
+        editScheduleCheckbox.addEventListener('change', () => {
+            const isChecked = editScheduleCheckbox.checked;
+            editScheduleFields.forEach(field => {
+                field.style.display = isChecked ? 'block' : 'none';
+                field.classList.toggle('hidden', !isChecked);
+            });
+            editPublishDateInput.disabled = !isChecked;
+            editPublishTimeInput.disabled = !isChecked;
+        });
+    }
+
     // Ouvrir le modal d'ajout d'annonce
     if (addAnnouncementBtn) {
         addAnnouncementBtn.addEventListener('click', () => {
@@ -55,6 +91,14 @@ document.addEventListener('DOMContentLoaded', function() {
             if (announcementModal) {
                 announcementModal.style.display = 'none';
                 if (announcementForm) announcementForm.reset();
+                // Réinitialiser la case à cocher et les champs de planification
+                if (scheduleCheckbox) scheduleCheckbox.checked = false;
+                scheduleFields.forEach(field => {
+                    field.style.display = 'none';
+                    field.classList.add('hidden');
+                });
+                if (publishDateInput) publishDateInput.disabled = true;
+                if (publishTimeInput) publishTimeInput.disabled = true;
             }
         });
     }
@@ -71,6 +115,13 @@ document.addEventListener('DOMContentLoaded', function() {
         if (e.target === announcementModal) {
             announcementModal.style.display = 'none';
             if (announcementForm) announcementForm.reset();
+            if (scheduleCheckbox) scheduleCheckbox.checked = false;
+            scheduleFields.forEach(field => {
+                field.style.display = 'none';
+                field.classList.add('hidden');
+            });
+            if (publishDateInput) publishDateInput.disabled = true;
+            if (publishTimeInput) publishTimeInput.disabled = true;
         }
         if (e.target === editModal) {
             editModal.style.display = 'none';
@@ -95,13 +146,16 @@ document.addEventListener('DOMContentLoaded', function() {
                     throw new Error(data.message || 'Données d\'annonce non valides.');
                 }
 
-                const { id, title, author, content } = data.announcement;
+                const { id, title, author, content, publish_at } = data.announcement;
                 const idField = document.getElementById('edit-announcement-id');
                 const titleField = document.getElementById('edit-announcement-title');
                 const authorField = document.getElementById('edit-announcement-author');
                 const contentField = document.getElementById('edit-announcement-content');
+                const scheduleField = document.getElementById('edit-announcement-schedule');
+                const dateField = document.getElementById('edit-announcement-publish-date');
+                const timeField = document.getElementById('edit-announcement-publish-time');
 
-                if (!idField || !titleField || !authorField || !contentField) {
+                if (!idField || !titleField || !authorField || !contentField || !scheduleField || !dateField || !timeField) {
                     console.error('Un ou plusieurs champs du formulaire de modification sont manquants.');
                     showNotification('Erreur: Formulaire de modification incomplet.', 'error');
                     return;
@@ -111,6 +165,30 @@ document.addEventListener('DOMContentLoaded', function() {
                 titleField.value = title;
                 authorField.value = author;
                 contentField.value = content;
+
+                // Gérer la planification
+                if (publish_at && publish_at !== '0000-00-00 00:00:00') {
+                    scheduleField.checked = true;
+                    editScheduleFields.forEach(field => {
+                        field.style.display = 'block';
+                        field.classList.remove('hidden');
+                    });
+                    dateField.disabled = false;
+                    timeField.disabled = false;
+                    const publishDate = new Date(publish_at);
+                    dateField.value = publishDate.toISOString().split('T')[0];
+                    timeField.value = publishDate.toTimeString().slice(0, 5);
+                } else {
+                    scheduleField.checked = false;
+                    editScheduleFields.forEach(field => {
+                        field.style.display = 'none';
+                        field.classList.add('hidden');
+                    });
+                    dateField.disabled = true;
+                    timeField.disabled = true;
+                    dateField.value = '';
+                    timeField.value = '';
+                }
 
                 if (editModal) {
                     editModal.style.display = 'block';
@@ -133,8 +211,11 @@ document.addEventListener('DOMContentLoaded', function() {
             const titleField = document.getElementById('edit-announcement-title');
             const authorField = document.getElementById('edit-announcement-author');
             const contentField = document.getElementById('edit-announcement-content');
+            const scheduleField = document.getElementById('edit-announcement-schedule');
+            const dateField = document.getElementById('edit-announcement-publish-date');
+            const timeField = document.getElementById('edit-announcement-publish-time');
 
-            if (!idField || !titleField || !authorField || !contentField) {
+            if (!idField || !titleField || !authorField || !contentField || !scheduleField || !dateField || !timeField) {
                 console.error('Champs du formulaire de modification manquants.');
                 showNotification('Erreur: Formulaire de modification incomplet.', 'error');
                 return;
@@ -144,8 +225,11 @@ document.addEventListener('DOMContentLoaded', function() {
             const title = titleField.value.trim();
             const author = authorField.value.trim();
             const content = contentField.value.trim();
+            const isScheduled = scheduleField.checked;
+            const publishDate = dateField.value;
+            const publishTime = timeField.value;
 
-            // JavaScript validation
+            // Validation
             if (!id) {
                 showNotification('Erreur: ID d\'annonce manquant.', 'error');
                 return;
@@ -162,8 +246,35 @@ document.addEventListener('DOMContentLoaded', function() {
                 showNotification('Veuillez ajouter du contenu à l\'annonce.', 'error');
                 return;
             }
+            if (isScheduled) {
+                if (!publishDate) {
+                    showNotification('Veuillez sélectionner une date de publication.', 'error');
+                    return;
+                }
+                if (!publishTime) {
+                    showNotification('Veuillez sélectionner une heure de publication.', 'error');
+                    return;
+                }
+                // Validate future date in UTC to avoid timezone issues
+                const publishDateTime = new Date(Date.parse(`${publishDate}T${publishTime}:00Z`));
+                const now = new Date();
+                const bufferTime = new Date(now.getTime() + 60 * 1000); // 1-minute buffer
+                if (publishDateTime <= bufferTime) {
+                    showNotification('La date et l\'heure de publication doivent être dans le futur (au moins 1 minute).', 'error');
+                    return;
+                }
+            }
 
-            const formData = new FormData(this);
+            const formData = new FormData();
+            formData.append('id', id);
+            formData.append('title', title);
+            formData.append('author', author);
+            formData.append('content', content);
+            if (isScheduled && publishDate && publishTime) {
+                formData.append('publish_at', `${publishDate} ${publishTime}:00`);
+            } else {
+                formData.append('publish_at', ''); // Indique une publication immédiate
+            }
 
             fetch('update-announcement.php', {
                 method: 'POST',
@@ -196,8 +307,11 @@ document.addEventListener('DOMContentLoaded', function() {
             const titleField = document.getElementById('announcement-title');
             const contentField = document.getElementById('announcement-content');
             const authorField = document.getElementById('announcement-author');
+            const scheduleField = document.getElementById('announcement-schedule');
+            const dateField = document.getElementById('announcement-publish-date');
+            const timeField = document.getElementById('announcement-publish-time');
 
-            if (!titleField || !contentField || !authorField) {
+            if (!titleField || !contentField || !authorField || !scheduleField || !dateField || !timeField) {
                 console.error('Champs du formulaire d\'ajout manquants.');
                 showNotification('Erreur: Formulaire d\'ajout incomplet.', 'error');
                 return;
@@ -206,8 +320,11 @@ document.addEventListener('DOMContentLoaded', function() {
             const title = titleField.value.trim();
             const content = contentField.value.trim();
             const author = authorField.value.trim();
+            const isScheduled = scheduleField.checked;
+            const publishDate = dateField.value;
+            const publishTime = timeField.value;
 
-            // JavaScript validation
+            // Validation
             if (!title) {
                 showNotification('Veuillez ajouter un titre à l\'annonce.', 'error');
                 return;
@@ -220,6 +337,33 @@ document.addEventListener('DOMContentLoaded', function() {
                 showNotification('Veuillez ajouter du contenu à l\'annonce.', 'error');
                 return;
             }
+            if (isScheduled) {
+                if (!publishDate) {
+                    showNotification('Veuillez sélectionner une date de publication.', 'error');
+                    return;
+                }
+                if (!publishTime) {
+                    showNotification('Veuillez sélectionner une heure de publication.', 'error');
+                    return;
+                }
+                // Validate future date in UTC to avoid timezone issues
+                const publishDateTime = new Date(Date.parse(`${publishDate}T${publishTime}:00Z`));
+                const now = new Date();
+                const bufferTime = new Date(now.getTime() + 60 * 1000); // 1-minute buffer
+                if (publishDateTime <= bufferTime) {
+                    showNotification('La date et l\'heure de publication doivent être dans le futur (au moins 1 minute).', 'error');
+                    return;
+                }
+            }
+
+            const body = new URLSearchParams({
+                title: title,
+                content: content,
+                author: author
+            });
+            if (isScheduled && publishDate && publishTime) {
+                body.append('publish_at', `${publishDate} ${publishTime}:00`);
+            }
 
             try {
                 const response = await fetch('add-announcement.php', {
@@ -227,13 +371,20 @@ document.addEventListener('DOMContentLoaded', function() {
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
                     },
-                    body: `title=${encodeURIComponent(title)}&content=${encodeURIComponent(content)}&author=${encodeURIComponent(author)}`
+                    body: body.toString()
                 });
                 const data = await response.json();
                 if (data.success) {
-                    showNotification('Annonce ajoutée avec succès', 'success');
+                    showNotification('Annonce enregistrée avec succès', 'success');
                     if (announcementModal) announcementModal.style.display = 'none';
                     announcementForm.reset();
+                    if (scheduleCheckbox) scheduleCheckbox.checked = false;
+                    scheduleFields.forEach(field => {
+                        field.style.display = 'none';
+                        field.classList.add('hidden');
+                    });
+                    if (publishDateInput) publishDateInput.disabled = true;
+                    if (publishTimeInput) publishTimeInput.disabled = true;
                     loadAnnouncements();
                     loadPublicAnnouncements();
                 } else {
@@ -246,12 +397,73 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Charger les données initiales
-    loadPosts();
-    loadComments();
-    loadReports();
-    loadAnnouncements();
-    loadPublicAnnouncements();
+    // Gestion du tri pour chaque table
+    const sortStates = {
+        posts: { column: 'id', direction: 'asc' },
+        comments: { column: 'id', direction: 'asc' },
+        reports: { column: 'id', direction: 'asc' },
+        announcements: { column: 'id', direction: 'asc' }
+    };
+
+    let tableData = {
+        posts: [],
+        comments: [],
+        reports: [],
+        announcements: []
+    };
+
+    function attachSortListeners() {
+        const sortableHeaders = document.querySelectorAll('.sortable');
+        sortableHeaders.forEach(header => {
+            header.addEventListener('click', () => {
+                const table = header.dataset.table;
+                const column = header.dataset.sort;
+
+                if (sortStates[table].column === column) {
+                    sortStates[table].direction = sortStates[table].direction === 'asc' ? 'desc' : 'asc';
+                } else {
+                    sortStates[table].column = column;
+                    sortStates[table].direction = 'asc';
+                }
+
+                updateSortArrows(table, column);
+                sortAndRenderTable(table);
+            });
+        });
+    }
+
+    function updateSortArrows(table, column) {
+        const headers = document.querySelectorAll(`#${table}-table .sortable`);
+        headers.forEach(header => {
+            const arrow = header.querySelector('.sort-arrow');
+            if (header.dataset.sort === column && header.dataset.table === table) {
+                arrow.classList.remove('asc', 'desc');
+                arrow.classList.add(sortStates[table].direction);
+            } else {
+                arrow.classList.remove('asc', 'desc');
+            }
+        });
+    }
+
+    function sortAndRenderTable(table) {
+        const data = tableData[table];
+        const { column, direction } = sortStates[table];
+
+        data.sort((a, b) => {
+            const valA = parseInt(a[column], 10);
+            const valB = parseInt(b[column], 10);
+            return direction === 'asc' ? valA - valB : valB - valA;
+        });
+
+        const renderFunction = {
+            posts: renderPosts,
+            comments: renderComments,
+            reports: renderReports,
+            announcements: renderAnnouncements
+        }[table];
+
+        renderFunction(data);
+    }
 
     // Charger les publications
     function loadPosts() {
@@ -264,32 +476,44 @@ document.addEventListener('DOMContentLoaded', function() {
         fetch('get-posts.php?admin=true')
             .then(res => res.json())
             .then(data => {
-                tbody.innerHTML = '';
                 if (data.success && Array.isArray(data.posts)) {
-                    data.posts.forEach(post => {
-                        const status = post.is_deleted ? 'Supprimé' : (post.hidden ? 'Caché' : 'Visible');
-                        const row = document.createElement('tr');
-                        row.innerHTML = `
-                            <td>${post.id}</td>
-                            <td>${post.title}</td>
-                            <td>${post.author || 'Anonyme'}</td>
-                            <td>${new Date(post.created_at).toLocaleDateString('fr-FR')}</td>
-                            <td>${status}</td>
-                            <td>
-                                ${post.is_deleted ? 
-                                    `<button class="action-btn restore" data-id="${post.id}" data-type="post">Restaurer</button>` :
-                                    `<button class="action-btn hide" data-id="${post.id}" data-type="post">${post.hidden ? 'Afficher' : 'Cacher'}</button>
-                                     <button class="action-btn delete" data-id="${post.id}" data-type="post">Supprimer</button>`}
-                            </td>
-                        `;
-                        tbody.appendChild(row);
-                    });
-                    attachActionListeners('post');
+                    tableData.posts = data.posts;
+                    sortAndRenderTable('posts');
+                    attachSortListeners();
                 } else {
                     console.warn('Aucune publication trouvée ou réponse invalide:', data);
+                    tbody.innerHTML = '<tr><td colspan="6">Aucune publication trouvée.</td></tr>';
                 }
             })
-            .catch(error => console.error('Erreur lors du chargement des publications:', error));
+            .catch(error => {
+                console.error('Erreur lors du chargement des publications:', error);
+                tbody.innerHTML = '<tr><td colspan="6">Erreur de chargement.</td></tr>';
+            });
+    }
+
+    function renderPosts(posts) {
+        const tbody = document.querySelector('#posts-table tbody');
+        tbody.innerHTML = '';
+        posts.forEach(post => {
+            const status = post.is_deleted ? 'Supprimé' : (post.hidden ? 'Caché' : 'Visible');
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${post.id}</td>
+                <td>${post.title}</td>
+                <td>${post.author || 'Anonyme'}</td>
+                <td>${new Date(post.created_at).toLocaleDateString('fr-FR')}</td>
+                <td>${status}</td>
+                <td>
+                    ${post.is_deleted ? 
+                        `<button class="action-btn restore" data-id="${post.id}" data-type="post">Restaurer</button>` :
+                        `<button class="action-btn hide" data-id="${post.id}" data-type="post">${post.hidden ? 'Afficher' : 'Cacher'}</button>
+                         <button class="action-btn delete" data-id="${post.id}" data-type="post">Supprimer</button>`
+                    }
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+        attachActionListeners('post');
     }
 
     // Charger les commentaires
@@ -303,32 +527,44 @@ document.addEventListener('DOMContentLoaded', function() {
         fetch('get-comments.php?admin=true')
             .then(res => res.json())
             .then(data => {
-                tbody.innerHTML = '';
                 if (data.success && Array.isArray(data.comments)) {
-                    data.comments.forEach(comment => {
-                        const status = comment.is_deleted ? 'Supprimé' : 'Visible';
-                        const row = document.createElement('tr');
-                        row.innerHTML = `
-                            <td>${comment.id}</td>
-                            <td>${comment.post_id}</td>
-                            <td>${comment.author || 'Anonyme'}</td>
-                            <td>${comment.content.substring(0, 50)}${comment.content.length > 50 ? '...' : ''}</td>
-                            <td>${new Date(comment.created_at).toLocaleDateString('fr-FR')}</td>
-                            <td>${status}</td>
-                            <td>
-                                ${comment.is_deleted ? 
-                                    `<button class="action-btn restore" data-id="${comment.id}" data-type="comment">Restaurer</button>` :
-                                    `<button class="action-btn delete" data-id="${comment.id}" data-type="comment">Supprimer</button>`}
-                            </td>
-                        `;
-                        tbody.appendChild(row);
-                    });
-                    attachActionListeners('comment');
+                    tableData.comments = data.comments;
+                    sortAndRenderTable('comments');
+                    attachSortListeners();
                 } else {
                     console.warn('Aucun commentaire trouvé ou réponse invalide:', data);
+                    tbody.innerHTML = '<tr><td colspan="7">Aucun commentaire trouvé.</td></tr>';
                 }
             })
-            .catch(error => console.error('Erreur lors du chargement des commentaires:', error));
+            .catch(error => {
+                console.error('Erreur lors du chargement des commentaires:', error);
+                tbody.innerHTML = '<tr><td colspan="7">Erreur de chargement.</td></tr>';
+            });
+    }
+
+    function renderComments(comments) {
+        const tbody = document.querySelector('#comments-table tbody');
+        tbody.innerHTML = '';
+        comments.forEach(comment => {
+            const status = comment.is_deleted ? 'Supprimé' : 'Visible';
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${comment.id}</td>
+                <td>${comment.post_id}</td>
+                <td>${comment.author || 'Anonyme'}</td>
+                <td>${comment.content.substring(0, 50)}${comment.content.length > 50 ? '...' : ''}</td>
+                <td>${new Date(comment.created_at).toLocaleDateString('fr-FR')}</td>
+                <td>${status}</td>
+                <td>
+                    ${comment.is_deleted ? 
+                        `<button class="action-btn restore" data-id="${comment.id}" data-type="comment">Restaurer</button>` :
+                        `<button class="action-btn delete" data-id="${comment.id}" data-type="comment">Supprimer</button>`
+                    }
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+        attachActionListeners('comment');
     }
 
     // Charger les signalements
@@ -342,36 +578,47 @@ document.addEventListener('DOMContentLoaded', function() {
         fetch('get-reports.php')
             .then(res => res.json())
             .then(data => {
-                tbody.innerHTML = '';
                 if (data.success && Array.isArray(data.reports)) {
-                    data.reports.forEach(report => {
-                        const row = document.createElement('tr');
-                        row.innerHTML = `
-                            <td>${report.id}</td>
-                            <td>${report.content_type === 'post' ? 'Publication' : 'Commentaire'}</td>
-                            <td>${report.content_id}</td>
-                            <td>${report.reporter}</td>
-                            <td>${report.reason === 'spam' ? 'Spam' : 
-                                  report.reason === 'harassment' ? 'Harcèlement' : 
-                                  report.reason === 'hate_speech' ? 'Discours haineux' : 
-                                  'Contenu inapproprié'}</td>
-                            <td>${report.status === 'pending' ? 'En attente' : 
-                                  report.status === 'resolved' ? 'Résolu' : 'Rejeté'}</td>
-                            <td>
-                                ${report.status === 'pending' ? `
-                                    <button class="action-btn resolve" data-id="${report.id}" data-type="report">Résoudre</button>
-                                    <button class="action-btn reject" data-id="${report.id}" data-type="report">Rejeter</button>
-                                ` : ''}
-                            </td>
-                        `;
-                        tbody.appendChild(row);
-                    });
-                    attachActionListeners('report');
+                    tableData.reports = data.reports;
+                    sortAndRenderTable('reports');
+                    attachSortListeners();
                 } else {
                     console.warn('Aucun signalement trouvé ou réponse invalide:', data);
+                    tbody.innerHTML = '<tr><td colspan="7">Aucun signalement trouvé.</td></tr>';
                 }
             })
-            .catch(error => console.error('Erreur lors du chargement des signalements:', error));
+            .catch(error => {
+                console.error('Erreur lors du chargement des signalements:', error);
+                tbody.innerHTML = '<tr><td colspan="7">Erreur de chargement.</td></tr>';
+            });
+    }
+
+    function renderReports(reports) {
+        const tbody = document.querySelector('#reports-table tbody');
+        tbody.innerHTML = '';
+        reports.forEach(report => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${report.id}</td>
+                <td>${report.content_type === 'post' ? 'Publication' : 'Commentaire'}</td>
+                <td>${report.content_id}</td>
+                <td>${report.reporter}</td>
+                <td>${report.reason === 'spam' ? 'Spam' : 
+                      report.reason === 'harassment' ? 'Harcèlement' : 
+                      report.reason === 'hate_speech' ? 'Discours haineux' : 
+                      'Contenu inapproprié'}</td>
+                <td>${report.status === 'pending' ? 'En attente' : 
+                      report.status === 'resolved' ? 'Résolu' : 'Rejeté'}</td>
+                <td>
+                    ${report.status === 'pending' ? `
+                        <button class="action-btn resolve" data-id="${report.id}" data-type="report">Résoudre</button>
+                        <button class="action-btn reject" data-id="${report.id}" data-type="report">Rejeter</button>
+                    ` : ''}
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+        attachActionListeners('report');
     }
 
     // Charger les annonces
@@ -385,36 +632,51 @@ document.addEventListener('DOMContentLoaded', function() {
         fetch('get-announcements.php')
             .then(res => res.json())
             .then(data => {
-                tbody.innerHTML = '';
                 if (data.success && Array.isArray(data.announcements)) {
-                    data.announcements.forEach(announcement => {
-                        const status = announcement.is_deleted ? 'Supprimé' : 'Visible';
-                        const row = document.createElement('tr');
-                        row.innerHTML = `
-                            <td>${announcement.id}</td>
-                            <td>${announcement.title}</td>
-                            <td>${announcement.author}</td>
-                            <td>${announcement.content.substring(0, 100)}${announcement.content.length > 100 ? '...' : ''}</td>
-                            <td>${new Date(announcement.created_at).toLocaleDateString('fr-FR')}</td>
-                            <td>${status}</td>
-                            <td>
-                                ${announcement.is_deleted ? 
-                                    `<button class="action-btn restore" data-id="${announcement.id}" data-type="announcement">Restaurer</button>` :
-                                    `<button class="action-btn delete" data-id="${announcement.id}" data-type="announcement">Supprimer</button>`}
-                            </td>
-                            <td>
-                                <button class="action-btn edit" data-id="${announcement.id}" data-type="announcement">Modifier</button>
-                            </td>
-                        `;
-                        tbody.appendChild(row);
-                    });
-                    attachActionListeners('announcement');
-                    attachEditListeners();
+                    tableData.announcements = data.announcements;
+                    sortAndRenderTable('announcements');
+                    attachSortListeners();
                 } else {
                     console.warn('Aucune annonce trouvée ou réponse invalide:', data);
+                    tbody.innerHTML = '<tr><td colspan="8">Aucune annonce trouvée.</td></tr>';
                 }
             })
-            .catch(error => console.error('Erreur lors du chargement des annonces:', error));
+            .catch(error => {
+                console.error('Erreur lors du chargement des annonces:', error);
+                tbody.innerHTML = '<tr><td colspan="8">Erreur de chargement.</td></tr>';
+            });
+    }
+
+    function renderAnnouncements(announcements) {
+        const tbody = document.querySelector('#announcements-table tbody');
+        tbody.innerHTML = '';
+        announcements.forEach(announcement => {
+            const status = announcement.is_deleted ? 'Supprimé' : (new Date(announcement.publish_at || announcement.created_at) > new Date() ? 'Planifié' : 'Visible');
+            const displayTime = announcement.publish_at && announcement.publish_at !== '0000-00-00 00:00:00' ? 
+                new Date(announcement.publish_at).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' }) : 
+                new Date(announcement.created_at).toLocaleDateString('fr-FR');
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${announcement.id}</td>
+                <td>${announcement.title}</td>
+                <td>${announcement.author}</td>
+                <td>${announcement.content.substring(0, 100)}${announcement.content.length > 100 ? '...' : ''}</td>
+                <td>${displayTime}</td>
+                <td>${status}</td>
+                <td>
+                    ${announcement.is_deleted ? 
+                        `<button class="action-btn restore" data-id="${announcement.id}" data-type="announcement">Restaurer</button>` :
+                        `<button class="action-btn delete" data-id="${announcement.id}" data-type="announcement">Supprimer</button>`
+                    }
+                </td>
+                <td>
+                    <button class="action-btn edit" data-id="${announcement.id}" data-type="announcement">Modifier</button>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+        attachActionListeners('announcement');
+        attachEditListeners();
     }
 
     // Charger les annonces publiques
@@ -431,12 +693,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 announcementList.innerHTML = '';
                 if (data.success && Array.isArray(data.announcements)) {
                     data.announcements.forEach(ann => {
-                        if (!ann.is_deleted) {
+                        const now = new Date();
+                        const publishTime = ann.publish_at && ann.publish_at !== '0000-00-00 00:00:00' ? new Date(ann.publish_at) : new Date(ann.created_at);
+                        if (!ann.is_deleted && publishTime <= now) {
                             const div = document.createElement('div');
                             div.className = 'announcement';
                             div.innerHTML = `
                                 <h3>${ann.title}</h3>
-                                <div class="meta">Par <span>${ann.author}</span> | Publié le ${new Date(ann.created_at).toLocaleDateString('fr-FR')}</div>
+                                <div class="meta">Par <span>${ann.author}</span> | Publié le ${publishTime.toLocaleDateString('fr-FR')}</div>
                                 <p>${ann.content}</p>
                             `;
                             announcementList.appendChild(div);
@@ -638,4 +902,11 @@ document.addEventListener('DOMContentLoaded', function() {
         confirmBtn.addEventListener('click', onConfirm);
         cancelBtn.addEventListener('click', onCancel);
     }
+
+    // Charger les données initiales
+    loadPosts();
+    loadComments();
+    loadReports();
+    loadAnnouncements();
+    loadPublicAnnouncements();
 });
