@@ -1,34 +1,22 @@
 <?php
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
+// get-announcements.php - Récupérer les annonces publiques depuis la base de données TuniFy
 
 header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *'); // Adjust for production
+
+// Set UTC timezone for consistent date handling
+date_default_timezone_set('UTC');
 
 try {
-    $configPath = '../../config.php';
-    if (!file_exists($configPath)) {
-        throw new Exception('Config file not found at ' . $configPath);
-    }
-    require_once $configPath;
+    require_once '../../config.php'; // Inclure la configuration de la base de données
 
-    if (!class_exists('Config')) {
-        throw new Exception('Config class not defined in config.php');
-    }
-
+    // Obtenir la connexion à la base de données
     $pdo = Config::getConnexion();
-    if (!$pdo) {
-        throw new Exception('Failed to get PDO connection');
-    }
 
-    $query = 'SHOW TABLES LIKE "announcements"';
-    $stmt = $pdo->query($query);
-    if ($stmt->rowCount() === 0) {
-        throw new Exception('Table "announcements" does not exist');
-    }
-
-    $query = 'SELECT id, title, content, author, created_at FROM announcements WHERE is_deleted = 0 ORDER BY created_at DESC';
+    // Query to fetch only published announcements
+    $query = 'SELECT id, title, content, author, created_at, publish_at, is_deleted 
+              FROM announcements 
+              WHERE is_deleted = 0 
+              AND (publish_at IS NULL OR publish_at <= NOW())';
     $stmt = $pdo->query($query);
     $announcements = $stmt->fetchAll(PDO::FETCH_ASSOC);
 

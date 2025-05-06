@@ -374,8 +374,7 @@ td {
 }
 
 .form-group input,
-.form-group input[type="date"],
-.form-group input[type="time"],
+.form-group input[type="text"],
 .form-group input[type="checkbox"] {
     width: 100%;
     padding: 1rem;
@@ -659,4 +658,66 @@ td {
 
 #cancel-action {
     background-color: #f44336 !important;
+}
+
+/* Flatpickr Styles */
+.flatpickr-calendar {
+    background: var(--dark-bg);
+    border: 1px solid var(--gold-primary);
+    border-radius: 0.5rem;
+    color: var(--light-text);
+    font-family: 'Montserrat', sans-serif;
+}
+
+.flatpickr-day {
+    color: var(--light-text);
+}
+
+.flatpickr-day:hover {
+    background: rgba(201, 168, 108, 0.1);
+    border-color: var(--gold-primary);
+}
+
+.flatpickr-day.selected,
+.flatpickr-day.startRange,
+.flatpickr-day.endRange {
+    background: var(--gold-primary);
+    border-color: var(--gold-primary);
+    color: var(--darker-bg);
+}
+
+.flatpickr-day.today {
+    border-color: var(--gold-light);
+}
+
+.flatpickr-monthDropdown-month,
+.flatpickr-current-month,
+.flatpickr-weekdays,
+.flatpickr-weekday {
+    color: var(--light-text);
+    background: var(--dark-bg);
+}
+
+.flatpickr-time input {
+    background: var(--darker-bg);
+    color: var(--light-text);
+    border: 1px solid var(--border-color);
+}
+
+.flatpickr-time input:hover,
+.flatpickr-time input:focus {
+    background: var(--dark-bg);
+    border-color: var(--gold-primary);
+}
+
+.flatpickr-time .numInputWrapper span.arrowUp:after,
+.flatpickr-time .numInputWrapper span.arrowDown:after {
+    border-bottom-color: var(--gold-light);
+    border-top-color: var(--gold-light);
+}
+
+.flatpickr-input.active,
+.flatpickr-input:focus {
+    border-color: var(--gold-primary);
+    outline: none;
 }

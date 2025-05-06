@@ -56,4 +56,47 @@ Session data: Array
 (
 )
 
-General error: Non authentifié
+General error: Non authentifiéDonnées reçues : Array
+(
+    [title] => Signal
+    [content] => Signal
+)
+
+Données renvoyées : Array
+(
+    [id] => 62
+    [title] => Signal
+    [content] => Signal
+    [author] => Anonyme
+    [region] => Non spécifiée
+    [image_url] => 
+    [video_url] => 
+    [created_at] => 2025-05-06 10:45:01
+    [hidden] => 0
+    [is_deleted] => 0
+    [last_updated] => 
+    [original_id] => 
+)
+
+Données reçues : Array
+(
+    [title] => test
+    [content] => Hol
+)
+
+Données renvoyées : Array
+(
+    [id] => 63
+    [title] => test
+    [content] => Hol
+    [author] => Anonyme
+    [region] => Non spécifiée
+    [image_url] => 
+    [video_url] => 
+    [created_at] => 2025-05-06 10:46:13
+    [hidden] => 0
+    [is_deleted] => 0
+    [last_updated] => 
+    [original_id] => 
+)
+

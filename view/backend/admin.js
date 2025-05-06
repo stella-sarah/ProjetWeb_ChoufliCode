@@ -40,11 +40,25 @@ document.addEventListener('DOMContentLoaded', function() {
     if (!closeEditModal) console.error('Bouton #close-edit-modal non trouvé.');
     if (!editForm) console.error('Formulaire #edit-announcement-form non trouvé.');
 
-    // Gestion de la case à cocher pour planifier (ajout)
+    // Initialiser Flatpickr pour le modal d'ajout
     const scheduleCheckbox = document.getElementById('announcement-schedule');
     const scheduleFields = document.querySelectorAll('#add-announcement-modal .schedule-fields');
-    const publishDateInput = document.getElementById('announcement-publish-date');
-    const publishTimeInput = document.getElementById('announcement-publish-time');
+    const publishDatetimeInput = document.getElementById('announcement-publish-datetime');
+    let addFlatpickrInstance = null;
+
+    if (publishDatetimeInput) {
+        addFlatpickrInstance = flatpickr(publishDatetimeInput, {
+            enableTime: true,
+            dateFormat: "Y-m-d H:i",
+            time_24hr: true,
+            locale: "fr",
+            minDate: "today",
+            minuteIncrement: 1,
+            defaultHour: new Date().getHours(),
+            defaultMinute: new Date().getMinutes() + 1,
+            disableMobile: true
+        });
+    }
 
     if (scheduleCheckbox) {
         scheduleCheckbox.addEventListener('change', () => {
@@ -53,16 +67,32 @@ document.addEventListener('DOMContentLoaded', function() {
                 field.style.display = isChecked ? 'block' : 'none';
                 field.classList.toggle('hidden', !isChecked);
             });
-            publishDateInput.disabled = !isChecked;
-            publishTimeInput.disabled = !isChecked;
+            publishDatetimeInput.disabled = !isChecked;
+            if (!isChecked && addFlatpickrInstance) {
+                addFlatpickrInstance.clear();
+            }
         });
     }
 
-    // Gestion de la case à cocher pour planifier (modification)
+    // Initialiser Flatpickr pour le modal de modification
     const editScheduleCheckbox = document.getElementById('edit-announcement-schedule');
     const editScheduleFields = document.querySelectorAll('#edit-announcement-modal .schedule-fields');
-    const editPublishDateInput = document.getElementById('edit-announcement-publish-date');
-    const editPublishTimeInput = document.getElementById('edit-announcement-publish-time');
+    const editPublishDatetimeInput = document.getElementById('edit-announcement-publish-datetime');
+    let editFlatpickrInstance = null;
+
+    if (editPublishDatetimeInput) {
+        editFlatpickrInstance = flatpickr(editPublishDatetimeInput, {
+            enableTime: true,
+            dateFormat: "Y-m-d H:i",
+            time_24hr: true,
+            locale: "fr",
+            minDate: "today",
+            minuteIncrement: 1,
+            defaultHour: new Date().getHours(),
+            defaultMinute: new Date().getMinutes() + 1,
+            disableMobile: true
+        });
+    }
 
     if (editScheduleCheckbox) {
         editScheduleCheckbox.addEventListener('change', () => {
@@ -71,8 +101,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 field.style.display = isChecked ? 'block' : 'none';
                 field.classList.toggle('hidden', !isChecked);
             });
-            editPublishDateInput.disabled = !isChecked;
-            editPublishTimeInput.disabled = !isChecked;
+            editPublishDatetimeInput.disabled = !isChecked;
+            if (!isChecked && editFlatpickrInstance) {
+                editFlatpickrInstance.clear();
+            }
         });
     }
 
@@ -91,14 +123,13 @@ document.addEventListener('DOMContentLoaded', function() {
             if (announcementModal) {
                 announcementModal.style.display = 'none';
                 if (announcementForm) announcementForm.reset();
-                // Réinitialiser la case à cocher et les champs de planification
                 if (scheduleCheckbox) scheduleCheckbox.checked = false;
                 scheduleFields.forEach(field => {
                     field.style.display = 'none';
                     field.classList.add('hidden');
                 });
-                if (publishDateInput) publishDateInput.disabled = true;
-                if (publishTimeInput) publishTimeInput.disabled = true;
+                if (publishDatetimeInput) publishDatetimeInput.disabled = true;
+                if (addFlatpickrInstance) addFlatpickrInstance.clear();
             }
         });
     }
@@ -120,8 +151,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 field.style.display = 'none';
                 field.classList.add('hidden');
             });
-            if (publishDateInput) publishDateInput.disabled = true;
-            if (publishTimeInput) publishTimeInput.disabled = true;
+            if (publishDatetimeInput) publishDatetimeInput.disabled = true;
+            if (addFlatpickrInstance) addFlatpickrInstance.clear();
         }
         if (e.target === editModal) {
             editModal.style.display = 'none';
@@ -152,10 +183,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 const authorField = document.getElementById('edit-announcement-author');
                 const contentField = document.getElementById('edit-announcement-content');
                 const scheduleField = document.getElementById('edit-announcement-schedule');
-                const dateField = document.getElementById('edit-announcement-publish-date');
-                const timeField = document.getElementById('edit-announcement-publish-time');
+                const datetimeField = document.getElementById('edit-announcement-publish-datetime');
 
-                if (!idField || !titleField || !authorField || !contentField || !scheduleField || !dateField || !timeField) {
+                if (!idField || !titleField || !authorField || !contentField || !scheduleField || !datetimeField) {
                     console.error('Un ou plusieurs champs du formulaire de modification sont manquants.');
                     showNotification('Erreur: Formulaire de modification incomplet.', 'error');
                     return;
@@ -173,21 +203,20 @@ document.addEventListener('DOMContentLoaded', function() {
                         field.style.display = 'block';
                         field.classList.remove('hidden');
                     });
-                    dateField.disabled = false;
-                    timeField.disabled = false;
-                    const publishDate = new Date(publish_at);
-                    dateField.value = publishDate.toISOString().split('T')[0];
-                    timeField.value = publishDate.toTimeString().slice(0, 5);
+                    datetimeField.disabled = false;
+                    if (editFlatpickrInstance) {
+                        editFlatpickrInstance.setDate(publish_at);
+                    }
                 } else {
                     scheduleField.checked = false;
                     editScheduleFields.forEach(field => {
                         field.style.display = 'none';
                         field.classList.add('hidden');
                     });
-                    dateField.disabled = true;
-                    timeField.disabled = true;
-                    dateField.value = '';
-                    timeField.value = '';
+                    datetimeField.disabled = true;
+                    if (editFlatpickrInstance) {
+                        editFlatpickrInstance.clear();
+                    }
                 }
 
                 if (editModal) {
@@ -212,10 +241,9 @@ document.addEventListener('DOMContentLoaded', function() {
             const authorField = document.getElementById('edit-announcement-author');
             const contentField = document.getElementById('edit-announcement-content');
             const scheduleField = document.getElementById('edit-announcement-schedule');
-            const dateField = document.getElementById('edit-announcement-publish-date');
-            const timeField = document.getElementById('edit-announcement-publish-time');
+            const datetimeField = document.getElementById('edit-announcement-publish-datetime');
 
-            if (!idField || !titleField || !authorField || !contentField || !scheduleField || !dateField || !timeField) {
+            if (!idField || !titleField || !authorField || !contentField || !scheduleField || !datetimeField) {
                 console.error('Champs du formulaire de modification manquants.');
                 showNotification('Erreur: Formulaire de modification incomplet.', 'error');
                 return;
@@ -226,8 +254,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const author = authorField.value.trim();
             const content = contentField.value.trim();
             const isScheduled = scheduleField.checked;
-            const publishDate = dateField.value;
-            const publishTime = timeField.value;
+            const publishDatetime = datetimeField.value;
 
             // Validation
             if (!id) {
@@ -247,19 +274,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             if (isScheduled) {
-                if (!publishDate) {
-                    showNotification('Veuillez sélectionner une date de publication.', 'error');
+                if (!publishDatetime) {
+                    showNotification('Veuillez sélectionner une date et une heure de publication.', 'error');
                     return;
                 }
-                if (!publishTime) {
-                    showNotification('Veuillez sélectionner une heure de publication.', 'error');
-                    return;
-                }
-                // Validate future date in UTC to avoid timezone issues
-                const publishDateTime = new Date(Date.parse(`${publishDate}T${publishTime}:00Z`));
+                const publishDateTime = new Date(Date.parse(publishDatetime + ':00Z'));
                 const now = new Date();
                 const bufferTime = new Date(now.getTime() + 60 * 1000); // 1-minute buffer
-                if (publishDateTime <= bufferTime) {
+                if (isNaN(publishDateTime.getTime()) || publishDateTime <= bufferTime) {
                     showNotification('La date et l\'heure de publication doivent être dans le futur (au moins 1 minute).', 'error');
                     return;
                 }
@@ -270,10 +292,10 @@ document.addEventListener('DOMContentLoaded', function() {
             formData.append('title', title);
             formData.append('author', author);
             formData.append('content', content);
-            if (isScheduled && publishDate && publishTime) {
-                formData.append('publish_at', `${publishDate} ${publishTime}:00`);
+            if (isScheduled && publishDatetime) {
+                formData.append('publish_at', publishDatetime + ':00');
             } else {
-                formData.append('publish_at', ''); // Indique une publication immédiate
+                formData.append('publish_at', '');
             }
 
             fetch('update-announcement.php', {
@@ -308,10 +330,9 @@ document.addEventListener('DOMContentLoaded', function() {
             const contentField = document.getElementById('announcement-content');
             const authorField = document.getElementById('announcement-author');
             const scheduleField = document.getElementById('announcement-schedule');
-            const dateField = document.getElementById('announcement-publish-date');
-            const timeField = document.getElementById('announcement-publish-time');
+            const datetimeField = document.getElementById('announcement-publish-datetime');
 
-            if (!titleField || !contentField || !authorField || !scheduleField || !dateField || !timeField) {
+            if (!titleField || !contentField || !authorField || !scheduleField || !datetimeField) {
                 console.error('Champs du formulaire d\'ajout manquants.');
                 showNotification('Erreur: Formulaire d\'ajout incomplet.', 'error');
                 return;
@@ -321,8 +342,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const content = contentField.value.trim();
             const author = authorField.value.trim();
             const isScheduled = scheduleField.checked;
-            const publishDate = dateField.value;
-            const publishTime = timeField.value;
+            const publishDatetime = datetimeField.value;
 
             // Validation
             if (!title) {
@@ -338,19 +358,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             if (isScheduled) {
-                if (!publishDate) {
-                    showNotification('Veuillez sélectionner une date de publication.', 'error');
+                if (!publishDatetime) {
+                    showNotification('Veuillez sélectionner une date et une heure de publication.', 'error');
                     return;
                 }
-                if (!publishTime) {
-                    showNotification('Veuillez sélectionner une heure de publication.', 'error');
-                    return;
-                }
-                // Validate future date in UTC to avoid timezone issues
-                const publishDateTime = new Date(Date.parse(`${publishDate}T${publishTime}:00Z`));
+                const publishDateTime = new Date(Date.parse(publishDatetime + ':00Z'));
                 const now = new Date();
                 const bufferTime = new Date(now.getTime() + 60 * 1000); // 1-minute buffer
-                if (publishDateTime <= bufferTime) {
+                if (isNaN(publishDateTime.getTime()) || publishDateTime <= bufferTime) {
                     showNotification('La date et l\'heure de publication doivent être dans le futur (au moins 1 minute).', 'error');
                     return;
                 }
@@ -361,8 +376,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 content: content,
                 author: author
             });
-            if (isScheduled && publishDate && publishTime) {
-                body.append('publish_at', `${publishDate} ${publishTime}:00`);
+            if (isScheduled && publishDatetime) {
+                body.append('publish_at', publishDatetime + ':00');
             }
 
             try {
@@ -383,8 +398,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         field.style.display = 'none';
                         field.classList.add('hidden');
                     });
-                    if (publishDateInput) publishDateInput.disabled = true;
-                    if (publishTimeInput) publishTimeInput.disabled = true;
+                    if (publishDatetimeInput) publishDatetimeInput.disabled = true;
+                    if (addFlatpickrInstance) addFlatpickrInstance.clear();
                     loadAnnouncements();
                     loadPublicAnnouncements();
                 } else {
@@ -638,12 +653,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     attachSortListeners();
                 } else {
                     console.warn('Aucune annonce trouvée ou réponse invalide:', data);
-                    tbody.innerHTML = '<tr><td colspan="8">Aucune annonce trouvée.</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="7">Aucune annonce trouvée.</td></tr>';
                 }
             })
             .catch(error => {
                 console.error('Erreur lors du chargement des annonces:', error);
-                tbody.innerHTML = '<tr><td colspan="8">Erreur de chargement.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7">Erreur de chargement.</td></tr>';
             });
     }
 
@@ -666,11 +681,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 <td>
                     ${announcement.is_deleted ? 
                         `<button class="action-btn restore" data-id="${announcement.id}" data-type="announcement">Restaurer</button>` :
-                        `<button class="action-btn delete" data-id="${announcement.id}" data-type="announcement">Supprimer</button>`
+                        `<button class="action-btn edit" data-id="${announcement.id}" data-type="announcement">Modifier</button>
+                         <button class="action-btn delete" data-id="${announcement.id}" data-type="announcement">Supprimer</button>`
                     }
-                </td>
-                <td>
-                    <button class="action-btn edit" data-id="${announcement.id}" data-type="announcement">Modifier</button>
                 </td>
             `;
             tbody.appendChild(row);

@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tableau de bord Admin - TuniFy</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <link rel="stylesheet" href="admin.css?v=1">
 </head>
 <body>
@@ -130,7 +131,6 @@
                                 <th>Publication prévue</th>
                                 <th>Statut</th>
                                 <th>Actions</th>
-                                <th>Modifier</th>
                             </tr>
                         </thead>
                         <tbody></tbody>
@@ -163,12 +163,8 @@
                             </label>
                         </div>
                         <div class="form-group schedule-fields" style="display: none;">
-                            <label for="announcement-publish-date">Date de publication</label>
-                            <input type="date" id="announcement-publish-date" name="publish_date" disabled>
-                        </div>
-                        <div class="form-group schedule-fields" style="display: none;">
-                            <label for="announcement-publish-time">Heure de publication</label>
-                            <input type="time" id="announcement-publish-time" name="publish_time" disabled>
+                            <label for="announcement-publish-datetime">Date et heure de publication</label>
+                            <input type="text" id="announcement-publish-datetime" class="flatpickr" name="publish_datetime" placeholder="Sélectionnez la date et l'heure" disabled>
                         </div>
                         <button type="submit" class="btn-gold">Enregistrer l'annonce</button>
                     </form>
@@ -201,12 +197,8 @@
                             </label>
                         </div>
                         <div class="form-group schedule-fields" style="display: none;">
-                            <label for="edit-announcement-publish-date">Date de publication</label>
-                            <input type="date" id="edit-announcement-publish-date" name="publish_date" disabled>
-                        </div>
-                        <div class="form-group schedule-fields" style="display: none;">
-                            <label for="edit-announcement-publish-time">Heure de publication</label>
-                            <input type="time" id="edit-announcement-publish-time" name="publish_time" disabled>
+                            <label for="edit-announcement-publish-datetime">Date et heure de publication</label>
+                            <input type="text" id="edit-announcement-publish-datetime" class="flatpickr" name="publish_datetime" placeholder="Sélectionnez la date et l'heure" disabled>
                         </div>
                         <button type="submit" class="btn-gold">Enregistrer</button>
                     </form>
@@ -234,6 +226,8 @@
         </div>
     </footer>
 
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/fr.js"></script>
     <script src="admin.js?v=1"></script>
 </body>
 </html>

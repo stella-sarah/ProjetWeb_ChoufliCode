@@ -16,12 +16,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
+// Initialisation de la session
+if (session_status() === PHP_SESSION_NONE) {
+    session_start([
+        'cookie_lifetime' => 86400,
+        'cookie_secure' => false,
+        'cookie_httponly' => true,
+        'cookie_samesite' => 'Lax'
+    ]);
+}
+
 set_error_handler(function($severity, $message, $file, $line) {
     throw new ErrorException($message, 0, $severity, $file, $line);
 });
 
-// Récupération des données
 try {
+    // Vérifier si l'utilisateur est connecté
+    if (!isset($_SESSION['user_id'])) {
+        throw new Exception('Non authentifié', 401);
+    }
+
+    // Récupération des données
     $input = file_get_contents('php://input');
     if ($input === false) {
         throw new Exception('Impossible de lire les données d\'entrée');
@@ -71,12 +86,11 @@ try {
     }
 
     // 2. Gestion de la conversation
-    // Si utilisateur connecté
-    $sender_id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : null;
+    $sender_id = $_SESSION['user_id'];
     
     // Détermination des IDs pour la conversation
-    $id1 = ($sender_id !== null) ? min($sender_id, $recipient_id) : $recipient_id;
-    $id2 = ($sender_id !== null) ? max($sender_id, $recipient_id) : $recipient_id;
+    $id1 = min($sender_id, $recipient_id);
+    $id2 = max($sender_id, $recipient_id);
 
     // Recherche de conversation existante
     $stmt = $pdo->prepare("
@@ -129,15 +143,17 @@ try {
         $pdo->rollBack();
     }
     http_response_code(500);
+    error_log("PDO Error: " . $e->getMessage());
     echo json_encode([
         'success' => false,
         'message' => 'Erreur de base de données',
         'error' => Config::DEBUG_MODE ? $e->getMessage() : null
     ]);
 } catch (Exception $e) {
-    http_response_code(400);
+    http_response_code($e->getCode() ?: 400);
     echo json_encode([
         'success' => false,
-        'message' => $e->getMessage()
+        'message' => $e->getMessage(),
+        'error' => Config::DEBUG_MODE ? $e->getMessage() : null
     ]);
 }

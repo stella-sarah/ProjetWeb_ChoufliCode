@@ -3,52 +3,69 @@
 
 header('Content-Type: application/json');
 
-try {
-    require_once '../../config.php'; // Inclure la configuration de la base de données
+// Set UTC timezone for consistent date handling
+date_default_timezone_set('UTC');
 
-    // Obtenir la connexion à la base de données
+try {
+    // Include database configuration
+    require_once '../../config.php';
+
+    // Get database connection
     $pdo = Config::getConnexion();
 
-    // Vérifier les paramètres POST requis
-    if (!isset($_POST['title'], $_POST['content'], $_POST['author'])) {
-        throw new Exception('Le titre, le contenu et l\'auteur sont requis');
+    // Get POST data
+    $title = isset($_POST['title']) ? trim($_POST['title']) : '';
+    $content = isset($_POST['content']) ? trim($_POST['content']) : '';
+    $author = isset($_POST['author']) ? trim($_POST['author']) : '';
+    $publish_at = isset($_POST['publish_at']) ? trim($_POST['publish_at']) : '';
+
+    // Validate required fields
+    if (empty($title)) {
+        echo json_encode(['success' => false, 'message' => 'Le titre est requis']);
+        exit;
+    }
+    if (empty($content)) {
+        echo json_encode(['success' => false, 'message' => 'Le contenu est requis']);
+        exit;
+    }
+    if (empty($author)) {
+        echo json_encode(['success' => false, 'message' => 'L\'auteur est requis']);
+        exit;
     }
 
-    $title = filter_var($_POST['title'], FILTER_SANITIZE_STRING);
-    $content = filter_var($_POST['content'], FILTER_SANITIZE_STRING);
-    $author = filter_var($_POST['author'], FILTER_SANITIZE_STRING);
-    $publish_at = isset($_POST['publish_at']) ? filter_var($_POST['publish_at'], FILTER_SANITIZE_STRING) : null;
-
-    if (empty($title) || empty($content) || empty($author)) {
-        throw new Exception('Le titre, le contenu et l\'auteur ne peuvent pas être vides');
-    }
-
-    // Valider le format de publish_at si fourni
+    // Validate publish_at if provided
     if ($publish_at) {
-        $dateTime = DateTime::createFromFormat('Y-m-d H:i:s', $publish_at);
-        if (!$dateTime || $dateTime->format('Y-m-d H:i:s') !== $publish_at) {
-            throw new Exception('Format de date de publication invalide');
+        // Ensure publish_at is in correct format (YYYY-MM-DD HH:MM:SS)
+        if (!preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/', $publish_at)) {
+            echo json_encode(['success' => false, 'message' => 'Format de date invalide (attendu : YYYY-MM-DD HH:MM:SS)']);
+            exit;
         }
-        if ($dateTime <= new DateTime()) {
-            throw new Exception('La date de publication doit être dans le futur');
+
+        // Check if publish_at is in the future (1-minute buffer)
+        $publish_timestamp = strtotime($publish_at);
+        if ($publish_timestamp === false || $publish_timestamp <= time() + 60) {
+            echo json_encode(['success' => false, 'message' => 'Erreur : La date de publication doit être dans le futur (au moins 1 minute)']);
+            exit;
         }
     }
 
-    $query = 'INSERT INTO announcements (title, content, author, created_at, publish_at) VALUES (:title, :content, :author, NOW(), :publish_at)';
-    $stmt = $pdo->prepare($query);
+    // Prepare SQL statement
+    $sql = 'INSERT INTO announcements (title, content, author, publish_at, created_at) VALUES (?, ?, ?, ?, NOW())';
+    $stmt = $pdo->prepare($sql);
+
+    // Bind parameters
     $stmt->execute([
-        'title' => $title,
-        'content' => $content,
-        'author' => $author,
-        'publish_at' => $publish_at
+        $title,
+        $content,
+        $author,
+        $publish_at ?: null // Use null if publish_at is empty
     ]);
 
-    echo json_encode([
-        'success' => true,
-        'message' => 'Annonce ajoutée avec succès'
-    ]);
+    // Return success response
+    echo json_encode(['success' => true, 'message' => 'Annonce enregistrée avec succès']);
 
 } catch (Exception $e) {
+    // Log error to file
     error_log("Erreur lors de l'ajout de l'annonce : " . $e->getMessage(), 3, __DIR__ . '/error.log');
     http_response_code(400);
     echo json_encode([
