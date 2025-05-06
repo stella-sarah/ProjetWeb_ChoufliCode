@@ -34,9 +34,9 @@
         header {
             position: fixed;
             width: 100%;
-            z-index: 1000;
+            z-index: 100;
             transition: background-color 0.3s ease;
-            padding: 20px 0;
+            padding: 15px 0;
         }
         
         header.scrolled {
@@ -45,9 +45,10 @@
         }
         
         .nav-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            display: flex; /* <-- CORRECTED: This is the primary fix */
+            justify-content: space-between; /* This will place space between logo, nav, and button */
+            align-items: center; /* This will vertically align all items in the middle */
+            width: 100%; /* Ensure it takes full width of its parent (.container) */
         }
         
         .logo {
@@ -56,34 +57,50 @@
         }
         
         .logo img {
-            height: 60px;
+            height: 50px; /* Slightly adjusted for balance */
+            margin-right: 10px; /* Added margin for spacing between image and text */
         }
         
         .logo-text {
-            margin-left: 15px;
+            /* Removed margin-left as items are now flex-aligned */
+    display: flex; /* To align h1 and p if needed, or keep as block */
+    flex-direction: column; /* If you want h1 and p stacked cleanly */
+    justify-content: center; /* Vertical centering for text within its own box */
         }
         
         .logo-text h1 {
             font-family: 'Cinzel', serif;
             font-weight: 700;
-            font-size: 24px;
+            font-size: 22px; /* Slightly adjusted */
             color: var(--gold-primary);
             margin: 0;
+            line-height: 1; /* Adjust line height */
             letter-spacing: 1px;
         }
         
         .logo-text p {
-            font-size: 12px;
+            font-size: 11px; /* Slightly adjusted */
             font-weight: 300;
             color: var(--gold-light);
-            letter-spacing: 4px;
+            letter-spacing: 3px; /* Slightly adjusted */
             text-transform: uppercase;
+            margin: 0; /* Remove default paragraph margin */
+            line-height: 1.2; /* Adjust line height */
         }
         
         nav ul {
             display: flex;
             list-style: none;
             gap: 40px;
+        }
+        
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 30px; /* Adjusted gap for potentially better spacing */
+            align-items: center; /* Vertically align nav items */
+            margin: 0; /* Ensure no default ul margins interfere */
+            padding: 0; /* Ensure no default ul padding interfere */
         }
         
         nav ul li a {
@@ -94,9 +111,11 @@
             letter-spacing: 2px;
             transition: color 0.3s ease;
             font-weight: 400;
+            padding: 5px 0; /* Add some padding for easier clicking and vertical alignment */
         }
         
-        nav ul li a:hover {
+        nav ul li a:hover,
+        nav ul li a.active { /* Style for active link */
             color: var(--gold-primary);
         }
         
@@ -104,14 +123,17 @@
             background-color: transparent;
             border: 1px solid var(--gold-primary);
             color: var(--gold-primary);
-            padding: 10px 30px;
+            padding: 8px 25px; /* Adjusted padding */
             font-family: 'Montserrat', sans-serif;
             font-weight: 500;
-            font-size: 14px;
+            font-size: 13px; /* Adjusted font size */
             text-transform: uppercase;
-            letter-spacing: 2px;
+            letter-spacing: 1.5px; /* Adjusted letter spacing */
             cursor: pointer;
             transition: all 0.3s ease;
+            text-decoration: none; /* Ensure it behaves like a button */
+            /* flex-shrink: 0; /* Prevent button from shrinking */
+            margin-left: 20px; /* Add some space between nav and button if not using space-between effectively */
         }
         
         .contact-btn:hover {
@@ -128,6 +150,7 @@
             align-items: center;
             justify-content: center;
             overflow: hidden;
+            
         }
         
         .hero:before {
@@ -1137,13 +1160,13 @@
     border: none;
     padding: 12px;
     font-family: 'Montserrat', sans-serif;
-    font-weight: 600;
+    font-weight: 500;
     font-size: 15px;
     text-transform: uppercase;
     letter-spacing: 1px;
     cursor: pointer;
     transition: all 0.3s ease;
-    margin-top: 15px;
+    margin-top: 30px;
 }
 
 .book-now-btn:hover {

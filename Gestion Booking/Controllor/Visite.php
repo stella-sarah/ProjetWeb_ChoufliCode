@@ -175,6 +175,24 @@ class VisiteFunctions extends Visite { // Hérite de Visite
             return false;
         }
     }
+    public function getVisitesByCin($cin) {
+        // Valider le CIN (doit être 8 chiffres)
+        if (!preg_match('/^\d{8}$/', $cin)) {
+            error_log("VisiteFunctions::getVisitesByCin - CIN invalide fourni: " . $cin);
+            return []; // Retourne un tableau vide si le CIN n'est pas valide
+        }
 
+        $query = "SELECT * FROM visites WHERE id_cin = :cin ORDER BY date_visite DESC, heure_visite DESC";
+        try {
+            $stmt = $this->conn->prepare($query);
+            // Lier le paramètre CIN validé
+            $stmt->bindParam(':cin', $cin, PDO::PARAM_STR);
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch(PDOException $e) {
+            error_log("PDO Exception getVisitesByCin: " . $e->getMessage());
+            return []; // Retourne un tableau vide en cas d'erreur
+        }
+    }
 } // Fin de la classe VisiteFunctions
 ?>

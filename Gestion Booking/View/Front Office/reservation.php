@@ -2,9 +2,10 @@
 // Reservation.php - Page listant les propriétés DYNAMIQUEMENT (avec vidéo pour villas)
 
 // --- Inclusion des fichiers ---
+// Ensure these paths are correct for your server setup
 require_once __DIR__ . '/../../config.php';
-require_once __DIR__ . '/../../Controllor/Photo.php'; // Pour les images
-require_once __DIR__ . '/../../Controllor/ProprieteController.php'; // Pour récupérer les propriétés
+require_once __DIR__ . '/../../Controllor/Photo.php';
+require_once __DIR__ . '/../../Controllor/ProprieteController.php';
 
 // Initialiser la connexion et les contrôleurs
 try {
@@ -17,58 +18,66 @@ try {
 }
 
 // --- Récupération dynamique des propriétés ---
+$villas = $maisons_hotes = $hotels = [];
+$page_error = '';
 try {
-    // Assurez-vous que getAllVillas() récupère la nouvelle colonne 'video_url' si vous l'avez ajoutée
     $villas = $proprieteController->getAllVillas();
     $maisons_hotes = $proprieteController->getAllMaisonsHotes();
     $hotels = $proprieteController->getAllHotels();
 } catch (Exception $e) {
     error_log("Erreur lors de la récupération des propriétés: " . $e->getMessage());
-    $villas = $maisons_hotes = $hotels = [];
     $page_error = "Erreur lors du chargement des propriétés.";
 }
 // --- Fin Récupération ---
 
-// Fonction pour afficher l'image principale dans la galerie (INCHANGÉE)
-function displayPhotoCarousel($photoController, $photo_nom_associe, $alt_text = "Hébergement", $default_image = "/api/placeholder/600/350/1c1c1c/c9a86c?text=Image+Indisponible") {
+// Function to display the main image in the gallery
+function displayPhotoCarousel($photoController, $photo_nom_associe, $alt_text = "Hébergement", $default_image_placeholder = "https://placehold.co/600x350/1c1c1c/c9a86c?text=Image+Indisponible") {
     $photos = [];
     if (!empty($photo_nom_associe)) {
-        $photos = $photoController->getPhotosByNom($photo_nom_associe);
+        try {
+            $photos = $photoController->getPhotosByNom($photo_nom_associe);
+        } catch (Exception $e) {
+             error_log("Error fetching photos by name '$photo_nom_associe': " . $e->getMessage());
+             $photos = [];
+        }
     }
-
+    $error_placeholder = "https://placehold.co/600x350/cccccc/ffffff?text=Error+Loading";
     if (empty($photos)) {
-        echo '<img src="' . htmlspecialchars($default_image) . '" alt="' . htmlspecialchars($alt_text) . '" style="width: 100%; height: 100%; object-fit: cover;">';
+        echo '<img src="' . htmlspecialchars($default_image_placeholder) . '" alt="' . htmlspecialchars($alt_text) . '" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.onerror=null; this.src=\'' . $error_placeholder . '\';">';
     } else {
         $photo = $photos[0];
         if (is_array($photo) && isset($photo['image_base64']) && !empty($photo['image_base64'])) {
             $imageData = $photo['image_base64'];
             if (strpos($imageData, 'data:image') !== 0) {
-                // Basic check for image type based on base64 start
                  if (strpos(substr($imageData, 0, 20), 'iVBORw0KGgo') === 0) $mime = 'png';
                  elseif (strpos(substr($imageData, 0, 20), '/9j/') === 0) $mime = 'jpeg';
                  elseif (strpos(substr($imageData, 0, 20), 'R0lGOD') === 0) $mime = 'gif';
-                 else $mime = 'jpeg'; // Default
+                 else $mime = 'jpeg';
                  $imageData = 'data:image/' . $mime . ';base64,' . $imageData;
             }
             echo '<img src="' . htmlspecialchars($imageData) . '" alt="' . htmlspecialchars($alt_text) . '" style="width: 100%; height: 100%; object-fit: cover;">';
         } else {
-             echo '<img src="' . htmlspecialchars($default_image) . '" alt="' . htmlspecialchars($alt_text) . '" style="width: 100%; height: 100%; object-fit: cover;">';
+             echo '<img src="' . htmlspecialchars($default_image_placeholder) . '" alt="' . htmlspecialchars($alt_text) . '" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.onerror=null; this.src=\'' . $error_placeholder . '\';">';
         }
     }
 }
 
-// Fonction pour afficher le carrousel photo COMPLET dans le popup (INCHANGÉE - utilisée pour maisons/hôtels)
-function displayFullPhotoCarouselInPopup($photoController, $photo_nom_associe, $alt_text = "Hébergement", $default_image = "/api/placeholder/600/350/1c1c1c/c9a86c?text=Image+Indisponible") {
+// Function to display the full photo carousel in the popup
+function displayFullPhotoCarouselInPopup($photoController, $photo_nom_associe, $alt_text = "Hébergement", $default_image_placeholder = "https://placehold.co/600x350/1c1c1c/c9a86c?text=Image+Indisponible") {
      $photos = [];
      if (!empty($photo_nom_associe)) {
-         $photos = $photoController->getPhotosByNom($photo_nom_associe);
+        try {
+            $photos = $photoController->getPhotosByNom($photo_nom_associe);
+        } catch (Exception $e) {
+             error_log("Error fetching photos for popup '$photo_nom_associe': " . $e->getMessage());
+             $photos = [];
+        }
      }
-
+     $error_placeholder = "https://placehold.co/600x350/cccccc/ffffff?text=Error+Loading";
      if (empty($photos)) {
-        echo '<img src="' . $default_image . '" alt="' . htmlspecialchars($alt_text) . '" style="width: 100%; height: 100%; object-fit: cover;">';
+        echo '<img src="' . htmlspecialchars($default_image_placeholder) . '" alt="' . htmlspecialchars($alt_text) . '" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.onerror=null; this.src=\'' . $error_placeholder . '\';">';
         return;
     }
-
     $carousel_id = 'carousel-popup-' . preg_replace('/[^a-zA-Z0-9_\-]/', '-', strtolower($alt_text)) . '-' . rand();
     echo '<div class="villa-carousel" id="' . htmlspecialchars($carousel_id) . '">';
     $validPhotoCount = 0;
@@ -84,30 +93,31 @@ function displayFullPhotoCarouselInPopup($photoController, $photo_nom_associe, $
              }
              $active_class = ($validPhotoCount === 0) ? ' active' : '';
              echo '<div class="carousel-item' . $active_class . '">';
-             echo '<img src="' . htmlspecialchars($imageData) . '" alt="' . htmlspecialchars($alt_text) . '">';
+             echo '<img src="' . htmlspecialchars($imageData) . '" alt="' . htmlspecialchars($alt_text) . ' ' . ($validPhotoCount + 1) . '" onerror="this.onerror=null; this.src=\'' . $error_placeholder . '\';">';
              echo '</div>';
              $validPhotoCount++;
          }
     }
     if ($validPhotoCount === 0) {
-         echo '<img src="' . $default_image . '" alt="' . htmlspecialchars($alt_text) . '" style="width: 100%; height: 100%; object-fit: cover;">';
+         echo '<img src="' . htmlspecialchars($default_image_placeholder) . '" alt="' . htmlspecialchars($alt_text) . '" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.onerror=null; this.src=\'' . $error_placeholder . '\';">';
     }
     elseif ($validPhotoCount > 1) {
-        echo '<a class="carousel-prev" onclick="changeSlide(\'' . htmlspecialchars($carousel_id) . '\', -1)">&#10094;</a>';
-        echo '<a class="carousel-next" onclick="changeSlide(\'' . htmlspecialchars($carousel_id) . '\', 1)">&#10095;</a>';
+        echo '<button type="button" class="carousel-prev" aria-label="Previous slide" onclick="changeSlide(\'' . htmlspecialchars($carousel_id) . '\', -1)">❮</button>';
+        echo '<button type="button" class="carousel-next" aria-label="Next slide" onclick="changeSlide(\'' . htmlspecialchars($carousel_id) . '\', 1)">❯</button>';
         echo '<div class="carousel-indicators">';
         for ($i = 0; $i < $validPhotoCount; $i++) {
             $active_class = ($i === 0) ? ' active' : '';
-            echo '<span class="carousel-dot' . $active_class . '" onclick="currentSlide(\'' . htmlspecialchars($carousel_id) . '\', ' . ($i + 1) . ')"></span>';
+            echo '<button type="button" class="carousel-dot' . $active_class . '" aria-label="Go to slide ' . ($i + 1) . '" onclick="currentSlide(\'' . htmlspecialchars($carousel_id) . '\', ' . ($i + 1) . ')"></button>';
         }
         echo '</div>';
     }
     echo '</div>';
 }
 
-
 // --- Gestion Session ---
-session_start();
+if (session_status() == PHP_SESSION_NONE) {
+    session_start();
+}
 $utilisateur_connecte = isset($_SESSION['user_id']);
 // --- Fin Gestion Session ---
 
@@ -119,88 +129,344 @@ $utilisateur_connecte = isset($_SESSION['user_id']);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TuniFy Village - Réservation</title>
     <link rel="stylesheet" href="../../style.css"> <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        /* Styles CSS existants */
-        .reservation-buttons { display: flex; gap: 15px; margin-top: 20px; }
-        .book-now-btn, .visit-btn { flex: 1; display: block; padding: 8px 20px; text-align: center; text-decoration: none; font-weight: 600; border-radius: 5px; transition: all 0.3s ease; border: 1px solid transparent; font-size: 14px; }
-        .book-now-btn { background: var(--gold-primary); color: var(--darker-bg); }
-        .visit-btn { background: transparent; color: var(--gold-primary); border-color: var(--gold-primary); }
-        .book-now-btn:hover { background: var(--gold-light); color: var(--darker-bg); transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-        .visit-btn:hover { background: rgba(201, 168, 108, 0.1); transform: translateY(-2px); }
-        @media (max-width: 768px) { .reservation-buttons { flex-direction: column; } }
 
-        .villa-carousel { position: relative; width: 100%; height: 100%; overflow: hidden; border-radius: 5px; background-color: #333; }
-        .carousel-item { display: none; width: 100%; height: 100%; animation: fadeEffect 1s; }
-        @keyframes fadeEffect { from {opacity: .4} to {opacity: 1} }
-        .carousel-item.active { display: block; }
-        .carousel-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
-        .carousel-prev, .carousel-next { position: absolute; top: 50%; transform: translateY(-50%); padding: 10px; color: white; background: rgba(0, 0, 0, 0.4); cursor: pointer; z-index: 1; border-radius: 50%; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; transition: background 0.3s; user-select: none; font-size: 18px; }
+    <style>
+        /* Styles from style.css will be inherited */
+/* In your style.css file */
+
+/* Navigation */
+header {
+    position: fixed;
+    width: 100%;
+    z-index: 100;
+    transition: background-color 0.3s ease;
+    padding: 15px 0; /* Adjust overall header padding as needed */
+}
+
+header.scrolled {
+    background-color: rgba(28, 28, 28, 0.95);
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+}
+
+.container { /* Ensure your main container settings are appropriate */
+    width: 100%;
+    max-width: 1400px; /* Or your preferred max-width */
+    margin: 0 auto;
+    padding: 0 20px; /* Horizontal padding for content within the container */
+}
+
+.nav-container {
+    display: flex;         /* Enables flexbox layout */
+    align-items: center;   /* Vertically aligns all children (logo, nav, button) to the center */
+    width: 100%;           /* Ensures it uses the full width available from .container */
+}
+
+.logo {
+    display: flex;
+    align-items: center; /* Vertically aligns image and text within the logo div */
+    flex-shrink: 0;      /* Prevents the logo from shrinking if space is tight */
+}
+
+.logo img {
+    height: 50px;        /* Adjust as needed */
+    margin-right: 10px;  /* Space between logo image and logo text */
+}
+
+.logo-text {
+    display: flex;
+    flex-direction: column; /* Stacks h1 and p vertically */
+    justify-content: center; /* Centers the text block if it has extra height */
+}
+
+.logo-text h1 {
+    font-family: 'Cinzel', serif;
+    font-weight: 700;
+    font-size: 22px;
+    color: var(--gold-primary);
+    margin: 0;
+    line-height: 1.1; /* Adjust for tight vertical spacing */
+    letter-spacing: 1px;
+}
+
+.logo-text p {
+    font-size: 11px;
+    font-weight: 300;
+    color: var(--gold-light);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin: 0;
+    line-height: 1.1; /* Adjust for tight vertical spacing */
+}
+
+nav {
+    margin-left: 30px;   /* Space between logo and navigation links */
+    /* flex-grow: 1; /* Alternative: if you want nav to fill space and center its items */
+    /* display: flex; */
+    /* justify-content: center; */
+}
+
+nav ul {
+    display: flex;
+    list-style: none;
+    gap: 30px;           /* Space between navigation items */
+    align-items: center; /* Ensures nav items themselves are aligned if they have different heights */
+    margin: 0;
+    padding: 0;
+}
+
+nav ul li a {
+    color: var(--light-text);
+    text-decoration: none;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    transition: color 0.3s ease;
+    font-weight: 400;
+    padding: 10px 0; /* Adds some vertical padding to help with visual text alignment */
+}
+
+nav ul li a:hover,
+nav ul li a.active {
+    color: var(--gold-primary);
+}
+
+.contact-btn {
+    background-color: transparent;
+    border: 1px solid var(--gold-primary);
+    color: var(--gold-primary);
+    padding: 10px 25px; /* Adjust padding for visual text alignment with nav links */
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 500;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    flex-shrink: 0;          /* Prevents the button from shrinking */
+    margin-left: auto;       /* THIS IS THE KEY: Pushes the button to the far right */
+    display: inline-flex;    /* Allows align-items to center text within the button's padding */
+    align-items: center;     /* Vertically centers text within the button's padding */
+    height: fit-content;     /* Ensures button height is determined by its content + padding */
+}
+
+.contact-btn:hover {
+    background-color: var(--gold-primary);
+    color: var(--darker-bg);
+}
+
+/* Responsive styles for smaller screens (from your existing CSS) */
+@media screen and (max-width: 768px) {
+    .nav-container {
+        flex-direction: column; /* Stack items vertically on small screens */
+        gap: 20px;
+        align-items: flex-start; /* Or 'center' depending on desired mobile look */
+    }
+
+    nav {
+        margin-left: 0; /* Reset margin for column layout */
+        width: 100%; /* Allow nav to take full width on mobile */
+    }
+
+    nav ul {
+        flex-direction: column; /* Stack nav links vertically */
+        gap: 15px;
+        text-align: center; /* Center nav links text */
+        width: 100%;
+    }
+
+    .contact-btn {
+        margin-left: 0; /* Reset margin for column layout */
+        width: auto; /* Or width: 100%; if you want full-width button on mobile */
+        align-self: center; /* Center button on mobile if nav-container is align-items:flex-start */
+    }
+}
+        /* --- >>> ADD PADDING TO BODY FOR FIXED HEADER <<< --- */
+        body {
+            /* Adjust this value based on your actual fixed header height */
+            /* Start with ~100px and adjust */
+            padding-top: 10px; /* <<< ADJUST THIS VALUE AS NEEDED */
+        }
+        /* --- >>> --- */
+        /* --- Styles for Image Carousel INSIDE POPUP --- */
+        .villa-carousel {
+            position: relative;
+            width: 100%;
+            height: 100%; /* Fill the media container */
+            overflow: hidden;
+            border-radius: 5px; /* Match container */
+            background-color: #000; /* Black background */
+            display: flex; /* Center image if needed */
+            align-items: center; /* Center image vertically */
+            justify-content: center; /* Center image horizontally */
+        }
+        .carousel-item {
+            display: none; /* Hide inactive slides */
+            width: 100%;
+            height: 100%;
+            text-align: center; /* Center image horizontally */
+            animation: fadeEffect 1s; /* Keep fade effect */
+        }
+        .carousel-item.active {
+            display: flex; /* Use flex to help center */
+            align-items: center;
+            justify-content: center;
+        }
+        .carousel-item img {
+            display: block;    /* Remove extra space */
+            width: 100%;       /* Make image fill width */
+            height: 100%;      /* Make image fill height */
+            object-fit: cover; /* Fill container, crop if necessary */
+          
+        }
+        @keyframes fadeEffect { from {opacity: .4} to {opacity: 1} } /* Keep fade effect */
+
+        /* Keep existing styles for arrows/dots inside popup */
+        .carousel-prev, .carousel-next { position: absolute; top: 50%; transform: translateY(-50%); padding: 10px; color: white; background: rgba(0, 0, 0, 0.4); cursor: pointer; z-index: 1; border-radius: 50%; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; transition: background 0.3s; user-select: none; font-size: 18px; border: none; }
         .carousel-prev { left: 10px; }
         .carousel-next { right: 10px; }
         .carousel-prev:hover, .carousel-next:hover { background: rgba(0, 0, 0, 0.7); }
         .carousel-indicators { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; z-index: 1; }
-        .carousel-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255, 255, 255, 0.5); cursor: pointer; transition: background 0.3s; }
+        .carousel-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255, 255, 255, 0.5); cursor: pointer; transition: background 0.3s; border: none; padding: 0;}
         .carousel-dot.active, .carousel-dot:hover { background: rgba(255, 255, 255, 0.9); }
+        /* --- End Popup Carousel Styles --- */
 
-        .gallery-item { position: relative; height: 350px; overflow: hidden; border-radius: 5px; cursor: pointer; transition: transform 0.5s ease; background-color: var(--dark-bg); }
-        .gallery-item::after { content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 60%; background: linear-gradient(to top, rgba(0, 0, 0, 0.85), transparent); transition: opacity 0.3s ease; z-index: 1; pointer-events: none; }
-        .gallery-item:hover::after { opacity: 0.95; }
-        .gallery-item-content { position: absolute; bottom: 25px; left: 25px; z-index: 2; transition: transform 0.5s ease; color: var(--light-text); }
-        .gallery-item:hover .gallery-item-content { transform: translateY(-10px); }
-        .gallery-item-title { font-family: 'Cinzel', serif; font-size: 22px; font-weight: 600; margin-bottom: 8px; text-shadow: 1px 1px 3px rgba(0,0,0,0.7); }
-        .gallery-item-subtitle { font-family: 'Montserrat', sans-serif; font-size: 13px; font-weight: 400; color: var(--gold-primary); text-transform: uppercase; letter-spacing: 1px; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
-
-         .transport-popup { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.85); z-index: 2000; justify-content: center; align-items: center; backdrop-filter: blur(5px); animation: fadeInPopup 0.4s ease-out; }
-         @keyframes fadeInPopup { from { opacity: 0; } to { opacity: 1; } }
-         .transport-popup.hiding { animation: fadeOutPopup 0.3s ease-in forwards; }
-         @keyframes fadeOutPopup { from { opacity: 1; } to { opacity: 0; } }
-         .transport-popup-content { background-color: var(--dark-bg); padding: 30px 35px; border-radius: 10px; width: 90%; max-width: 650px; position: relative; border: 1px solid var(--gold-primary); box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6); max-height: 90vh; overflow-y: auto; animation: scaleInPopup 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-         @keyframes scaleInPopup { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-         .close-popup { position: absolute; top: 15px; right: 20px; font-size: 28px; color: var(--gold-light); cursor: pointer; transition: color 0.3s ease, transform 0.3s ease; z-index: 10; }
-         .close-popup:hover { color: #fff; transform: rotate(90deg); }
-         .transport-popup-content h2 { font-family: 'Cinzel', serif; font-size: 24px; color: var(--gold-primary); margin-bottom: 25px; text-align: center; text-transform: uppercase; letter-spacing: 1px; }
-         .transport-details-section, .transport-prices-section { margin-bottom: 25px; }
-         .transport-details-section h3, .transport-prices-section h3 { font-family: 'Montserrat', sans-serif; font-size: 16px; color: var(--gold-primary); margin-bottom: 15px; padding-bottom: 8px; border-bottom: 1px solid rgba(201, 168, 108, 0.3); }
-         .transport-details-list, .transport-prices-list { list-style: none; padding: 0; }
-         .transport-details-list li, .transport-prices-list li { display: flex; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid rgba(248, 245, 235, 0.1); font-size: 14px; }
-         .transport-details-list li:last-child, .transport-prices-list li:last-child { border-bottom: none; }
-         .transport-details-list li span:first-child, .transport-prices-list li span:first-child { color: rgba(248, 245, 235, 0.8); padding-right: 10px; min-width: 120px; /* Pour alignement */ }
-         .transport-details-list li span:last-child, .transport-prices-list li span:last-child { color: var(--light-text); font-weight: 500; text-align: right; }
-         .popup-media-container {
+        /* Keep other styles like .popup-media-container, .transport-popup etc. */
+        .popup-media-container {
             margin-top: 20px;
             margin-bottom: 25px;
             border-radius: 5px;
             overflow: hidden;
-            height: 300px; /* Hauteur fixe pour média popup */
-            background-color: #222; /* Fond sombre */
-            display: flex; /* Pour centrer si besoin */
+            height: 300px; /* Keep fixed height for the container */
+            background-color: #222;
+            display: flex;
             justify-content: center;
             align-items: center;
          }
-         .popup-media-container video { /* Style spécifique pour la vidéo */
-             max-width: 100%;
-             max-height: 100%;
-             display: block; /* Empêche espace blanc sous la vidéo */
-         }
-         .popup-description { font-size: 14px; color: rgba(248, 245, 235, 0.8); line-height: 1.6; margin-top: 15px; }
-         .no-properties { text-align: center; color: rgba(248, 245, 235, 0.7); padding: 40px 20px; font-style: italic; }
+         /* ... rest of your styles ... */
 
-         /* Style pour la vidéo dans la section hero */
-        .hero-video-container {
-            margin-top: 30px; /* Espace au-dessus de la vidéo */
-            max-width: 800px; /* Limite la largeur */
-            margin-left: auto;
-            margin-right: auto;
+        /* --- YouTube Video Carousel Styles --- */
+        .youtube-carousel-container {
+            position: relative;
+            max-width: 800px;
+            width: 90%;
+            /* Reduced top margin as body padding handles header offset */
+            /* Keep bottom margin for spacing below */
+            margin: 200px auto 60px auto; /* Top=40px, R/L=auto, Bottom=60px */ /* <<< ADJUST 40px FOR SPACE BETWEEN HEADER AREA AND CAROUSEL */
+            overflow: hidden; /* IMPORTANT */
             border-radius: 8px;
-            overflow: hidden; /* Pour les coins arrondis */
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(201, 168, 108, 0.2); /* Bordure subtile */
+            border: 1px solid rgba(201, 168, 108, 0.1);
+            background-color: var(--dark-bg); /* Fallback */
         }
-        .hero-video-container video {
+
+        .youtube-carousel-slides {
+            display: flex; /* IMPORTANT */
+            transition: transform 0.5s ease-in-out;
             width: 100%;
-            display: block; /* Enlève l'espace en dessous */
-            height: auto; /* Garde le ratio */
         }
+
+        .youtube-slide {
+            flex: 0 0 100%; /* IMPORTANT */
+            box-sizing: border-box;
+            background-color: #000; /* Black bg for iframes */
+        }
+
+        .youtube-slide iframe {
+            display: block;
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            height: auto;
+            border: none;
+        }
+
+        /* Navigation Arrows Styles */
+        .yt-carousel-prev,
+        .yt-carousel-next {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            padding: 0;
+            color: white;
+            background: rgba(0, 0, 0, 0.4);
+            cursor: pointer;
+            z-index: 1;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.3s;
+            user-select: none;
+            font-size: 20px;
+            border: none;
+            line-height: 1;
+        }
+        .yt-carousel-prev:focus,
+        .yt-carousel-next:focus {
+            outline: 2px solid var(--gold-light);
+            outline-offset: 2px;
+        }
+        .yt-carousel-prev { left: 15px; }
+        .yt-carousel-next { right: 15px; }
+        .yt-carousel-prev:hover,
+        .yt-carousel-next:hover {
+            background: rgba(201, 168, 108, 0.7);
+            color: var(--dark-bg);
+        }
+
+        /* Indicator Dots Styles */
+        .yt-carousel-dots {
+            position: absolute;
+            bottom: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 8px;
+            z-index: 1;
+        }
+        .yt-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.5);
+            cursor: pointer;
+            transition: background 0.3s, transform 0.3s;
+            border: none;
+            padding: 0;
+        }
+        .yt-dot:focus {
+            outline: 2px solid var(--gold-light);
+            outline-offset: 2px;
+        }
+        .yt-dot.active {
+            background: var(--gold-primary);
+            transform: scale(1.2);
+        }
+        .yt-dot:hover {
+             background: rgba(255, 255, 255, 0.9);
+             transform: scale(1.2);
+        }
+
+        /* Responsive adjustment */
+        @media (max-width: 768px) {
+            body {
+                /* Adjust body padding for smaller screens if header height changes */
+                padding-top: 80px; /* Example smaller padding */
+            }
+            .yt-carousel-prev,
+            .yt-carousel-next { width: 35px; height: 35px; font-size: 18px; }
+            .yt-dot { width: 8px; height: 8px; }
+            .yt-carousel-dots { bottom: 10px; }
+            .youtube-carousel-container {
+                 /* Adjust carousel margin for smaller screens if needed */
+                 margin-top: 30px;
+                 margin-bottom: 40px;
+            }
+        }
+
+        /* Other styles from style.css (like .gallery-item, popups etc.) */
 
     </style>
 </head>
@@ -213,22 +479,27 @@ $utilisateur_connecte = isset($_SESSION['user_id']);
         </div>
     </header>
 
-    <section class="hero" id="home" style="min-height: 70vh; height: auto; padding-bottom: 50px; background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.8)), url('/api/placeholder/1600/900/111111/c9a86c?text=TuniFy+Village') center/cover no-repeat;">
-        <div class="hero-content" style="padding-top: 100px;"> <div class="hero-subtitle"></div>
-            <h1 class="hero-title">Nos <span>Hébergements</span></h1>
-            <p class="hero-description">Découvrez notre sélection d'hébergements luxueux et réservez votre séjour ou planifiez une visite.</p>
-
-            <div class="hero-video-container">
-                <video id="heroVideo" autoplay muted loop playsinline>
-                    <source src="test.mp4" type="video/mp4">
-                    Votre navigateur ne supporte pas la lecture de vidéos HTML5.
-                </video>
-                 </div>
+    <div class="youtube-carousel-container">
+        <div class="youtube-carousel-slides">
+            <div class="youtube-slide">
+                <iframe src="https://www.youtube.com/embed/Jisnk4wMLqo" title="YouTube video player 1" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
             </div>
-    </section>
-
-     <?php if (isset($page_error)): ?>
-        <div style="color: #FFA07A; text-align: center; padding: 20px; background: rgba(244, 67, 54, 0.1); border-bottom: 1px solid rgba(244, 67, 54, 0.4);"><?php echo htmlspecialchars($page_error); ?></div>
+            <div class="youtube-slide">
+                 <iframe src="https://www.youtube.com/embed/MtRvNwWacEU" title="YouTube video player 2" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+            </div>
+            <div class="youtube-slide">
+                 <iframe src="https://www.youtube.com/embed/lOC8mp6Ujbo" title="YouTube video player 3" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+            </div>
+            <div class="youtube-slide">
+                 <iframe src="https://www.youtube.com/embed/P59BATNWaHs" title="YouTube video player 4" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+            </div>
+        </div>
+        <button type="button" class="yt-carousel-prev" aria-label="Previous video">❮</button>
+        <button type="button" class="yt-carousel-next" aria-label="Next video">❯</button>
+        <div class="yt-carousel-dots"></div>
+    </div>
+    <?php if (!empty($page_error)): ?>
+        <div style="color: #FFA07A; text-align: center; padding: 20px; background: rgba(244, 67, 54, 0.1); border-bottom: 1px solid rgba(244, 67, 54, 0.4); max-width: 1100px; margin: 20px auto;"><?php echo htmlspecialchars($page_error); ?></div>
      <?php endif; ?>
 
     <section class="gallery" style="padding-top: 60px;">
@@ -237,13 +508,15 @@ $utilisateur_connecte = isset($_SESSION['user_id']);
             <div class="gallery-grid">
                 <?php if (!empty($villas)): ?>
                     <?php foreach ($villas as $villa): ?>
-                        <div class="gallery-item" onclick="openPopup('villaPopup_<?php echo $villa['id_villa']; ?>')">
-                            <?php displayPhotoCarousel($photoController, $villa['photo_nom_associe'] ?? null, 'Villa ' . htmlspecialchars($villa['nom_villa'])); ?>
-                            <div class="gallery-item-content">
-                                <h3 class="gallery-item-title">Villa <?php echo htmlspecialchars($villa['nom_villa']); ?></h3>
-                                <p class="gallery-item-subtitle"><?php echo htmlspecialchars($villa['type_villa']); ?> | <?php echo $villa['nb_chambres'] ?? '?'; ?> chambres</p>
+                        <?php if (isset($villa['id_villa'])): ?>
+                            <div class="gallery-item" onclick="openPopup('villaPopup_<?php echo htmlspecialchars($villa['id_villa']); ?>')">
+                                <?php displayPhotoCarousel($photoController, $villa['photo_nom_associe'] ?? null, 'Villa ' . htmlspecialchars($villa['nom_villa'] ?? '')); ?>
+                                <div class="gallery-item-content">
+                                    <h3 class="gallery-item-title">Villa <?php echo htmlspecialchars($villa['nom_villa'] ?? 'N/A'); ?></h3>
+                                    <p class="gallery-item-subtitle"><?php echo htmlspecialchars($villa['type_villa'] ?? ''); ?> | <?php echo $villa['nb_chambres'] ?? '?'; ?> chambres</p>
+                                </div>
                             </div>
-                        </div>
+                        <?php endif; ?>
                     <?php endforeach; ?>
                 <?php else: ?>
                     <p class="no-properties">Aucune villa disponible pour le moment.</p>
@@ -253,18 +526,20 @@ $utilisateur_connecte = isset($_SESSION['user_id']);
     </section>
 
     <section class="gallery" style="padding-top: 60px;">
-        <div class="container gallery-container">
+       <div class="container gallery-container">
             <div class="gallery-header"> <p class="section-subtitle">Séjours Authentiques</p> <h2 class="section-title">Nos <span>Maisons d'hôtes</span></h2> </div>
             <div class="gallery-grid">
                  <?php if (!empty($maisons_hotes)): ?>
                     <?php foreach ($maisons_hotes as $maison): ?>
-                        <div class="gallery-item" onclick="openPopup('maisonPopup_<?php echo $maison['id_maison_hote']; ?>')">
-                             <?php displayPhotoCarousel($photoController, $maison['photo_nom_associe'] ?? null, htmlspecialchars($maison['nom_maison'])); ?>
-                            <div class="gallery-item-content">
-                                <h3 class="gallery-item-title"><?php echo htmlspecialchars($maison['nom_maison']); ?></h3>
-                                <p class="gallery-item-subtitle"><?php echo $maison['nb_chambres'] ?? '?'; ?> chambres | Capacité: <?php echo $maison['capacite_personnes'] ?? '?'; ?> pers.</p>
+                         <?php if (isset($maison['id_maison_hote'])): ?>
+                            <div class="gallery-item" onclick="openPopup('maisonPopup_<?php echo htmlspecialchars($maison['id_maison_hote']); ?>')">
+                                 <?php displayPhotoCarousel($photoController, $maison['photo_nom_associe'] ?? null, htmlspecialchars($maison['nom_maison'] ?? '')); ?>
+                                <div class="gallery-item-content">
+                                    <h3 class="gallery-item-title"><?php echo htmlspecialchars($maison['nom_maison'] ?? 'N/A'); ?></h3>
+                                    <p class="gallery-item-subtitle"><?php echo $maison['nb_chambres'] ?? '?'; ?> chambres | Capacité: <?php echo $maison['capacite_personnes'] ?? '?'; ?> pers.</p>
+                                </div>
                             </div>
-                        </div>
+                        <?php endif; ?>
                     <?php endforeach; ?>
                 <?php else: ?>
                     <p class="no-properties">Aucune maison d'hôte disponible pour le moment.</p>
@@ -279,13 +554,15 @@ $utilisateur_connecte = isset($_SESSION['user_id']);
             <div class="gallery-grid">
                  <?php if (!empty($hotels)): ?>
                     <?php foreach ($hotels as $hotel): ?>
-                        <div class="gallery-item" onclick="openPopup('hotelPopup_<?php echo $hotel['id_hotel']; ?>')">
-                             <?php displayPhotoCarousel($photoController, $hotel['photo_nom_associe'] ?? null, htmlspecialchars($hotel['nom_hotel'])); ?>
-                            <div class="gallery-item-content">
-                                <h3 class="gallery-item-title"><?php echo htmlspecialchars($hotel['nom_hotel']); ?></h3>
-                                <p class="gallery-item-subtitle"><?php echo $hotel['classement_etoiles'] ? $hotel['classement_etoiles'] . '*' : ''; ?> | <?php echo htmlspecialchars($hotel['type_hotel']); ?></p>
+                         <?php if (isset($hotel['id_hotel'])): ?>
+                            <div class="gallery-item" onclick="openPopup('hotelPopup_<?php echo htmlspecialchars($hotel['id_hotel']); ?>')">
+                                 <?php displayPhotoCarousel($photoController, $hotel['photo_nom_associe'] ?? null, htmlspecialchars($hotel['nom_hotel'] ?? '')); ?>
+                                <div class="gallery-item-content">
+                                    <h3 class="gallery-item-title"><?php echo htmlspecialchars($hotel['nom_hotel'] ?? 'N/A'); ?></h3>
+                                    <p class="gallery-item-subtitle"><?php echo isset($hotel['classement_etoiles']) ? $hotel['classement_etoiles'] . '*' : ''; ?> | <?php echo htmlspecialchars($hotel['type_hotel'] ?? ''); ?></p>
+                                </div>
                             </div>
-                        </div>
+                        <?php endif; ?>
                     <?php endforeach; ?>
                 <?php else: ?>
                     <p class="no-properties">Aucun hôtel disponible pour le moment.</p>
@@ -295,130 +572,141 @@ $utilisateur_connecte = isset($_SESSION['user_id']);
     </section>
 
 
-    <?php foreach ($villas as $villa): ?>
-    <div class="transport-popup" id="villaPopup_<?php echo $villa['id_villa']; ?>">
-        <div class="transport-popup-content">
-            <span class="close-popup" onclick="closePopup('villaPopup_<?php echo $villa['id_villa']; ?>')">&times;</span>
-            <h2>Villa <?php echo htmlspecialchars($villa['nom_villa']); ?></h2>
-
-            <div class="popup-media-container">
-                <?php if (!empty($villa['video_url'])): // Vérifie si l'URL de la vidéo existe ?>
-                    <video width="100%" style="max-height: 300px; display: block;" controls>
-                        <source src="<?php echo htmlspecialchars($villa['video_url']); ?>" type="video/mp4">
-                        Votre navigateur ne supporte pas la lecture de vidéos HTML5.
-                        <a href="<?php echo htmlspecialchars($villa['video_url']); ?>">Lien vers la vidéo</a>
-                    </video>
-                <?php else: // Sinon, affiche le carrousel photo comme avant ?>
-                    <?php displayFullPhotoCarouselInPopup($photoController, $villa['photo_nom_associe'] ?? null, 'Villa ' . htmlspecialchars($villa['nom_villa'])); ?>
-                <?php endif; ?>
-            </div>
-
-            <div class="transport-details-section"><h3>Caractéristiques</h3>
-                <ul class="transport-details-list">
-                    <li><span>Type</span><span><?php echo htmlspecialchars($villa['type_villa']); ?></span></li>
-                    <li><span>Nom</span><span><?php echo htmlspecialchars($villa['nom_villa']); ?></span></li>
-                    <?php if($villa['surface_m2']): ?><li><span>Surface</span><span><?php echo $villa['surface_m2']; ?> m²</span></li><?php endif; ?>
-                    <?php if($villa['nb_chambres']): ?><li><span>Chambres</span><span><?php echo $villa['nb_chambres']; ?></span></li><?php endif; ?>
-                    <?php if($villa['nb_salles_bain']): ?><li><span>Salles de bain</span><span><?php echo $villa['nb_salles_bain']; ?></span></li><?php endif; ?>
-                    <?php if($villa['jardin_m2']): ?><li><span>Jardin</span><span><?php echo $villa['jardin_m2']; ?> m²</span></li><?php endif; ?>
-                    <li><span>Piscine</span><span><?php echo $villa['piscine'] ? 'Oui' : 'Non'; ?></span></li>
-                    <?php if($villa['parking']): ?><li><span>Parking</span><span><?php echo $villa['parking']; ?> places</span></li><?php endif; ?>
-                </ul>
-            </div>
-            <?php if($villa['prix_indicatif']): ?>
-            <div class="transport-prices-section"><h3>Prix</h3>
-                <ul class="transport-prices-list">
-                    <li><span>Prix Indicatif</span><span><?php echo number_format($villa['prix_indicatif'], 0, ',', ' ').' DT'; ?></span></li>
-                </ul>
-            </div>
-            <?php endif; ?>
-            <?php if($villa['description']): ?>
-                <div class="popup-description">
-                    <h3>Description</h3>
-                    <p><?php echo nl2br(htmlspecialchars($villa['description'])); ?></p>
+    <?php if (!empty($villas)): ?>
+        <?php foreach ($villas as $villa): ?>
+            <?php if (isset($villa['id_villa'])): ?>
+                <div class="transport-popup" id="villaPopup_<?php echo htmlspecialchars($villa['id_villa']); ?>">
+                    <div class="transport-popup-content">
+                        <button type="button" class="close-popup" aria-label="Close popup" onclick="closePopup('villaPopup_<?php echo htmlspecialchars($villa['id_villa']); ?>')">×</button>
+                        <h2>Villa <?php echo htmlspecialchars($villa['nom_villa'] ?? 'N/A'); ?></h2>
+                        <div class="popup-media-container">
+                            <?php if (!empty($villa['video_url'])): ?>
+                                <video width="100%" style="max-height: 300px; display: block;" controls>
+                                    <source src="<?php echo htmlspecialchars($villa['video_url']); ?>" type="video/mp4">
+                                    Votre navigateur ne supporte pas la lecture de vidéos HTML5.
+                                    <a href="<?php echo htmlspecialchars($villa['video_url']); ?>">Lien vers la vidéo</a>
+                                </video>
+                            <?php else: ?>
+                                <?php displayFullPhotoCarouselInPopup($photoController, $villa['photo_nom_associe'] ?? null, 'Villa ' . htmlspecialchars($villa['nom_villa'] ?? '')); ?>
+                            <?php endif; ?>
+                        </div>
+                        <div class="transport-details-section"><h3>Caractéristiques</h3>
+                            <ul class="transport-details-list">
+                                <li><span>Type</span><span><?php echo htmlspecialchars($villa['type_villa'] ?? 'N/A'); ?></span></li>
+                                <li><span>Nom</span><span><?php echo htmlspecialchars($villa['nom_villa'] ?? 'N/A'); ?></span></li>
+                                <?php if(isset($villa['surface_m2']) && $villa['surface_m2']): ?><li><span>Surface</span><span><?php echo htmlspecialchars($villa['surface_m2']); ?> m²</span></li><?php endif; ?>
+                                <?php if(isset($villa['nb_chambres']) && $villa['nb_chambres']): ?><li><span>Chambres</span><span><?php echo htmlspecialchars($villa['nb_chambres']); ?></span></li><?php endif; ?>
+                                <?php if(isset($villa['nb_salles_bain']) && $villa['nb_salles_bain']): ?><li><span>Salles de bain</span><span><?php echo htmlspecialchars($villa['nb_salles_bain']); ?></span></li><?php endif; ?>
+                                <?php if(isset($villa['jardin_m2']) && $villa['jardin_m2']): ?><li><span>Jardin</span><span><?php echo htmlspecialchars($villa['jardin_m2']); ?> m²</span></li><?php endif; ?>
+                                <li><span>Piscine</span><span><?php echo isset($villa['piscine']) && $villa['piscine'] ? 'Oui' : 'Non'; ?></span></li>
+                                <?php if(isset($villa['parking']) && $villa['parking']): ?><li><span>Parking</span><span><?php echo htmlspecialchars($villa['parking']); ?> places</span></li><?php endif; ?>
+                            </ul>
+                        </div>
+                        <?php if(isset($villa['prix_indicatif']) && $villa['prix_indicatif']): ?>
+                        <div class="transport-prices-section"><h3>Prix</h3>
+                            <ul class="transport-prices-list">
+                                <li><span>Prix Indicatif</span><span><?php echo number_format($villa['prix_indicatif'], 0, ',', ' ').' DT'; ?></span></li>
+                            </ul>
+                        </div>
+                        <?php endif; ?>
+                        <?php if(isset($villa['description']) && !empty($villa['description'])): ?>
+                            <div class="popup-description">
+                                <h3>Description</h3>
+                                <p><?php echo nl2br(htmlspecialchars($villa['description'])); ?></p>
+                            </div>
+                        <?php endif; ?>
+                        <div class="reservation-buttons">
+                            <a href="reservation-villa.php?nom=<?php echo urlencode($villa['nom_villa'] ?? ''); ?>" class="book-now-btn">Demande d'Achat</a>
+                            <a href="visitevilla.php?type=<?php echo urlencode($villa['type_villa'] ?? ''); ?>&nom=<?php echo urlencode($villa['nom_villa'] ?? ''); ?>" class="book-now-btn">Réserver Visite</a>
+                            <a href="recherchevisitecin.php" class="book-now-btn" style="background-color: var(--gold-dark); margin-top: 50px;">Rechercher Mes Visites</a>
+                            </div>
+                    </div>
                 </div>
             <?php endif; ?>
-            <div class="reservation-buttons">
-                <a href="reservation-villa.php?nom=<?php echo urlencode($villa['nom_villa']); ?>" class="book-now-btn">Demande d'Achat</a>
-                <a href="visitevilla.php?type=<?php echo urlencode($villa['type_villa']); ?>&nom=<?php echo urlencode($villa['nom_villa']); ?>" class="visit-btn">Réserver Visite</a>
-            </div>
-        </div>
-    </div>
-    <?php endforeach; ?>
+        <?php endforeach; ?>
+    <?php endif; ?>
 
-    <?php foreach ($maisons_hotes as $maison): ?>
-    <div class="transport-popup" id="maisonPopup_<?php echo $maison['id_maison_hote']; ?>">
-         <div class="transport-popup-content">
-            <span class="close-popup" onclick="closePopup('maisonPopup_<?php echo $maison['id_maison_hote']; ?>')">&times;</span>
-            <h2><?php echo htmlspecialchars($maison['nom_maison']); ?></h2>
-             <div class="popup-media-container">
-                <?php displayFullPhotoCarouselInPopup($photoController, $maison['photo_nom_associe'] ?? null, htmlspecialchars($maison['nom_maison'])); ?>
-            </div>
-            <div class="transport-details-section"><h3>Caractéristiques</h3>
-                <ul class="transport-details-list">
-                    <li><span>Type</span><span><?php echo htmlspecialchars($maison['type_maison']); ?></span></li>
-                     <?php if($maison['surface_m2']): ?><li><span>Surface</span><span><?php echo $maison['surface_m2']; ?> m²</span></li><?php endif; ?>
-                    <?php if($maison['nb_chambres']): ?><li><span>Chambres</span><span><?php echo $maison['nb_chambres']; ?></span></li><?php endif; ?>
-                    <?php if($maison['capacite_personnes']): ?><li><span>Capacité</span><span><?php echo $maison['capacite_personnes']; ?> personnes</span></li><?php endif; ?>
-                    <li><span>Piscine</span><span><?php echo $maison['piscine'] ? 'Oui' : 'Non'; ?></span></li>
-                    <li><span>Petit Déj. Inclus</span><span><?php echo $maison['petit_dejeuner_inclus'] ? 'Oui' : 'Non'; ?></span></li>
-                </ul>
-            </div>
-            <?php if($maison['prix_nuit']): ?>
-            <div class="transport-prices-section"><h3>Prix</h3>
-                <ul class="transport-prices-list">
-                    <li><span>Prix / Nuit</span><span><?php echo number_format($maison['prix_nuit'], 0, ',', ' ').' DT'; ?></span></li>
-                </ul>
-            </div>
-             <?php endif; ?>
-             <?php if($maison['description']): ?>
-                <div class="popup-description">
-                    <h3>Description</h3>
-                    <p><?php echo nl2br(htmlspecialchars($maison['description'])); ?></p>
+    <?php if (!empty($maisons_hotes)): ?>
+        <?php foreach ($maisons_hotes as $maison): ?>
+             <?php if (isset($maison['id_maison_hote'])): ?>
+                <div class="transport-popup" id="maisonPopup_<?php echo htmlspecialchars($maison['id_maison_hote']); ?>">
+                     <div class="transport-popup-content">
+                        <button type="button" class="close-popup" aria-label="Close popup" onclick="closePopup('maisonPopup_<?php echo htmlspecialchars($maison['id_maison_hote']); ?>')">×</button>
+                        <h2><?php echo htmlspecialchars($maison['nom_maison'] ?? 'N/A'); ?></h2>
+                         <div class="popup-media-container">
+                            <?php displayFullPhotoCarouselInPopup($photoController, $maison['photo_nom_associe'] ?? null, htmlspecialchars($maison['nom_maison'] ?? '')); ?>
+                        </div>
+                        <div class="transport-details-section"><h3>Caractéristiques</h3>
+                            <ul class="transport-details-list">
+                                <li><span>Type</span><span><?php echo htmlspecialchars($maison['type_maison'] ?? 'N/A'); ?></span></li>
+                                 <?php if(isset($maison['surface_m2']) && $maison['surface_m2']): ?><li><span>Surface</span><span><?php echo htmlspecialchars($maison['surface_m2']); ?> m²</span></li><?php endif; ?>
+                                <?php if(isset($maison['nb_chambres']) && $maison['nb_chambres']): ?><li><span>Chambres</span><span><?php echo htmlspecialchars($maison['nb_chambres']); ?></span></li><?php endif; ?>
+                                <?php if(isset($maison['capacite_personnes']) && $maison['capacite_personnes']): ?><li><span>Capacité</span><span><?php echo htmlspecialchars($maison['capacite_personnes']); ?> personnes</span></li><?php endif; ?>
+                                <li><span>Piscine</span><span><?php echo isset($maison['piscine']) && $maison['piscine'] ? 'Oui' : 'Non'; ?></span></li>
+                                <li><span>Petit Déj. Inclus</span><span><?php echo isset($maison['petit_dejeuner_inclus']) && $maison['petit_dejeuner_inclus'] ? 'Oui' : 'Non'; ?></span></li>
+                            </ul>
+                        </div>
+                        <?php if(isset($maison['prix_nuit']) && $maison['prix_nuit']): ?>
+                        <div class="transport-prices-section"><h3>Prix</h3>
+                            <ul class="transport-prices-list">
+                                <li><span>Prix / Nuit</span><span><?php echo number_format($maison['prix_nuit'], 0, ',', ' ').' DT'; ?></span></li>
+                            </ul>
+                        </div>
+                         <?php endif; ?>
+                         <?php if(isset($maison['description']) && !empty($maison['description'])): ?>
+                            <div class="popup-description">
+                                <h3>Description</h3>
+                                <p><?php echo nl2br(htmlspecialchars($maison['description'])); ?></p>
+                            </div>
+                        <?php endif; ?>
+                        <div class="reservation-buttons">
+                             <a href="reservation-maisonhote.php?nom=<?php echo urlencode($maison['nom_maison'] ?? ''); ?>" class="book-now-btn">Réserver Séjour</a>
+                        </div>
+                    </div>
                 </div>
             <?php endif; ?>
-            <div class="reservation-buttons">
-                 <a href="reservation-maisonhote.php?nom=<?php echo urlencode($maison['nom_maison']); ?>" class="book-now-btn">Réserver Séjour</a>
-            </div>
-        </div>
-    </div>
-    <?php endforeach; ?>
+        <?php endforeach; ?>
+    <?php endif; ?>
 
-    <?php foreach ($hotels as $hotel): ?>
-    <div class="transport-popup" id="hotelPopup_<?php echo $hotel['id_hotel']; ?>">
-         <div class="transport-popup-content">
-            <span class="close-popup" onclick="closePopup('hotelPopup_<?php echo $hotel['id_hotel']; ?>')">&times;</span>
-            <h2><?php echo htmlspecialchars($hotel['nom_hotel']); ?></h2>
-             <div class="popup-media-container">
-                <?php displayFullPhotoCarouselInPopup($photoController, $hotel['photo_nom_associe'] ?? null, htmlspecialchars($hotel['nom_hotel'])); ?>
-            </div>
-            <div class="transport-details-section"><h3>Caractéristiques</h3>
-                <ul class="transport-details-list">
-                    <li><span>Type</span><span><?php echo htmlspecialchars($hotel['type_hotel']); ?></span></li>
-                    <?php if($hotel['classement_etoiles']): ?><li><span>Classement</span><span><?php echo $hotel['classement_etoiles']; ?> *</span></li><?php endif; ?>
-                    <?php if($hotel['services_cles']): ?><li><span>Services Clés</span><span><?php echo htmlspecialchars($hotel['services_cles']); ?></span></li><?php endif; ?>
-                     <?php if($hotel['adresse']): ?><li><span>Adresse</span><span><?php echo htmlspecialchars($hotel['adresse']); ?></span></li><?php endif; ?>
-                </ul>
-            </div>
-             <?php if($hotel['prix_nuit_apd']): ?>
-            <div class="transport-prices-section"><h3>Prix</h3>
-                <ul class="transport-prices-list">
-                     <li><span>Prix / Nuit (àpd)</span><span><?php echo number_format($hotel['prix_nuit_apd'], 0, ',', ' ').' DT'; ?></span></li>
-                </ul>
-            </div>
-             <?php endif; ?>
-             <?php if($hotel['description']): ?>
-                <div class="popup-description">
-                    <h3>Description</h3>
-                    <p><?php echo nl2br(htmlspecialchars($hotel['description'])); ?></p>
+    <?php if (!empty($hotels)): ?>
+        <?php foreach ($hotels as $hotel): ?>
+             <?php if (isset($hotel['id_hotel'])): ?>
+                <div class="transport-popup" id="hotelPopup_<?php echo htmlspecialchars($hotel['id_hotel']); ?>">
+                     <div class="transport-popup-content">
+                        <button type="button" class="close-popup" aria-label="Close popup" onclick="closePopup('hotelPopup_<?php echo htmlspecialchars($hotel['id_hotel']); ?>')">×</button>
+                        <h2><?php echo htmlspecialchars($hotel['nom_hotel'] ?? 'N/A'); ?></h2>
+                         <div class="popup-media-container">
+                            <?php displayFullPhotoCarouselInPopup($photoController, $hotel['photo_nom_associe'] ?? null, htmlspecialchars($hotel['nom_hotel'] ?? '')); ?>
+                        </div>
+                        <div class="transport-details-section"><h3>Caractéristiques</h3>
+                            <ul class="transport-details-list">
+                                <li><span>Type</span><span><?php echo htmlspecialchars($hotel['type_hotel'] ?? 'N/A'); ?></span></li>
+                                <?php if(isset($hotel['classement_etoiles']) && $hotel['classement_etoiles']): ?><li><span>Classement</span><span><?php echo htmlspecialchars($hotel['classement_etoiles']); ?> *</span></li><?php endif; ?>
+                                <?php if(isset($hotel['services_cles']) && !empty($hotel['services_cles'])): ?><li><span>Services Clés</span><span><?php echo htmlspecialchars($hotel['services_cles']); ?></span></li><?php endif; ?>
+                                 <?php if(isset($hotel['adresse']) && !empty($hotel['adresse'])): ?><li><span>Adresse</span><span><?php echo htmlspecialchars($hotel['adresse']); ?></span></li><?php endif; ?>
+                            </ul>
+                        </div>
+                         <?php if(isset($hotel['prix_nuit_apd']) && $hotel['prix_nuit_apd']): ?>
+                        <div class="transport-prices-section"><h3>Prix</h3>
+                            <ul class="transport-prices-list">
+                                 <li><span>Prix / Nuit (àpd)</span><span><?php echo number_format($hotel['prix_nuit_apd'], 0, ',', ' ').' DT'; ?></span></li>
+                            </ul>
+                        </div>
+                         <?php endif; ?>
+                         <?php if(isset($hotel['description']) && !empty($hotel['description'])): ?>
+                            <div class="popup-description">
+                                <h3>Description</h3>
+                                <p><?php echo nl2br(htmlspecialchars($hotel['description'])); ?></p>
+                            </div>
+                        <?php endif; ?>
+                        <div class="reservation-buttons">
+                             <a href="reservation-hotel.php?nom=<?php echo urlencode($hotel['nom_hotel'] ?? ''); ?>" class="book-now-btn">Réserver Séjour</a>
+                        </div>
+                    </div>
                 </div>
             <?php endif; ?>
-            <div class="reservation-buttons">
-                 <a href="reservation-hotel.php?nom=<?php echo urlencode($hotel['nom_hotel']); ?>" class="book-now-btn">Réserver Séjour</a>
-            </div>
-        </div>
-    </div>
-    <?php endforeach; ?>
+        <?php endforeach; ?>
+    <?php endif; ?>
 
 
     <footer class="footer">
@@ -429,12 +717,12 @@ $utilisateur_connecte = isset($_SESSION['user_id']);
                  <div class="footer-links"> <h3 class="footer-heading">Nos Services</h3> <ul> <li><a href="#">Vente Immobilière</a></li> <li><a href="#">Gestion de Propriété</a></li> <li><a href="#">Design d'Intérieur</a></li> <li><a href="#">Aménagement Paysager</a></li> <li><a href="#">Services de Conciergerie</a></li> </ul> </div>
                  <div class="footer-contact"> <h3 class="footer-heading">Informations de Contact</h3> <p><i class="fas fa-map-marker-alt"></i> 123 Boulevard du Luxe, Quartier Doré, Ville</p> <p><i class="fas fa-phone"></i> +216 12 345 678</p> <p><i class="fas fa-envelope"></i> info@tunifyvillage.com</p> <p><i class="fas fa-clock"></i> Lun-Sam: 9:00 - 18:00</p> </div>
              </div>
-            <div class="footer-bottom"> <div class="footer-copyright"> &copy; <?php echo date("Y"); ?> TuniFy Village. Tous Droits Réservés. Conçu par <a href="#">Kaptin</a> </div> </div>
+            <div class="footer-bottom"> <div class="footer-copyright"> © <?php echo date("Y"); ?> TuniFy Village. Tous Droits Réservés. Conçu par <a href="#">Kaptin</a> </div> </div>
         </div>
     </footer>
 
     <script>
-        // --- Carrousel Logic (INCHANGÉ) ---
+        // --- Carrousel Logic for Popups ---
         let slideIndexes = {};
         function initCarousel(carouselId) {
              if (slideIndexes[carouselId] === undefined) {
@@ -461,13 +749,13 @@ $utilisateur_connecte = isset($_SESSION['user_id']);
              else if (n < 1) { slideIndexes[carouselId] = slides.length }
              else { slideIndexes[carouselId] = n; }
              for (i = 0; i < slides.length; i++) { slides[i].style.display = "none"; slides[i].classList.remove("active"); }
-              if (dots.length > 0) { for (i = 0; i < dots.length; i++) { dots[i].className = dots[i].className.replace(" active", ""); } }
+              if (dots.length > 0) { for (i = 0; i < dots.length; i++) { dots[i].classList.remove("active"); } }
              slides[slideIndexes[carouselId] - 1].style.display = "block";
              slides[slideIndexes[carouselId] - 1].classList.add("active");
-              if (dots.length > 0) { dots[slideIndexes[carouselId] - 1].className += " active"; }
+              if (dots.length > 0) { dots[slideIndexes[carouselId] - 1].classList.add("active"); }
          }
 
-        // --- Popup Logic (MODIFIÉ pour arrêter la vidéo) ---
+        // --- Popup Logic ---
         function openPopup(popupId) {
             const popup = document.getElementById(popupId);
             if (popup) {
@@ -480,7 +768,6 @@ $utilisateur_connecte = isset($_SESSION['user_id']);
                 console.error("Popup with ID '" + popupId + "' not found.");
             }
         }
-
         function closePopup(popupId) {
             const popup = document.getElementById(popupId);
             if (popup) {
@@ -494,14 +781,8 @@ $utilisateur_connecte = isset($_SESSION['user_id']);
             }
         }
 
-        // --- Event Listeners (DOM Ready) ---
+        // --- YouTube Carousel & Other Logic ---
         document.addEventListener('DOMContentLoaded', function() {
-            // Fermer popup en cliquant à l'extérieur
-            window.addEventListener('click', function(event) {
-                if (event.target.classList.contains('transport-popup')) {
-                    closePopup(event.target.id);
-                }
-            });
 
             // Scroll Header Effect
             const header = document.querySelector('header');
@@ -511,39 +792,103 @@ $utilisateur_connecte = isset($_SESSION['user_id']);
                  handleScroll();
             }
 
-            // --- *** NOUVEAU : Intersection Observer pour la vidéo Hero *** ---
-            const heroVideo = document.getElementById('heroVideo');
+            // YouTube Carousel Setup
+            const carouselContainer = document.querySelector('.youtube-carousel-container');
+            if (carouselContainer) {
+                const slidesContainer = carouselContainer.querySelector('.youtube-carousel-slides');
+                const slides = carouselContainer.querySelectorAll('.youtube-slide');
+                const prevButton = carouselContainer.querySelector('.yt-carousel-prev');
+                const nextButton = carouselContainer.querySelector('.yt-carousel-next');
+                const dotsContainer = carouselContainer.querySelector('.yt-carousel-dots');
+                const totalSlides = slides.length;
+                let currentSlideIndex = 0;
 
-            if (heroVideo) {
-                const observerOptions = {
-                    root: null, // Observe par rapport au viewport
-                    rootMargin: '0px',
-                    threshold: 0.5 // Déclenche quand 50% de la vidéo est visible/invisible
-                };
+                if (!slidesContainer || !slides || totalSlides === 0) {
+                    console.warn("YouTube carousel essential elements not found. Carousel disabled.");
+                    if (prevButton) prevButton.style.display = 'none';
+                    if (nextButton) nextButton.style.display = 'none';
+                    if (dotsContainer) dotsContainer.style.display = 'none';
+                    return;
+                }
+                if (totalSlides <= 1) {
+                    if (prevButton) prevButton.style.display = 'none';
+                    if (nextButton) nextButton.style.display = 'none';
+                    if (dotsContainer) dotsContainer.style.display = 'none';
+                    return;
+                }
 
-                const observerCallback = (entries, observer) => {
-                    entries.forEach(entry => {
-                        if (entry.isIntersecting) {
-                            // La vidéo est visible
-                            // Tenter de jouer la vidéo (peut échouer si l'utilisateur n'a pas interagi)
-                            heroVideo.play().catch(error => {
-                                // Gérer l'erreur si autoplay est bloqué (optionnel)
-                                console.log("Autoplay de la vidéo hero bloqué, interaction utilisateur requise.");
-                            });
-                        } else {
-                            // La vidéo n'est plus visible
-                            heroVideo.pause();
+                function createDots() {
+                    if (!dotsContainer) return;
+                    dotsContainer.innerHTML = '';
+                    for (let i = 0; i < totalSlides; i++) {
+                        const dot = document.createElement('button');
+                        dot.classList.add('yt-dot');
+                        dot.setAttribute('aria-label', `Go to slide ${i + 1}`);
+                        dot.addEventListener('click', () => goToSlide(i));
+                        dotsContainer.appendChild(dot);
+                    }
+                }
+
+                function updateCarousel() {
+                    if (slidesContainer) {
+                        slidesContainer.style.transform = `translateX(-${currentSlideIndex * 100}%)`;
+                    } else {
+                        console.error("Slides container not found during update.");
+                        return;
+                    }
+                    const dots = dotsContainer?.querySelectorAll('.yt-dot');
+                    if (dots) {
+                        dots.forEach((dot, index) => {
+                            dot.classList.toggle('active', index === currentSlideIndex);
+                        });
+                    }
+                    slides.forEach((slide, index) => {
+                        const iframe = slide.querySelector('iframe');
+                        if (iframe && index !== currentSlideIndex) {
+                            const currentSrc = iframe.getAttribute('src');
+                            if (currentSrc) {
+                               iframe.setAttribute('src', '');
+                               requestAnimationFrame(() => { // Use requestAnimationFrame for better timing
+                                   iframe.setAttribute('src', currentSrc);
+                               });
+                            }
                         }
                     });
-                };
+                }
 
-                const videoObserver = new IntersectionObserver(observerCallback, observerOptions);
-                videoObserver.observe(heroVideo); // Commence à observer la vidéo
-            }
-            // --- *** FIN Intersection Observer *** ---
+                function goToSlide(index) {
+                    if (index >= 0 && index < totalSlides) {
+                       currentSlideIndex = index;
+                       updateCarousel();
+                    }
+                }
+                function showNextSlide() {
+                    currentSlideIndex = (currentSlideIndex + 1) % totalSlides;
+                    updateCarousel();
+                }
+                function showPrevSlide() {
+                    currentSlideIndex = (currentSlideIndex - 1 + totalSlides) % totalSlides;
+                    updateCarousel();
+                }
 
-        });
+                if (nextButton) { nextButton.addEventListener('click', showNextSlide); }
+                else { console.warn("YouTube carousel 'next' button not found."); }
+                if (prevButton) { prevButton.addEventListener('click', showPrevSlide); }
+                else { console.warn("YouTube carousel 'previous' button not found."); }
 
+                createDots();
+                updateCarousel();
+            } // End if (carouselContainer)
+
+            // Close popup when clicking outside
+            window.addEventListener('click', function(event) {
+                if (event.target.classList.contains('transport-popup')) {
+                    closePopup(event.target.id);
+                }
+            });
+
+        }); // End DOMContentLoaded
     </script>
+
 </body>
 </html>
