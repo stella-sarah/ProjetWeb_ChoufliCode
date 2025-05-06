@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TuniFy Village - Inscription</title>
+    <title>TuniFy Village - Mot de passe oublié</title>
     <link rel="stylesheet" href="assets/css/styleback.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -55,8 +55,7 @@
             margin-bottom: 8px;
             display: block;
         }
-        .form-group input,
-        .form-group select {
+        .form-group input {
             width: 100%;
             padding: 12px;
             background-color: rgba(17, 17, 17, 0.5);
@@ -64,13 +63,7 @@
             border-radius: 4px;
             color: var(--light-text);
         }
-        .checkbox-label {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            color: var(--gold-light);
-        }
-        .login-btn {
+        .submit-btn {
             background-color: var(--gold-primary);
             color: var(--darker-bg);
             border: none;
@@ -79,12 +72,12 @@
             width: 100%;
             cursor: pointer;
         }
-        .signup-link {
+        .back-link {
             text-align: center;
             margin-top: 20px;
             color: var(--gold-light);
         }
-        .signup-link a {
+        .back-link a {
             color: var(--gold-primary);
             text-decoration: none;
         }
@@ -95,15 +88,9 @@
         <div class="logo">
             <img src="assets/images/logo.png" alt="TuniFy Logo">
             <h1>TuniFy</h1>
-            <p>INSCRIPTION</p>
+            <p>MOT DE PASSE OUBLIÉ</p>
         </div>
 
-        <?php if(isset($_SESSION['error'])): ?>
-            <div class="error-message">
-                <?php echo $_SESSION['error']; unset($_SESSION['error']); ?>
-            </div>
-        <?php endif; ?>
-        
         <?php if(isset($_SESSION['errors'])): ?>
             <div class="error-message">
                 <ul>
@@ -115,65 +102,18 @@
             <?php unset($_SESSION['errors']); ?>
         <?php endif; ?>
         
-        <form action="index.php?controller=auth&action=signup" method="post">
+        <form action="index.php?controller=auth&action=forgotPassword" method="post">
+            <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
             <div class="form-group">
                 <label for="email">Email</label>
-                <input type="text" id="email" name="email">
+                <input type="text" id="email" name="email" placeholder="Entrez votre email">
             </div>
             
-            <div class="form-group">
-                <label for="mot_de_passe">Mot de passe</label>
-                <input type="password" id="mot_de_passe" name="mot_de_passe">
-            </div>
-            
-            <div class="form-group">
-                <label for="nom">Nom</label>
-                <input type="text" id="nom" name="nom">
-            </div>
-            
-            <div class="form-group">
-                <label for="prenom">Prénom</label>
-                <input type="text" id="prenom" name="prenom">
-            </div>
-            
-            <div class="form-group">
-                <label for="genre">Genre</label>
-                <select id="genre" name="genre">
-                    <option value="">Sélectionner le genre</option>
-                    <option value="Homme">Homme</option>
-                    <option value="Femme">Femme</option>
-                </select>
-            </div>
-            
-            <div class="form-group">
-                <label for="date_naissance">Date de naissance</label>
-                <input type="text" id="date_naissance" name="date_naissance" placeholder="YYYY-MM-DD">
-            </div>
-            
-            <div class="form-group">
-                <label for="telephone">Téléphone</label>
-                <input type="text" id="telephone" name="telephone">
-            </div>
-            
-            <div class="form-group">
-                <label class="checkbox-label">
-                    <input type="checkbox" name="newsletter" value="1">
-                    Je souhaite recevoir la newsletter
-                </label>
-            </div>
-            
-            <div class="form-group">
-                <label class="checkbox-label">
-                    <input type="checkbox" name="accepte_conditions" value="1">
-                    J'accepte les conditions d'utilisation
-                </label>
-            </div>
-            
-            <button type="submit" class="login-btn">Créer un compte</button>
+            <button type="submit" class="submit-btn">Envoyer le lien de réinitialisation</button>
         </form>
 
-        <div class="signup-link">
-            Déjà un compte ? <a href="index.php?controller=auth&action=showLoginForm">Se connecter</a>
+        <div class="back-link">
+            <a href="index.php?controller=auth&action=showLoginForm">Retour à la connexion</a>
         </div>
     </div>
 </body>

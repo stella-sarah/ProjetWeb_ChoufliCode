@@ -1,68 +1,21 @@
 <?php
 session_start();
 
-// Include database and object files
-require_once "config/Database.php";
-require_once "controllers/UserController.php";
+require_once 'config/Database.php';
+require_once 'config/Mailer.php';
+require_once 'controllers/AuthController.php';
+require_once 'controllers/UserController.php';
 
-// Get controller and action from URL parameters
 $controller = isset($_GET['controller']) ? $_GET['controller'] : 'auth';
 $action = isset($_GET['action']) ? $_GET['action'] : 'showLoginForm';
 
-// Check if user is logged in
-$isLoggedIn = isset($_SESSION['user_id']);
+$db = new Database();
+$dbConnection = $db->getConnection();
 
-// List of public actions that don't require authentication
-$publicActions = ['showLoginForm', 'login', 'showSignupForm', 'signup'];
-
-// If not logged in and trying to access protected pages, redirect to login
-if(!$isLoggedIn && $controller != 'auth' && !in_array($action, $publicActions)) {
-    header("Location: index.php?controller=auth&action=showLoginForm");
-    exit;
-}
-
-// Route the request to the appropriate controller and action
-switch($controller) {
-    case 'user':
-        $userController = new UserController();
-        
-        switch($action) {
-            case 'index':
-                $userController->index();
-                break;
-            case 'create':
-                $userController->create();
-                break;
-            case 'store':
-                $userController->store();
-                break;
-            case 'edit':
-                $id = isset($_GET['id']) ? $_GET['id'] : null;
-                $userController->edit($id);
-                break;
-            case 'update':
-                $id = isset($_GET['id']) ? $_GET['id'] : null;
-                $userController->update($id);
-                break;
-            case 'profile':
-                $userController->profile();
-                break;
-            case 'delete':
-                $id = isset($_GET['id']) ? $_GET['id'] : null;
-                $userController->delete($id);
-                break;
-            default:
-                $userController->index();
-                break;
-        }
-        break;
-        
+switch ($controller) {
     case 'auth':
-    default:
-        require_once "controllers/AuthController.php";
-        $authController = new AuthController();
-        
-        switch($action) {
+        $authController = new AuthController($dbConnection);
+        switch ($action) {
             case 'showLoginForm':
                 $authController->showLoginForm();
                 break;
@@ -78,10 +31,57 @@ switch($controller) {
             case 'logout':
                 $authController->logout();
                 break;
+            case 'refreshCaptcha':
+                $authController->refreshCaptcha();
+                break;
+            case 'showForgotPasswordForm':
+                $authController->showForgotPasswordForm();
+                break;
+            case 'forgotPassword':
+                $authController->forgotPassword();
+                break;
+            case 'showResetPasswordForm':
+                $authController->showResetPasswordForm();
+                break;
+            case 'resetPassword':
+                $authController->resetPassword();
+                break;
             default:
                 $authController->showLoginForm();
                 break;
         }
+        break;
+
+    case 'user':
+        $userController = new UserController($dbConnection);
+        switch ($action) {
+            case 'index':
+                $userController->index();
+                break;
+            case 'store':
+                $userController->store();
+                break;
+            case 'edit':
+                $userController->edit();
+                break;
+            case 'update':
+                $userController->update();
+                break;
+            case 'delete':
+                $userController->delete();
+                break;
+            case 'profile':
+                $userController->profile();
+                break;
+            default:
+                $userController->index();
+                break;
+        }
+        break;
+
+    default:
+        $authController = new AuthController($dbConnection);
+        $authController->showLoginForm();
         break;
 }
 ?>
