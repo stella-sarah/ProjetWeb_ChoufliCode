@@ -2,70 +2,53 @@
 // add-announcement.php - Ajouter une nouvelle annonce dans la base de données TuniFy
 
 header('Content-Type: application/json');
-
-// Set UTC timezone for consistent date handling
 date_default_timezone_set('UTC');
 
 try {
-    // Include database configuration
     require_once '../../config.php';
-
-    // Get database connection
     $pdo = Config::getConnexion();
 
-    // Get POST data
-    $title = isset($_POST['title']) ? trim($_POST['title']) : '';
-    $content = isset($_POST['content']) ? trim($_POST['content']) : '';
-    $author = isset($_POST['author']) ? trim($_POST['author']) : '';
-    $publish_at = isset($_POST['publish_at']) ? trim($_POST['publish_at']) : '';
-
-    // Validate required fields
-    if (empty($title)) {
-        echo json_encode(['success' => false, 'message' => 'Le titre est requis']);
-        exit;
-    }
-    if (empty($content)) {
-        echo json_encode(['success' => false, 'message' => 'Le contenu est requis']);
-        exit;
-    }
-    if (empty($author)) {
-        echo json_encode(['success' => false, 'message' => 'L\'auteur est requis']);
-        exit;
+    // Vérifier les paramètres POST requis
+    if (!isset($_POST['title'], $_POST['content'], $_POST['author'])) {
+        throw new Exception('Le titre, le contenu et l\'auteur sont requis');
     }
 
-    // Validate publish_at if provided
+    $title = filter_var($_POST['title'], FILTER_SANITIZE_STRING);
+    $content = filter_var($_POST['content'], FILTER_SANITIZE_STRING);
+    $author = filter_var($_POST['author'], FILTER_SANITIZE_STRING);
+    $publish_at = isset($_POST['publish_at']) ? trim($_POST['publish_at']) : null;
+
+    if (empty($title) || empty($content) || empty($author)) {
+        throw new Exception('Le titre, le contenu et l\'auteur ne peuvent pas être vides');
+    }
+
+    // Valider la date de publication si fournie
     if ($publish_at) {
-        // Ensure publish_at is in correct format (YYYY-MM-DD HH:MM:SS)
         if (!preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/', $publish_at)) {
-            echo json_encode(['success' => false, 'message' => 'Format de date invalide (attendu : YYYY-MM-DD HH:MM:SS)']);
-            exit;
+            throw new Exception('Format de date invalide (attendu : YYYY-MM-DD HH:MM:SS)');
         }
 
-        // Check if publish_at is in the future (1-minute buffer)
-        $publish_timestamp = strtotime($publish_at);
-        if ($publish_timestamp === false || $publish_timestamp <= time() + 60) {
-            echo json_encode(['success' => false, 'message' => 'Erreur : La date de publication doit être dans le futur (au moins 1 minute)']);
-            exit;
+        if (strtotime($publish_at) <= time()) {
+            throw new Exception('La date de publication doit être dans le futur');
         }
     }
 
-    // Prepare SQL statement
-    $sql = 'INSERT INTO announcements (title, content, author, publish_at, created_at) VALUES (?, ?, ?, ?, NOW())';
-    $stmt = $pdo->prepare($sql);
-
-    // Bind parameters
+    $query = 'INSERT INTO announcements (title, content, author, created_at, publish_at) 
+              VALUES (:title, :content, :author, NOW(), :publish_at)';
+    $stmt = $pdo->prepare($query);
     $stmt->execute([
-        $title,
-        $content,
-        $author,
-        $publish_at ?: null // Use null if publish_at is empty
+        'title' => $title,
+        'content' => $content,
+        'author' => $author,
+        'publish_at' => $publish_at ?: null
     ]);
 
-    // Return success response
-    echo json_encode(['success' => true, 'message' => 'Annonce enregistrée avec succès']);
+    echo json_encode([
+        'success' => true,
+        'message' => 'Annonce ajoutée avec succès'
+    ]);
 
 } catch (Exception $e) {
-    // Log error to file
     error_log("Erreur lors de l'ajout de l'annonce : " . $e->getMessage(), 3, __DIR__ . '/error.log');
     http_response_code(400);
     echo json_encode([

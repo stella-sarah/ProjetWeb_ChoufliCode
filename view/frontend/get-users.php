@@ -1,33 +1,53 @@
 <?php
 header('Content-Type: application/json; charset=UTF-8');
-header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type");
+header("Access-Control-Allow-Origin: *"); // À remplacer par votre domaine en production
+header("Access-Control-Allow-Credentials: true");
 
 require_once __DIR__.'/../../config.php';
 
+// Activer le logging des erreurs
 ini_set('display_errors', 0);
 ini_set('log_errors', 1);
+error_log("Début de get-users.php");
 
 try {
+    session_start();
+    
+    if (!isset($_SESSION['user_id'])) {
+        throw new Exception('Utilisateur non authentifié', 401);
+    }
+
+    $current_user_id = $_SESSION['user_id'];
+    error_log("User ID: ".$current_user_id);
+
     $pdo = config::getConnexion();
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-    // Requête pour récupérer tous les utilisateurs
+    // Requête optimisée avec gestion des valeurs NULL
     $sql = "SELECT 
                 id, 
                 email,
-                COALESCE(NULLIF(CONCAT(TRIM(prenom), ' ', TRIM(nom)), ''), email) AS display_name
+                CASE 
+                    WHEN CONCAT(COALESCE(prenom,''), ' ', COALESCE(nom,'')) = ' ' THEN email
+                    ELSE CONCAT(COALESCE(prenom,''), ' ', COALESCE(nom,''))
+                END AS display_name
             FROM users 
-            WHERE email IS NOT NULL
+            WHERE id != ? 
+            AND email IS NOT NULL
             ORDER BY display_name ASC";
 
-    $stmt = $pdo->query($sql);
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([$current_user_id]);
     $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    error_log("Nombre d'utilisateurs trouvés: ".count($users));
+
+    if (empty($users)) {
+        error_log("Aucun utilisateur trouvé (sauf l'utilisateur courant)");
+    }
 
     echo json_encode([
         'success' => true,
-        'count' => count($users),
         'users' => array_map(function($user) {
             return [
                 'id' => (int)$user['id'],
@@ -35,19 +55,21 @@ try {
                 'email' => $user['email']
             ];
         }, $users)
-    ], JSON_UNESCAPED_UNICODE);
+    ]);
 
 } catch (PDOException $e) {
+    error_log("Erreur PDO: ".$e->getMessage());
     http_response_code(500);
     echo json_encode([
         'success' => false,
-        'message' => 'Database error',
+        'message' => 'Erreur de base de données',
         'error' => $e->getMessage()
-    ], JSON_UNESCAPED_UNICODE);
+    ]);
 } catch (Exception $e) {
-    http_response_code(400);
+    error_log("Erreur générale: ".$e->getMessage());
+    http_response_code($e->getCode() ?: 400);
     echo json_encode([
         'success' => false,
         'message' => $e->getMessage()
-    ], JSON_UNESCAPED_UNICODE);
+    ]);
 }

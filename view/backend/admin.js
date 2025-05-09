@@ -278,11 +278,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     showNotification('Veuillez sélectionner une date et une heure de publication.', 'error');
                     return;
                 }
-                const publishDateTime = new Date(Date.parse(publishDatetime + ':00Z'));
-                const now = new Date();
-                const bufferTime = new Date(now.getTime() + 60 * 1000); // 1-minute buffer
-                if (isNaN(publishDateTime.getTime()) || publishDateTime <= bufferTime) {
-                    showNotification('La date et l\'heure de publication doivent être dans le futur (au moins 1 minute).', 'error');
+                
+                // Envoyer la date au format correct (YYYY-MM-DD HH:MM:SS)
+                const publishDateTime = new Date(publishDatetime + ':00Z');
+                if (isNaN(publishDateTime.getTime())) {
+                    showNotification('Date et heure de publication invalides.', 'error');
                     return;
                 }
             }
@@ -292,11 +292,7 @@ document.addEventListener('DOMContentLoaded', function() {
             formData.append('title', title);
             formData.append('author', author);
             formData.append('content', content);
-            if (isScheduled && publishDatetime) {
-                formData.append('publish_at', publishDatetime + ':00');
-            } else {
-                formData.append('publish_at', '');
-            }
+            formData.append('publish_at', isScheduled ? publishDatetime + ':00' : '');
 
             fetch('update-announcement.php', {
                 method: 'POST',

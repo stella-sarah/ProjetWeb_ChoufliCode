@@ -2,15 +2,10 @@
 // update-announcement.php - Mettre à jour une annonce existante dans la base de données TuniFy
 
 header('Content-Type: application/json');
-
-// Set UTC timezone for consistent date handling
 date_default_timezone_set('UTC');
 
 try {
-    // Include database configuration
     require_once '../../config.php';
-
-    // Get database connection
     $pdo = Config::getConnexion();
 
     // Get POST data
@@ -46,10 +41,15 @@ try {
             exit;
         }
 
-        // Check if publish_at is in the future (1-minute buffer)
-        $publish_timestamp = strtotime($publish_at);
-        if ($publish_timestamp === false || $publish_timestamp <= time() + 60) {
-            echo json_encode(['success' => false, 'message' => 'Erreur : La date de publication doit être dans le futur (au moins 1 minute)']);
+        // Get current publish_at from database
+        $stmt = $pdo->prepare('SELECT publish_at FROM announcements WHERE id = ?');
+        $stmt->execute([$id]);
+        $current_publish_at = $stmt->fetchColumn();
+
+        // Only validate future date if it's a new schedule or changed schedule
+        if ((!$current_publish_at || $current_publish_at === '0000-00-00 00:00:00') && 
+            strtotime($publish_at) <= time()) {
+            echo json_encode(['success' => false, 'message' => 'Erreur : La date de publication doit être dans le futur']);
             exit;
         }
     }
@@ -71,7 +71,7 @@ try {
         $title,
         $content,
         $author,
-        $publish_at ?: null, // Use null if publish_at is empty
+        $publish_at ?: null,
         $id
     ]);
 
@@ -79,7 +79,6 @@ try {
     echo json_encode(['success' => true, 'message' => 'Annonce mise à jour avec succès']);
 
 } catch (Exception $e) {
-    // Log error to file
     error_log("Erreur lors de la mise à jour de l'annonce : " . $e->getMessage(), 3, __DIR__ . '/error.log');
     http_response_code(400);
     echo json_encode([

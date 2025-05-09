@@ -1,159 +1,94 @@
 <?php
 header('Content-Type: application/json; charset=UTF-8');
-header("Access-Control-Allow-Origin: http://localhost:3000");
-header("Access-Control-Allow-Methods: POST, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type");
-header("Access-Control-Allow-Credentials: true");
+require_once '../../config.php';
 
-require_once __DIR__.'/../../config.php';
+session_start();
 
-// Gestion des requêtes OPTIONS
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    exit(0);
+if (!isset($_SESSION['user_id'])) {
+    echo json_encode(['success' => false, 'message' => 'Non authentifié'], JSON_UNESCAPED_UNICODE);
+    exit;
 }
 
-// Configuration du rapport d'erreurs
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-
-// Initialisation de la session
-if (session_status() === PHP_SESSION_NONE) {
-    session_start([
-        'cookie_lifetime' => 86400,
-        'cookie_secure' => false,
-        'cookie_httponly' => true,
-        'cookie_samesite' => 'Lax'
-    ]);
+// Vérification des données POST
+if (!isset($_POST['recipient_id']) || !isset($_POST['content'])) {
+    echo json_encode(['success' => false, 'message' => 'Données manquantes'], JSON_UNESCAPED_UNICODE);
+    exit;
 }
 
-set_error_handler(function($severity, $message, $file, $line) {
-    throw new ErrorException($message, 0, $severity, $file, $line);
-});
+$recipient_id = (int)$_POST['recipient_id'];
+$content = trim($_POST['content']);
+
+// Validation des données
+if ($recipient_id <= 0) {
+    echo json_encode(['success' => false, 'message' => 'Destinataire invalide'], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
+if (empty($content)) {
+    echo json_encode(['success' => false, 'message' => 'Le message ne peut pas être vide'], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
+if (strlen($content) > 1000) {
+    echo json_encode(['success' => false, 'message' => 'Le message est trop long (max 1000 caractères)'], JSON_UNESCAPED_UNICODE);
+    exit;
+}
 
 try {
-    // Vérifier si l'utilisateur est connecté
-    if (!isset($_SESSION['user_id'])) {
-        throw new Exception('Non authentifié', 401);
-    }
-
-    // Récupération des données
-    $input = file_get_contents('php://input');
-    if ($input === false) {
-        throw new Exception('Impossible de lire les données d\'entrée');
-    }
-    
-    $data = json_decode($input, true);
-    if ($data === null && json_last_error() !== JSON_ERROR_NONE) {
-        throw new Exception('Format JSON invalide: ' . json_last_error_msg());
-    }
-    
-    $recipient_id = $data['recipient_id'] ?? null;
-    $content = $data['content'] ?? null;
-
-    // Validation basique
-    if ($recipient_id === null || $content === null) {
-        throw new Exception('Données manquantes');
-    }
-    
-    $recipient_id = (int)$recipient_id;
-    $content = trim($content);
-
-    if ($recipient_id <= 0) {
-        throw new Exception('Destinataire invalide');
-    }
-
-    if (empty($content)) {
-        throw new Exception('Le message ne peut pas être vide');
-    }
-
-    if (strlen($content) > 1000) {
-        throw new Exception('Message trop long (max 1000 caractères)');
-    }
-
-    // Protection XSS
-    $content = htmlspecialchars($content, ENT_QUOTES | ENT_HTML5, 'UTF-8');
-
-    // Connexion à la base de données
     $pdo = Config::getConnexion();
-    $pdo->beginTransaction();
-
-    // 1. Vérification du destinataire
-    $stmt = $pdo->prepare("SELECT id FROM users WHERE id = ?");
-    $stmt->execute([$recipient_id]);
+    
+    // Vérification du destinataire
+    $stmt = $pdo->prepare("SELECT id FROM users WHERE id = ? AND id != ?");
+    $stmt->execute([$recipient_id, $_SESSION['user_id']]);
     
     if (!$stmt->fetch()) {
-        throw new Exception('Destinataire introuvable');
+        echo json_encode(['success' => false, 'message' => 'Destinataire invalide'], JSON_UNESCAPED_UNICODE);
+        exit;
     }
-
-    // 2. Gestion de la conversation
-    $sender_id = $_SESSION['user_id'];
-    
-    // Détermination des IDs pour la conversation
-    $id1 = min($sender_id, $recipient_id);
-    $id2 = max($sender_id, $recipient_id);
 
     // Recherche de conversation existante
     $stmt = $pdo->prepare("
         SELECT id FROM conversations 
-        WHERE user1_id = ? AND user2_id = ?
+        WHERE (user1_id = ? AND user2_id = ?)
+        OR (user1_id = ? AND user2_id = ?)
         LIMIT 1
     ");
-    $stmt->execute([$id1, $id2]);
-    $conversation = $stmt->fetch();
-
-    if (!$conversation) {
-        // Création d'une nouvelle conversation
-        $stmt = $pdo->prepare("
-            INSERT INTO conversations (user1_id, user2_id, created_at, updated_at) 
-            VALUES (?, ?, NOW(), NOW())
-        ");
-        $stmt->execute([$id1, $id2]);
-        $conversation_id = $pdo->lastInsertId();
+    $stmt->execute([$_SESSION['user_id'], $recipient_id, $recipient_id, $_SESSION['user_id']]);
+    
+    if ($conversation = $stmt->fetch()) {
+        $conversationId = $conversation['id'];
     } else {
-        $conversation_id = $conversation['id'];
+        // Création nouvelle conversation
+        $stmt = $pdo->prepare("INSERT INTO conversations (user1_id, user2_id) VALUES (?, ?)");
+        $stmt->execute([$_SESSION['user_id'], $recipient_id]);
+        $conversationId = $pdo->lastInsertId();
     }
 
-    // 3. Envoi du message
+    // Insertion du message (avec protection XSS)
     $stmt = $pdo->prepare("
-        INSERT INTO messages (conversation_id, sender_id, content, created_at) 
-        VALUES (?, ?, ?, NOW())
+        INSERT INTO messages (conversation_id, sender_id, content)
+        VALUES (?, ?, ?)
     ");
-    
-    $stmt->execute([$conversation_id, $sender_id, $content]);
-    $messageId = $pdo->lastInsertId();
+    $stmt->execute([
+        $conversationId, 
+        $_SESSION['user_id'], 
+        htmlspecialchars($content, ENT_QUOTES, 'UTF-8')
+    ]);
 
-    // Mise à jour de la date de la conversation
-    $stmt = $pdo->prepare("
-        UPDATE conversations SET updated_at = NOW() WHERE id = ?
-    ");
-    $stmt->execute([$conversation_id]);
+    // Mise à jour timestamp conversation
+    $pdo->prepare("UPDATE conversations SET updated_at = NOW() WHERE id = ?")
+        ->execute([$conversationId]);
 
-    $pdo->commit();
-
-    // Réponse succès
     echo json_encode([
         'success' => true,
-        'message_id' => $messageId,
-        'conversation_id' => $conversation_id,
-        'message' => 'Message envoyé avec succès'
+        'conversation_id' => $conversationId
     ], JSON_UNESCAPED_UNICODE);
 
 } catch (PDOException $e) {
-    if (isset($pdo) && $pdo->inTransaction()) {
-        $pdo->rollBack();
-    }
-    http_response_code(500);
-    error_log("PDO Error: " . $e->getMessage());
+    error_log("Erreur PDO: " . $e->getMessage());
     echo json_encode([
         'success' => false,
         'message' => 'Erreur de base de données',
-        'error' => Config::DEBUG_MODE ? $e->getMessage() : null
-    ]);
-} catch (Exception $e) {
-    http_response_code($e->getCode() ?: 400);
-    echo json_encode([
-        'success' => false,
-        'message' => $e->getMessage(),
-        'error' => Config::DEBUG_MODE ? $e->getMessage() : null
-    ]);
+        'error' => $e->getMessage()
+    ], JSON_UNESCAPED_UNICODE);
 }

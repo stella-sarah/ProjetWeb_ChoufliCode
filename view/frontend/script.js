@@ -817,22 +817,9 @@ class MessagingSystem {
             
             const response = await fetch('start-conversation.php', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json', // Changez ceci
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify({ // Modifiez ceci
-                    recipient_id: recipientId,
-                    content: message
-                }),
+                body: formData,
                 credentials: 'include'
             });
-            
-            // Ajoutez cette vérification
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => null);
-                throw new Error(errorData?.message || `Erreur HTTP: ${response.status}`);
-            }
             
             const data = await response.json();
             
@@ -850,28 +837,9 @@ class MessagingSystem {
             } else {
                 showNotification('error', data.message || 'Erreur lors de la création');
             }
-        }  catch (error) {
+        } catch (error) {
             console.error('Error starting conversation:', error);
-            
-            let errorMsg = 'Erreur réseau lors de la création';
-            if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
-                errorMsg = 'Impossible de se connecter au serveur';
-            } else if (error.message) {
-                errorMsg = error.message;
-            }
-            
-            showNotification('error', errorMsg);
-            
-            // Affichez plus de détails en développement
-            if (Config.DEBUG_MODE) {
-                console.group('Détails de l\'erreur');
-                console.log('URL:', 'start-conversation.php');
-                console.log('Données envoyées:', {
-                    recipient_id: recipientId,
-                    content: message
-                });
-                console.groupEnd();
-            }
+            showNotification('error', 'Erreur réseau lors de la création');
         }
     }
 }
