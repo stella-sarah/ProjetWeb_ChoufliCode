@@ -1,66 +1,82 @@
 <?php
 header('Content-Type: application/json; charset=UTF-8');
-header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Origin: http://localhost"); // Remplacer par votre domaine
 header("Access-Control-Allow-Credentials: true");
 
-// Activer le rapport d'erreurs
+// Configuration des erreurs
 ini_set('display_errors', 0);
 ini_set('log_errors', 1);
 error_reporting(E_ALL);
 
-require_once '../../config.php';
+// Inclure la configuration
+require_once __DIR__ . '/../../config.php';
 
-// Enregistrer les erreurs dans un fichier
-file_put_contents('php_error_log.txt', PHP_EOL.date('Y-m-d H:i:s')." - Starting script", FILE_APPEND);
+// À des fins de test uniquement
+$_SESSION['user_id'] = 1; // Supprimez après résolution
 
 try {
-    session_start();
-    
-    if (!isset($_SESSION['user_id'])) {
-        throw new Exception('Non authentifié', 401);
+    // Vérification d'authentification
+    if (empty($_SESSION['user_id'])) {
+        error_log("Erreur: Aucun user_id en session");
+        throw new Exception('Authentification requise', 401);
     }
 
-    $pdo = config::getConnexion();
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    
-    $stmt = $pdo->prepare("
+    $current_user_id = (int)$_SESSION['user_id'];
+    error_log("Tentative de chargement des conversations pour user ID: $current_user_id");
+
+    $pdo = Config::getConnexion();
+
+    // Vérification que l'utilisateur existe et est actif
+    $stmt = $pdo->prepare("SELECT 1 FROM users WHERE id = ? AND active = 1 LIMIT 1");
+    $stmt->execute([$current_user_id]);
+    if (!$stmt->fetch()) {
+        throw new Exception('Utilisateur invalide ou inactif', 403);
+    }
+
+    // Requête optimisée avec jointures
+    $sql = "
         SELECT 
             c.id,
-            CASE 
-                WHEN c.user1_id = :user_id THEN c.user2_id
-                ELSE c.user1_id
-            END AS recipient_id,
+            IF(c.user1_id = :user_id, c.user2_id, c.user1_id) AS recipient_id,
             COALESCE(
-                CASE 
-                    WHEN c.user1_id = :user_id THEN CONCAT(u2.prenom, ' ', u2.nom)
-                    ELSE CONCAT(u1.prenom, ' ', u1.nom)
-                END,
-                CASE 
-                    WHEN c.user1_id = :user_id THEN u2.email
-                    ELSE u1.email
-                END
+                IF(c.user1_id = :user_id, 
+                    CONCAT(u2.prenom, ' ', u2.nom), 
+                    CONCAT(u1.prenom, ' ', u1.nom)
+                ),
+                'Utilisateur'
             ) AS recipient_name,
-            (SELECT content FROM messages 
-             WHERE conversation_id = c.id 
-             ORDER BY created_at DESC LIMIT 1) AS last_message,
-            (SELECT created_at FROM messages 
-             WHERE conversation_id = c.id 
-             ORDER BY created_at DESC LIMIT 1) AS last_message_time,
-            (SELECT COUNT(*) FROM messages 
-             WHERE conversation_id = c.id 
-             AND sender_id != :user_id 
-             AND is_read = 0) AS unread_count
+            m.content AS last_message,
+            m.created_at AS last_message_time,
+            COALESCE((
+                SELECT COUNT(*) 
+                FROM messages m2 
+                WHERE m2.conversation_id = c.id 
+                  AND m2.sender_id != :user_id 
+                  AND m2.is_read = 0
+            ), 0) AS unread_count
         FROM conversations c
         LEFT JOIN users u1 ON c.user1_id = u1.id
         LEFT JOIN users u2 ON c.user2_id = u2.id
+        LEFT JOIN (
+            SELECT conversation_id, content, created_at
+            FROM messages
+            WHERE id IN (
+                SELECT MAX(id)
+                FROM messages
+                GROUP BY conversation_id
+            )
+        ) m ON c.id = m.conversation_id
         WHERE c.user1_id = :user_id OR c.user2_id = :user_id
-        ORDER BY last_message_time DESC
-    ");
-    
-    $stmt->execute([':user_id' => $_SESSION['user_id']]);
+        ORDER BY COALESCE(m.created_at, c.created_at) DESC
+    ";
+
+    $stmt = $pdo->prepare($sql);
+    $stmt->bindParam(':user_id', $current_user_id, PDO::PARAM_INT);
+    $stmt->execute();
+
     $conversations = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // Valider et formater les données
+    // Formatage de la réponse
     $response = [
         'success' => true,
         'conversations' => array_map(function($conv) {
@@ -78,7 +94,7 @@ try {
     echo json_encode($response);
 
 } catch (PDOException $e) {
-    file_put_contents('php_error_log.txt', PHP_EOL.$e->getMessage(), FILE_APPEND);
+    error_log("Erreur PDO: " . $e->getMessage());
     http_response_code(500);
     echo json_encode([
         'success' => false,
@@ -86,10 +102,12 @@ try {
         'error' => $e->getMessage()
     ]);
 } catch (Exception $e) {
-    file_put_contents('php_error_log.txt', PHP_EOL.$e->getMessage(), FILE_APPEND);
+    error_log("Erreur: " . $e->getMessage());
     http_response_code($e->getCode() ?: 400);
     echo json_encode([
         'success' => false,
-        'message' => $e->getMessage()
+        'message' => $e->getMessage(),
+        'code' => $e->getCode()
     ]);
 }
+?>

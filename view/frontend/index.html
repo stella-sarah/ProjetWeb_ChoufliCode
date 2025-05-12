@@ -25,7 +25,6 @@
                     <li><a href="#"><i class="fas fa-map-marked-alt"></i> Régions</a></li>
                     <li><a href="#"><i class="fas fa-user"></i> Profil</a></li>
                     <li><a href="#"><i class="fas fa-envelope"></i> Contact</a></li>
-                    <li><a href="#" id="messages-link"><i class="fas fa-envelope"></i> Messages</a></li>
                 </ul>
             </div>
         </div>
@@ -282,7 +281,14 @@
             </div>
         </div>
     </footer>
-
+    <div class="floating-messages">
+        <div class="message-bubble" id="messages-trigger">
+            <i class="fas fa-comment-dots"></i>
+            <span class="message-count">1</span>
+        </div>
+        <div class="message-tooltip">Messages</div>
+    </div>
     <script src="script.js?v=2"></script>
+    <script src="messaging.js"></script>
 </body>
 </html>

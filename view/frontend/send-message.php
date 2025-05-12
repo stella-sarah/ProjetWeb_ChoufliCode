@@ -1,77 +1,100 @@
 <?php
 header('Content-Type: application/json; charset=UTF-8');
+
+// Inclure la configuration
 require_once '../../config.php';
 
-session_start();
-
-if (!isset($_SESSION['user_id'])) {
-    echo json_encode(['success' => false, 'message' => 'Non authentifié'], JSON_UNESCAPED_UNICODE);
+// Vérification d'authentification
+if (empty($_SESSION['user_id'])) {
+    http_response_code(401);
+    echo json_encode([
+        'success' => false,
+        'message' => 'Non authentifié'
+    ]);
     exit;
 }
 
-if (!isset($_POST['conversation_id']) || !isset($_POST['content'])) {
-    echo json_encode(['success' => false, 'message' => 'Données manquantes'], JSON_UNESCAPED_UNICODE);
-    exit;
+$user_id = (int)$_SESSION['user_id'];
+
+// Validation des champs requis
+$required_fields = ['conversation_id', 'content'];
+foreach ($required_fields as $field) {
+    if (empty($_POST[$field])) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => "Champ manquant : $field"]);
+        exit;
+    }
 }
 
 $conversation_id = (int)$_POST['conversation_id'];
 $content = trim($_POST['content']);
 
-// Validation
+// Validation logique
 if ($conversation_id <= 0) {
-    echo json_encode(['success' => false, 'message' => 'Conversation invalide'], JSON_UNESCAPED_UNICODE);
+    http_response_code(400);
+    echo json_encode(['success' => false, 'message' => 'ID conversation invalide']);
     exit;
 }
 
-if (empty($content)) {
-    echo json_encode(['success' => false, 'message' => 'Le message ne peut pas être vide'], JSON_UNESCAPED_UNICODE);
+if ($content === '') {
+    http_response_code(400);
+    echo json_encode(['success' => false, 'message' => 'Message vide']);
     exit;
 }
 
-if (strlen($content) > 1000) {
-    echo json_encode(['success' => false, 'message' => 'Message trop long (max 1000 caractères)'], JSON_UNESCAPED_UNICODE);
+if (mb_strlen($content) > 1000) {
+    http_response_code(400);
+    echo json_encode(['success' => false, 'message' => 'Message trop long (max 1000 caractères)']);
     exit;
 }
 
 try {
-    $pdo = config::getConnexion();
-    
-    // Vérifier que l'utilisateur fait partie de la conversation
+    $pdo = Config::getConnexion();
+
+    // Vérifier que l'utilisateur appartient à la conversation
     $stmt = $pdo->prepare("
-        SELECT id FROM conversations 
-        WHERE id = ? 
-        AND (user1_id = ? OR user2_id = ?)
-        LIMIT 1
+        SELECT id FROM conversations
+        WHERE id = :conv_id AND (user1_id = :uid OR user2_id = :uid)
     ");
-    $stmt->execute([$conversation_id, $_SESSION['user_id'], $_SESSION['user_id']]);
-    
+    $stmt->execute([
+        ':conv_id' => $conversation_id,
+        ':uid' => $user_id
+    ]);
+
     if (!$stmt->fetch()) {
-        echo json_encode(['success' => false, 'message' => 'Conversation non trouvée'], JSON_UNESCAPED_UNICODE);
+        http_response_code(403);
+        echo json_encode(['success' => false, 'message' => 'Accès non autorisé à la conversation']);
         exit;
     }
 
     // Insérer le message
-    $stmt = $pdo->prepare("
-        INSERT INTO messages (conversation_id, sender_id, content)
-        VALUES (?, ?, ?)
+    $insert = $pdo->prepare("
+        INSERT INTO messages (conversation_id, sender_id, content, created_at)
+        VALUES (:conv_id, :sender_id, :content, NOW())
     ");
-    $stmt->execute([
-        $conversation_id,
-        $_SESSION['user_id'],
-        htmlspecialchars($content, ENT_QUOTES, 'UTF-8')
+    $insert->execute([
+        ':conv_id' => $conversation_id,
+        ':sender_id' => $user_id,
+        ':content' => htmlspecialchars($content, ENT_QUOTES, 'UTF-8')
     ]);
 
-    // Mettre à jour la conversation
-    $pdo->prepare("UPDATE conversations SET updated_at = NOW() WHERE id = ?")
-        ->execute([$conversation_id]);
+    // Mettre à jour la date de mise à jour de la conversation
+    $pdo->prepare("UPDATE conversations SET updated_at = NOW() WHERE id = :conv_id")
+        ->execute([':conv_id' => $conversation_id]);
 
-    echo json_encode(['success' => true], JSON_UNESCAPED_UNICODE);
+    // Réponse succès avec ID du message
+    echo json_encode([
+        'success' => true,
+        'message_id' => $pdo->lastInsertId()
+    ]);
 
 } catch (PDOException $e) {
-    error_log("Erreur PDO: " . $e->getMessage());
+    error_log("Erreur PDO - send-message.php: " . $e->getMessage());
+    http_response_code(500);
     echo json_encode([
         'success' => false,
         'message' => 'Erreur de base de données',
         'error' => $e->getMessage()
-    ], JSON_UNESCAPED_UNICODE);
+    ]);
 }
+?>

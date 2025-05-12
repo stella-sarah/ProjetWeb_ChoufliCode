@@ -1,4 +1,77 @@
 document.addEventListener('DOMContentLoaded', function() {
+    // Sidebar Toggle
+    const sidebar = document.getElementById('sidebar');
+    const mainContent = document.getElementById('main-content');
+    const sidebarToggle = document.getElementById('sidebar-toggle');
+
+    if (sidebar && mainContent && sidebarToggle) {
+        sidebarToggle.addEventListener('click', function() {
+            sidebar.classList.toggle('active');
+            mainContent.classList.toggle('expanded');
+        });
+    } else {
+        console.warn('Éléments sidebar, main-content ou sidebar-toggle non trouvés.');
+    }
+
+    // Dropdown Menu Toggle
+    const dropdownToggles = document.querySelectorAll('.dropdown-toggle');
+    dropdownToggles.forEach(toggle => {
+        toggle.addEventListener('click', function(e) {
+            e.preventDefault();
+            const targetId = this.getAttribute('data-target');
+            const submenu = document.getElementById(targetId);
+            if (submenu) {
+                submenu.classList.toggle('show');
+                const chevron = this.querySelector('.fa-chevron-down');
+                if (chevron) {
+                    chevron.classList.toggle('fa-chevron-up');
+                    chevron.classList.toggle('fa-chevron-down');
+                }
+            }
+        });
+    });
+
+    // Set Active Menu Item
+    if (typeof $ !== 'undefined') {
+        const currentPath = window.location.href;
+        let itemFound = false;
+
+        // Try exact match first
+        $('.sidebar-nav a').each(function() {
+            if (this.href && currentPath === this.href) {
+                $('.sidebar-nav li.active').removeClass('active');
+                $(this).closest('li').addClass('active');
+                // If it's inside a submenu, show the submenu
+                let parentSubmenu = $(this).closest('.submenu');
+                if (parentSubmenu.length > 0 && !parentSubmenu.hasClass('show')) {
+                    parentSubmenu.addClass('show');
+                    let parentToggle = parentSubmenu.prev('.dropdown-toggle');
+                    if (parentToggle.length > 0) {
+                        let chevron = parentToggle.find('.fa-chevron-down');
+                        if (chevron.length > 0) {
+                            chevron.removeClass('fa-chevron-down').addClass('fa-chevron-up');
+                        }
+                    }
+                }
+                itemFound = true;
+                return false;
+            }
+        });
+
+        // Fallback for controller-based matching
+        if (!itemFound) {
+            if (currentPath.includes('controller=forum')) {
+                $('.sidebar-nav a[href*="controller=forum"]').closest('li').addClass('active');
+            } else if (currentPath.includes('controller=user')) {
+                $('.sidebar-nav a[href*="controller=user&action=index"]').closest('li').addClass('active');
+            } else if (currentPath.includes('controller=auth&action=logout')) {
+                $('.sidebar-nav a[href*="controller=auth&action=logout"]').closest('li').addClass('active');
+            }
+        }
+    } else {
+        console.warn("jQuery n'est pas chargé. La gestion avancée du menu actif pourrait ne pas fonctionner.");
+    }
+
     // Gestion des onglets
     const tabButtons = document.querySelectorAll('.tab-btn');
     const tabContents = document.querySelectorAll('.tab-content');
@@ -159,6 +232,61 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
+    // Fonction pour afficher les notifications
+    function showNotification(message, type) {
+        const container = document.querySelector('.notification-container') || createNotificationContainer();
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        const icon = type === 'success' ? 'fas fa-check-circle' :
+                     type === 'error' ? 'fas fa-exclamation-circle' :
+                     type === 'warning' ? 'fas fa-exclamation-triangle' : 'fas fa-info-circle';
+        notification.innerHTML = `<i class="${icon}"></i> ${message}`;
+        container.appendChild(notification);
+        setTimeout(() => notification.remove(), 3500);
+    }
+
+    function createNotificationContainer() {
+        const container = document.createElement('div');
+        container.className = 'notification-container';
+        document.body.appendChild(container);
+        return container;
+    }
+
+    // Fonction pour afficher le modal de confirmation
+    function showConfirmation(message, callback) {
+        const modal = document.getElementById('confirmation-modal');
+        const messageEl = document.getElementById('confirmation-message');
+        const confirmBtn = document.getElementById('confirm-action');
+        const cancelBtn = document.getElementById('cancel-action');
+
+        if (!modal || !messageEl || !confirmBtn || !cancelBtn) {
+            console.error('Éléments du modal de confirmation manquants.');
+            showNotification('Erreur: Modal de confirmation incomplet.', 'error');
+            return;
+        }
+
+        messageEl.textContent = message;
+        modal.style.display = 'block';
+
+        const confirmHandler = () => {
+            callback(true);
+            modal.style.display = 'none';
+            confirmBtn.removeEventListener('click', confirmHandler);
+            cancelBtn.removeEventListener('click', cancelHandler);
+        };
+
+        const cancelHandler = () => {
+            callback(false);
+            modal.style.display = 'none';
+            confirmBtn.removeEventListener('click', confirmHandler);
+            cancelBtn.removeEventListener('click', cancelHandler);
+        };
+
+        confirmBtn.addEventListener('click', confirmHandler);
+        cancelBtn.addEventListener('click', cancelHandler);
+        document.getElementById('close-confirmation-modal').addEventListener('click', cancelHandler);
+    }
+
     // Fonction pour ouvrir le modal de modification
     function openEditModal(id) {
         if (!id) {
@@ -196,7 +324,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 authorField.value = author;
                 contentField.value = content;
 
-                // Gérer la planification
                 if (publish_at && publish_at !== '0000-00-00 00:00:00') {
                     scheduleField.checked = true;
                     editScheduleFields.forEach(field => {
@@ -256,7 +383,6 @@ document.addEventListener('DOMContentLoaded', function() {
             const isScheduled = scheduleField.checked;
             const publishDatetime = datetimeField.value;
 
-            // Validation
             if (!id) {
                 showNotification('Erreur: ID d\'annonce manquant.', 'error');
                 return;
@@ -278,8 +404,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     showNotification('Veuillez sélectionner une date et une heure de publication.', 'error');
                     return;
                 }
-                
-                // Envoyer la date au format correct (YYYY-MM-DD HH:MM:SS)
                 const publishDateTime = new Date(publishDatetime + ':00Z');
                 if (isNaN(publishDateTime.getTime())) {
                     showNotification('Date et heure de publication invalides.', 'error');
@@ -340,7 +464,6 @@ document.addEventListener('DOMContentLoaded', function() {
             const isScheduled = scheduleField.checked;
             const publishDatetime = datetimeField.value;
 
-            // Validation
             if (!title) {
                 showNotification('Veuillez ajouter un titre à l\'annonce.', 'error');
                 return;
@@ -360,7 +483,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
                 const publishDateTime = new Date(Date.parse(publishDatetime + ':00Z'));
                 const now = new Date();
-                const bufferTime = new Date(now.getTime() + 60 * 1000); // 1-minute buffer
+                const bufferTime = new Date(now.getTime() + 60 * 1000);
                 if (isNaN(publishDateTime.getTime()) || publishDateTime <= bufferTime) {
                     showNotification('La date et l\'heure de publication doivent être dans le futur (au moins 1 minute).', 'error');
                     return;
@@ -461,9 +584,21 @@ document.addEventListener('DOMContentLoaded', function() {
         const { column, direction } = sortStates[table];
 
         data.sort((a, b) => {
-            const valA = parseInt(a[column], 10);
-            const valB = parseInt(b[column], 10);
-            return direction === 'asc' ? valA - valB : valB - valA;
+            let valA = a[column];
+            let valB = b[column];
+
+            // Handle numeric and string sorting
+            if (!isNaN(parseFloat(valA)) && !isNaN(parseFloat(valB))) {
+                valA = parseFloat(valA);
+                valB = parseFloat(valB);
+            } else {
+                valA = valA ? valA.toString().toLowerCase() : '';
+                valB = valB ? valB.toString().toLowerCase() : '';
+            }
+
+            if (valA < valB) return direction === 'asc' ? -1 : 1;
+            if (valA > valB) return direction === 'asc' ? 1 : -1;
+            return 0;
         });
 
         const renderFunction = {
@@ -476,7 +611,6 @@ document.addEventListener('DOMContentLoaded', function() {
         renderFunction(data);
     }
 
-    // Charger les publications
     function loadPosts() {
         const tbody = document.querySelector('#posts-table tbody');
         if (!tbody) {
@@ -527,7 +661,6 @@ document.addEventListener('DOMContentLoaded', function() {
         attachActionListeners('post');
     }
 
-    // Charger les commentaires
     function loadComments() {
         const tbody = document.querySelector('#comments-table tbody');
         if (!tbody) {
@@ -578,7 +711,6 @@ document.addEventListener('DOMContentLoaded', function() {
         attachActionListeners('comment');
     }
 
-    // Charger les signalements
     function loadReports() {
         const tbody = document.querySelector('#reports-table tbody');
         if (!tbody) {
@@ -632,7 +764,6 @@ document.addEventListener('DOMContentLoaded', function() {
         attachActionListeners('report');
     }
 
-    // Charger les annonces
     function loadAnnouncements() {
         const tbody = document.querySelector('#announcements-table tbody');
         if (!tbody) {
@@ -688,7 +819,6 @@ document.addEventListener('DOMContentLoaded', function() {
         attachEditListeners();
     }
 
-    // Charger les annonces publiques
     function loadPublicAnnouncements() {
         const announcementList = document.getElementById('announcements-list');
         if (!announcementList) {
@@ -722,7 +852,6 @@ document.addEventListener('DOMContentLoaded', function() {
             .catch(error => console.error('Erreur lors du chargement des annonces publiques:', error));
     }
 
-    // Attacher les écouteurs pour les boutons d'édition
     function attachEditListeners() {
         const editButtons = document.querySelectorAll('.action-btn.edit');
         if (!editButtons.length) {
@@ -741,7 +870,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Attacher les écouteurs pour les actions (supprimer, restaurer, cacher, résoudre, rejeter)
     function attachActionListeners(type) {
         const buttons = document.querySelectorAll(`.action-btn[data-type="${type}"]`);
         if (!buttons.length) {
@@ -791,7 +919,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                         loadPublicAnnouncements();
                                     }
                                 } else {
-                                    showNotification(`Erreur: ${data.message || 'Échec de l\'action'}`, 'error');
+                                    showNotification(`Erreur: ${data.message || 'Échec de la suppression'}`, 'error');
                                 }
                             } catch (error) {
                                 console.error(`Erreur lors de l'action ${action} sur ${type}:`, error);
@@ -799,120 +927,45 @@ document.addEventListener('DOMContentLoaded', function() {
                             }
                         }
                     });
-                    return;
-                }
-
-                try {
-                    const response = await fetch(`admin-action.php`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded',
-                        },
-                        body: new URLSearchParams({
-                            type: type,
-                            action: action,
-                            id: id
-                        })
-                    });
-                    const data = await response.json();
-                    if (data.success) {
-                        showNotification(`${typeFr.charAt(0).toUpperCase() + typeFr.slice(1)} ${action === 'hide' ? 'cachée' : 
-                            action === 'restore' ? 'restaurée' : 
-                            action === 'resolve' ? 'résolue' : 'rejetée'} avec succès`, 'success');
-                        if (type === 'post') loadPosts();
-                        else if (type === 'comment') loadComments();
-                        else if (type === 'report') loadReports();
-                        else if (type === 'announcement') {
-                            loadAnnouncements();
-                            loadPublicAnnouncements();
+                } else {
+                    try {
+                        const response = await fetch(`admin-action.php`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded',
+                            },
+                            body: new URLSearchParams({
+                                type: type,
+                                action: action,
+                                id: id
+                            })
+                        });
+                        const data = await response.json();
+                        if (data.success) {
+                            const actionFr = action === 'hide' ? (type === 'post' && data.hidden ? 'cachée' : 'affichée') :
+                                            action === 'restore' ? 'restaurée' :
+                                            action === 'resolve' ? 'résolue' : 'rejetée';
+                            showNotification(`${typeFr.charAt(0).toUpperCase() + typeFr.slice(1)} ${actionFr} avec succès`, 'success');
+                            if (type === 'post') loadPosts();
+                            else if (type === 'comment') loadComments();
+                            else if (type === 'report') loadReports();
+                            else if (type === 'announcement') {
+                                loadAnnouncements();
+                                loadPublicAnnouncements();
+                            }
+                        } else {
+                            showNotification(`Erreur: ${data.message || 'Échec de l\'action'}`, 'error');
                         }
-                    } else {
-                        showNotification(`Erreur: ${data.message || 'Échec de l\'action'}`, 'error');
+                    } catch (error) {
+                        console.error(`Erreur lors de l'action ${action} sur ${type}:`, error);
+                        showNotification(`Erreur: ${error.message}`, 'error');
                     }
-                } catch (error) {
-                    console.error(`Erreur lors de l'action ${action} sur ${type}:`, error);
-                    showNotification(`Erreur: ${error.message}`, 'error');
                 }
             });
         });
     }
 
-    // Fonction pour afficher une notification stylisée
-    function showNotification(message, type = 'info') {
-        const types = {
-            success: { icon: 'fa-check-circle', class: 'success' },
-            error: { icon: 'fa-exclamation-circle', class: 'error' },
-            warning: { icon: 'fa-exclamation-triangle', class: 'warning' },
-            info: { icon: 'fa-info-circle', class: 'info' }
-        };
-
-        // Créer le conteneur s'il n'existe pas
-        let container = document.querySelector('.notification-container');
-        if (!container) {
-            container = document.createElement('div');
-            container.className = 'notification-container';
-            document.body.appendChild(container);
-        }
-
-        // Créer la notification
-        const notification = document.createElement('div');
-        notification.className = `notification ${types[type].class}`;
-        
-        const icon = document.createElement('i');
-        icon.className = `fas ${types[type].icon}`;
-        
-        const text = document.createElement('span');
-        text.textContent = message;
-        
-        notification.appendChild(icon);
-        notification.appendChild(text);
-        container.appendChild(notification);
-
-        // Supprimer la notification après l'animation
-        setTimeout(() => {
-            notification.remove();
-            if (container && container.children.length === 0) {
-                container.remove();
-            }
-        }, 3500);
-    }
-
-    // Fonction pour afficher une confirmation stylisée
-    function showConfirmation(message, callback) {
-        const modal = document.getElementById('confirmation-modal');
-        const messageEl = document.getElementById('confirmation-message');
-        const confirmBtn = document.getElementById('confirm-action');
-        const cancelBtn = document.getElementById('cancel-action');
-
-        if (!modal || !messageEl || !confirmBtn || !cancelBtn) {
-            // Fallback si le modal n'est pas trouvé
-            return callback(confirm(message));
-        }
-
-        messageEl.textContent = message;
-        modal.style.display = 'block';
-
-        const cleanUp = () => {
-            confirmBtn.removeEventListener('click', onConfirm);
-            cancelBtn.removeEventListener('click', onCancel);
-            modal.style.display = 'none';
-        };
-
-        const onConfirm = () => {
-            cleanUp();
-            callback(true);
-        };
-
-        const onCancel = () => {
-            cleanUp();
-            callback(false);
-        };
-
-        confirmBtn.addEventListener('click', onConfirm);
-        cancelBtn.addEventListener('click', onCancel);
-    }
-
-    // Charger les données initiales
+    // Initialiser le chargement des données
     loadPosts();
     loadComments();
     loadReports();

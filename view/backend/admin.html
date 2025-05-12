@@ -9,212 +9,235 @@
     <link rel="stylesheet" href="admin.css?v=1">
 </head>
 <body>
-    <!-- Navigation -->
-    <nav class="navbar">
-        <div class="container">
-            <a class="navbar-brand" href="#">
-                <div class="logo">
-                    <img src="logo.png" alt="Logo">
-                    <div class="logo-text">
-                        <h1>TuniFy</h1>
-                        <p>Admin</p>
-                    </div>
-                </div>
-            </a>
-            <div class="navbar-right">
-                <ul class="list-inline">
-                    <li><a href="#"><i class="fas fa-tachometer-alt"></i> Tableau de bord</a></li>
-                    <li><a href="#"><i class="fas fa-flag"></i> Signalements</a></li>
-                    <li><a href="#"><i class="fas fa-users"></i> Utilisateurs</a></li>
-                    <li><a href="#"><i class="fas fa-sign-out-alt"></i> Déconnexion</a></li>
-                </ul>
+<!-- Sidebar -->
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <div class="logo">
+            <img src="logo.png" alt="Logo">
+            <div class="logo-text">
+                <h1>TuniFy</h1>
+                <p>ADMINISTRATION</p>
             </div>
         </div>
-    </nav>
+        <button class="sidebar-toggle" id="sidebar-toggle">
+            <i class="fas fa-bars"></i>
+        </button>
+    </div>
+    <div class="sidebar-nav">
+        <ul class="list-unstyled">
+            <li><a href="View\Back Office\transportback.php"><i class="fas fa-car"></i><span>Transports</span></a></li>
+            <li><a href="View\Back Office\admin-reservations.php"><i class="fas fa-hotel"></i><span>Hébergements</span></a></li>
+            <li class="dropdown">
+                <a href="#" class="d-flex justify-content-between align-items-center" data-bs-toggle="collapse" data-bs-target="#submenu-restauration" aria-expanded="false" aria-controls="submenu-restauration">
+                    <div>
+                        <i class="fas fa-utensils"></i>
+                        <span>Restauration</span>
+                    </div>
+                    <i class="fas fa-chevron-down"></i>
+                </a>
+                <ul class="collapse list-unstyled" id="submenu-restauration">
+                    <li><a href="indexx.php"><i class="fas fa-home"></i><span>Dashboard</span></a></li>
+                    <li><a href="gestion_plats.php">Gestion des Plats</a></li>
+                    <li><a href="gestion_commandes.php">Gestion des Commandes</a></li>
+                    <li><a href="gestion_livraisons.php">Gestion des Livraisons</a></li>
+                    <li><a href="gestion_reservations.php">Gestion des Réservations</a></li>
+                </ul>
+            </li>
+            <li><a href="index.php?controller=forum&action=index"><i class="fas fa-comments"></i><span>Forums</span></a></li>
+            <li><a href="View\Back Office\dashboard.php"><i class="fas fa-calendar-alt"></i><span>Evenements</span></a></li>
+            <li><a href="index.php?controller=user&action=index"><i class="fas fa-users"></i><span>Utilisateurs</span></a></li>
+            <li><a href="index.php?controller=user&action=profile"><i class="fas fa-user"></i><span>Mon Profil</span></a></li>
+            <li><a href="../index.php" target="_blank"><i class="fas fa-external-link-alt"></i><span>Voir le Site</span></a></li>
+            <li><a href="index.php?controller=auth&action=logout"><i class="fas fa-sign-out-alt"></i><span>Déconnexion</span></a></li>
+        </ul>
+    </div>
+</div>
 
     <!-- Main Content -->
-    <main class="container">
-        <div class="breadcrumbBox">
-            <ul class="breadcrumb">
-                <li><a href="#">Admin</a></li>
-                <li class="active"><a href="#">Tableau de bord</a></li>
-            </ul>
-        </div>
-
-        <section class="dashboard-section">
-            <h1>Tableau de bord Admin</h1>
-            <div class="tab-buttons">
-                <button class="tab-btn active" data-tab="posts">Publications</button>
-                <button class="tab-btn" data-tab="comments">Commentaires</button>
-                <button class="tab-btn" data-tab="reports">Signalements</button>
-                <button class="tab-btn" data-tab="announcements">Annonces</button>
+    <main class="main-content">
+        <div class="container">
+            <div class="breadcrumbBox">
+                <ul class="breadcrumb">
+                    <li><a href="#">Admin</a></li>
+                    <li class="active"><a href="#">Tableau de bord</a></li>
+                </ul>
             </div>
 
-            <!-- Posts Tab -->
-            <div class="tab-content active" id="posts-tab">
-                <div class="table-container">
-                    <table id="posts-table">
-                        <thead>
-                            <tr>
-                                <th class="sortable" data-sort="id" data-table="posts">
-                                    ID <span class="sort-arrow"></span>
-                                </th>
-                                <th>Titre</th>
-                                <th>Auteur</th>
-                                <th>Créé le</th>
-                                <th>Statut</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
+            <section class="dashboard-section">
+                <h1>Tableau de bord Admin</h1>
+                <div class="tab-buttons">
+                    <button class="tab-btn active" data-tab="posts">Publications</button>
+                    <button class="tab-btn" data-tab="comments">Commentaires</button>
+                    <button class="tab-btn" data-tab="reports">Signalements</button>
+                    <button class="tab-btn" data-tab="announcements">Annonces</button>
                 </div>
-            </div>
 
-            <!-- Comments Tab -->
-            <div class="tab-content" id="comments-tab">
-                <div class="table-container">
-                    <table id="comments-table">
-                        <thead>
-                            <tr>
-                                <th class="sortable" data-sort="id" data-table="comments">
-                                    ID <span class="sort-arrow"></span>
-                                </th>
-                                <th>ID Publication</th>
-                                <th>Auteur</th>
-                                <th>Contenu</th>
-                                <th>Créé le</th>
-                                <th>Statut</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Reports Tab -->
-            <div class="tab-content" id="reports-tab">
-                <div class="table-container">
-                    <table id="reports-table">
-                        <thead>
-                            <tr>
-                                <th class="sortable" data-sort="id" data-table="reports">
-                                    ID <span class="sort-arrow"></span>
-                                </th>
-                                <th>Type de contenu</th>
-                                <th>ID Contenu</th>
-                                <th>Signaleur</th>
-                                <th>Raison</th>
-                                <th>Statut</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Announcements Tab -->
-            <div class="tab-content" id="announcements-tab">
-                <div class="table-container">
-                    <button class="btn-gold" id="add-announcement-btn">Ajouter une nouvelle annonce</button>
-                    <table id="announcements-table">
-                        <thead>
-                            <tr>
-                                <th class="sortable" data-sort="id" data-table="announcements">
-                                    ID <span class="sort-arrow"></span>
-                                </th>
-                                <th>Titre</th>
-                                <th>Auteur</th>
-                                <th>Contenu</th>
-                                <th>Publication prévue</th>
-                                <th>Statut</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Modal pour ajouter une annonce -->
-            <div class="modal" id="add-announcement-modal">
-                <div class="modal-content">
-                    <span class="close-modal" id="close-announcement-modal">×</span>
-                    <h2>Ajouter une nouvelle annonce</h2>
-                    <form id="announcement-form">
-                        <div class="form-group">
-                            <label for="announcement-title">Titre</label>
-                            <input type="text" id="announcement-title" name="title" placeholder="Entrez le titre">
-                        </div>
-                        <div class="form-group">
-                            <label for="announcement-author">Auteur</label>
-                            <input type="text" id="announcement-author" name="author" placeholder="Entrez l'auteur">
-                        </div>
-                        <div class="form-group">
-                            <label for="announcement-content">Contenu</label>
-                            <textarea id="announcement-content" name="content" placeholder="Entrez le contenu"></textarea>
-                        </div>
-                        <div class="form-group">
-                            <label>
-                                <input type="checkbox" id="announcement-schedule" name="schedule">
-                                Planifier la publication
-                            </label>
-                        </div>
-                        <div class="form-group schedule-fields" style="display: none;">
-                            <label for="announcement-publish-datetime">Date et heure de publication</label>
-                            <input type="text" id="announcement-publish-datetime" class="flatpickr" name="publish_datetime" placeholder="Sélectionnez la date et l'heure" disabled>
-                        </div>
-                        <button type="submit" class="btn-gold">Enregistrer l'annonce</button>
-                    </form>
-                </div>
-            </div>
-
-            <!-- Modal pour modifier une annonce -->
-            <div class="modal" id="edit-announcement-modal">
-                <div class="modal-content">
-                    <span class="close-modal" id="close-edit-modal">×</span>
-                    <h2>Modifier l'annonce</h2>
-                    <form id="edit-announcement-form">
-                        <input type="hidden" name="id" id="edit-announcement-id">
-                        <div class="form-group">
-                            <label for="edit-announcement-title">Titre</label>
-                            <input type="text" id="edit-announcement-title" name="title">
-                        </div>
-                        <div class="form-group">
-                            <label for="edit-announcement-author">Auteur</label>
-                            <input type="text" id="edit-announcement-author" name="author">
-                        </div>
-                        <div class="form-group">
-                            <label for="edit-announcement-content">Contenu</label>
-                            <textarea id="edit-announcement-content" name="content"></textarea>
-                        </div>
-                        <div class="form-group">
-                            <label>
-                                <input type="checkbox" id="edit-announcement-schedule" name="schedule">
-                                Planifier la publication
-                            </label>
-                        </div>
-                        <div class="form-group schedule-fields" style="display: none;">
-                            <label for="edit-announcement-publish-datetime">Date et heure de publication</label>
-                            <input type="text" id="edit-announcement-publish-datetime" class="flatpickr" name="publish_datetime" placeholder="Sélectionnez la date et l'heure" disabled>
-                        </div>
-                        <button type="submit" class="btn-gold">Enregistrer</button>
-                    </form>
-                </div>
-            </div>
-            <div class="modal" id="confirmation-modal">
-                <div class="modal-content" style="max-width: 500px;">
-                    <h2 id="confirmation-title">Confirmation</h2>
-                    <p id="confirmation-message">Êtes-vous sûr de vouloir effectuer cette action ?</p>
-                    <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
-                        <button class="btn-gold" id="confirm-action" style="background-color: #4CAF50;">Confirmer</button>
-                        <button class="btn-gold" id="cancel-action" style="background-color: #f44336;">Annuler</button>
+                <!-- Posts Tab -->
+                <div class="tab-content active" id="posts-tab">
+                    <div class="table-container">
+                        <table id="posts-table">
+                            <thead>
+                                <tr>
+                                    <th class="sortable" data-sort="id" data-table="posts">
+                                        ID <span class="sort-arrow"></span>
+                                    </th>
+                                    <th>Titre</th>
+                                    <th>Auteur</th>
+                                    <th>Créé le</th>
+                                    <th>Statut</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
                     </div>
                 </div>
-            </div>
-        </section>
+
+                <!-- Comments Tab -->
+                <div class="tab-content" id="comments-tab">
+                    <div class="table-container">
+                        <table id="comments-table">
+                            <thead>
+                                <tr>
+                                    <th class="sortable" data-sort="id" data-table="comments">
+                                        ID <span class="sort-arrow"></span>
+                                    </th>
+                                    <th>ID Publication</th>
+                                    <th>Auteur</th>
+                                    <th>Contenu</th>
+                                    <th>Créé le</th>
+                                    <th>Statut</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Reports Tab -->
+                <div class="tab-content" id="reports-tab">
+                    <div class="table-container">
+                        <table id="reports-table">
+                            <thead>
+                                <tr>
+                                    <th class="sortable" data-sort="id" data-table="reports">
+                                        ID <span class="sort-arrow"></span>
+                                    </th>
+                                    <th>Type de contenu</th>
+                                    <th>ID Contenu</th>
+                                    <th>Signaleur</th>
+                                    <th>Raison</th>
+                                    <th>Statut</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Announcements Tab -->
+                <div class="tab-content" id="announcements-tab">
+                    <div class="table-container">
+                        <button class="btn-gold" id="add-announcement-btn">Ajouter une nouvelle annonce</button>
+                        <table id="announcements-table">
+                            <thead>
+                                <tr>
+                                    <th class="sortable" data-sort="id" data-table="announcements">
+                                        ID <span class="sort-arrow"></span>
+                                    </th>
+                                    <th>Titre</th>
+                                    <th>Auteur</th>
+                                    <th>Contenu</th>
+                                    <th>Publication prévue</th>
+                                    <th>Statut</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Modal pour ajouter une annonce -->
+                <div class="modal" id="add-announcement-modal">
+                    <div class="modal-content">
+                        <span class="close-modal" id="close-announcement-modal">×</span>
+                        <h2>Ajouter une nouvelle annonce</h2>
+                        <form id="announcement-form">
+                            <div class="form-group">
+                                <label for="announcement-title">Titre</label>
+                                <input type="text" id="announcement-title" name="title" placeholder="Entrez le titre">
+                            </div>
+                            <div class="form-group">
+                                <label for="announcement-author">Auteur</label>
+                                <input type="text" id="announcement-author" name="author" placeholder="Entrez l'auteur">
+                            </div>
+                            <div class="form-group">
+                                <label for="announcement-content">Contenu</label>
+                                <textarea id="announcement-content" name="content" placeholder="Entrez le contenu"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" id="announcement-schedule" name="schedule">
+                                    Planifier la publication
+                                </label>
+                            </div>
+                            <div class="form-group schedule-fields" style="display: none;">
+                                <label for="announcement-publish-datetime">Date et heure de publication</label>
+                                <input type="text" id="announcement-publish-datetime" class="flatpickr" name="publish_datetime" placeholder="Sélectionnez la date et l'heure" disabled>
+                            </div>
+                            <button type="submit" class="btn-gold">Enregistrer l'annonce</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Modal pour modifier une annonce -->
+                <div class="modal" id="edit-announcement-modal">
+                    <div class="modal-content">
+                        <span class="close-modal" id="close-edit-modal">×</span>
+                        <h2>Modifier l'annonce</h2>
+                        <form id="edit-announcement-form">
+                            <input type="hidden" name="id" id="  edit-announcement-id">
+                            <div class="form-group">
+                                <label for="edit-announcement-title">Titre</label>
+                                <input type="text" id="edit-announcement-title" name="title">
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-announcement-author">Auteur</label>
+                                <input type="text" id="edit-announcement-author" name="author">
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-announcement-content">Contenu</label>
+                                <textarea id="edit-announcement-content" name="content"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" id="edit-announcement-schedule" name="schedule">
+                                    Planifier la publication
+                                </label>
+                            </div>
+                            <div class="form-group schedule-fields" style="display: none;">
+                                <label for="edit-announcement-publish-datetime">Date et heure de publication</label>
+                                <input type="text" id="edit-announcement-publish-datetime" class="flatpickr" name="publish_datetime" placeholder="Sélectionnez la date et l'heure" disabled>
+                            </div>
+                            <button type="submit" class="btn-gold">Enregistrer</button>
+                        </form>
+                    </div>
+                </div>
+                <div class="modal" id="confirmation-modal">
+                    <div class="modal-content" style="max-width: 500px;">
+                        <h2 id="confirmation-title">Confirmation</h2>
+                        <p id="confirmation-message">Êtes-vous sûr de vouloir effectuer cette action ?</p>
+                        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+                            <button class="btn-gold" id="confirm-action" style="background-color: #4CAF50;">Confirmer</button>
+                            <button class="btn-gold" id="cancel-action" style="background-color: #f44336;">Annuler</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
     </main>
 
     <!-- Footer -->

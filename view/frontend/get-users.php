@@ -3,50 +3,57 @@ header('Content-Type: application/json; charset=UTF-8');
 header("Access-Control-Allow-Origin: *"); // À remplacer par votre domaine en production
 header("Access-Control-Allow-Credentials: true");
 
-require_once __DIR__.'/../../config.php';
-
-// Activer le logging des erreurs
+// Configuration du logging
 ini_set('display_errors', 0);
 ini_set('log_errors', 1);
-error_log("Début de get-users.php");
+error_reporting(E_ALL);
+$logFile = __DIR__ . '/../../logs/users.log';
+file_put_contents($logFile, PHP_EOL . date('Y-m-d H:i:s') . " - Début de la requête", FILE_APPEND);
+
+// Inclure la configuration
+require_once __DIR__ . '/../../config.php';
 
 try {
-    session_start();
-    
-    if (!isset($_SESSION['user_id'])) {
-        throw new Exception('Utilisateur non authentifié', 401);
+    if (empty($_SESSION['user_id'])) {
+        file_put_contents($logFile, PHP_EOL . "Erreur: Session utilisateur non trouvée", FILE_APPEND);
+        throw new Exception('Session expirée ou invalide', 401);
     }
 
-    $current_user_id = $_SESSION['user_id'];
-    error_log("User ID: ".$current_user_id);
+    $userId = (int)$_SESSION['user_id'];
+    file_put_contents($logFile, PHP_EOL . "Traitement pour l'utilisateur ID: $userId", FILE_APPEND);
 
-    $pdo = config::getConnexion();
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $pdo = Config::getConnexion();
 
-    // Requête optimisée avec gestion des valeurs NULL
-    $sql = "SELECT 
-                id, 
-                email,
-                CASE 
-                    WHEN CONCAT(COALESCE(prenom,''), ' ', COALESCE(nom,'')) = ' ' THEN email
-                    ELSE CONCAT(COALESCE(prenom,''), ' ', COALESCE(nom,''))
-                END AS display_name
-            FROM users 
-            WHERE id != ? 
-            AND email IS NOT NULL
-            ORDER BY display_name ASC";
+    // Vérifier si l'utilisateur existe et est actif
+    $stmt = $pdo->prepare("SELECT 1 FROM users WHERE id = ? AND active = 1");
+    $stmt->execute([$userId]);
+    if (!$stmt->fetch()) {
+        file_put_contents($logFile, PHP_EOL . "Erreur: Utilisateur $userId inactif ou inexistant", FILE_APPEND);
+        throw new Exception('Utilisateur non trouvé', 404);
+    }
 
+    // Requête principale
+    $sql = "
+        SELECT 
+            id, 
+            email,
+            CASE 
+                WHEN TRIM(CONCAT(COALESCE(prenom,''), ' ', COALESCE(nom,''))) = '' THEN email
+                ELSE CONCAT(COALESCE(prenom,''), ' ', COALESCE(nom,''))
+            END AS display_name
+        FROM users 
+        WHERE active = 1 AND id != :current_user_id
+        ORDER BY display_name ASC
+    ";
     $stmt = $pdo->prepare($sql);
-    $stmt->execute([$current_user_id]);
+    $stmt->execute([':current_user_id' => $userId]);
     $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    error_log("Nombre d'utilisateurs trouvés: ".count($users));
-
     if (empty($users)) {
-        error_log("Aucun utilisateur trouvé (sauf l'utilisateur courant)");
+        file_put_contents($logFile, PHP_EOL . "Aucun autre utilisateur trouvé", FILE_APPEND);
     }
 
-    echo json_encode([
+    $response = [
         'success' => true,
         'users' => array_map(function($user) {
             return [
@@ -55,21 +62,31 @@ try {
                 'email' => $user['email']
             ];
         }, $users)
-    ]);
+    ];
+
+    file_put_contents($logFile, PHP_EOL . "Réponse envoyée: " . json_encode($response), FILE_APPEND);
+    echo json_encode($response);
 
 } catch (PDOException $e) {
-    error_log("Erreur PDO: ".$e->getMessage());
+    $errorMsg = "Erreur PDO: " . $e->getMessage();
+    file_put_contents($logFile, PHP_EOL . $errorMsg, FILE_APPEND);
     http_response_code(500);
     echo json_encode([
         'success' => false,
         'message' => 'Erreur de base de données',
-        'error' => $e->getMessage()
+        'error' => $e->getMessage(),
+        'code' => $e->getCode()
     ]);
 } catch (Exception $e) {
-    error_log("Erreur générale: ".$e->getMessage());
+    $errorMsg = "Erreur: " . $e->getMessage();
+    file_put_contents($logFile, PHP_EOL . $errorMsg, FILE_APPEND);
     http_response_code($e->getCode() ?: 400);
     echo json_encode([
         'success' => false,
-        'message' => $e->getMessage()
+        'message' => $e->getMessage(),
+        'code' => $e->getCode()
     ]);
 }
+
+file_put_contents($logFile, PHP_EOL . date('Y-m-d H:i:s') . " - Fin de la requête", FILE_APPEND);
+?>
